@@ -1,6 +1,6 @@
 /*
 
-  RGENOUD (limited version)
+  RGENOUD
 
   Walter R. Mebane, Jr.
   Cornell University
@@ -8,11 +8,11 @@
   wrm1@macht.arts.cornell.edu
 
   Jasjeet Singh Sekhon 
-  Harvard University and Lamarck, Inc.
+  Harvard University
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.h,v 1.23 2004/02/02 08:01:49 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.h,v 1.25 2004/03/03 22:56:19 jsekhon Exp $
 
 */
 
@@ -310,7 +310,7 @@ void free_imatrix(int **m, int nrl, int nrh, int ncl);
 void oper1(VECTOR parent, double **domains, int nvars);
 void oper2(VECTOR parent, double **domains, int nvars);
 void oper3(VECTOR parent, double **domains, int nvars, int T, int t, int B);
-void oper4(VECTOR p1, VECTOR p2, int x2_vari);
+void oper4(MATRIX p, int p2use, int nvars);
 void oper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars);
 void oper6(VECTOR parent, double **domains, int nvars, int T, int t, int B);
 void oper7(VECTOR p1, VECTOR p2, double **domains, int nvars);
@@ -326,7 +326,7 @@ double get_F(int T, int t, double y, int B);
 void JaIntegerOper1(VECTOR parent, double **domains, int nvars);
 void JaIntegerOper2(VECTOR parent, double **domains, int nvars);
 void JaIntegerOper3(VECTOR parent, double **domains, int nvars, int T, int t, int B);
-void JaIntegerOper4(VECTOR p1, VECTOR p2, int nvars);
+void JaIntegeroper4(MATRIX p, int p2use, int nvars);
 void JaIntegerOper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars);
 void JaIntegerOper6(VECTOR parent, double **domains, int nvars, int T, int t, int B);
 void JaIntegerOper7(VECTOR p1, VECTOR p2, double **domains, int nvars);

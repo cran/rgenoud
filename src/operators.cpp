@@ -1,6 +1,6 @@
 /*
 
-  RGENOUD (limited version)
+  RGENOUD
 
   Walter R. Mebane, Jr.
   Cornell University
@@ -8,11 +8,11 @@
   wrm1@macht.arts.cornell.edu
 
   Jasjeet Singh Sekhon 
-  Harvard University and Lamarck, Inc.
+  Harvard University
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/operators.cpp,v 1.23 2004/02/02 08:01:52 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/operators.cpp,v 1.25 2004/03/03 22:56:19 jsekhon Exp $
 
 */
 
@@ -32,18 +32,6 @@ extern double genoud_optim(double *X, int nvars);
 /*           DESCRIPTION       :   This function returns a new vector generated */
 /*                                  from the parent vector, after applying      */
 /*                                  the operator, uniform mutation.             */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   find_range(),                                */
-/*                                 frange_ran(),                                */
-/*                                 irange_ran(),                                */
-/*                                 Gvector().                                   */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
@@ -89,24 +77,6 @@ void oper1(VECTOR parent, double **domains, int nvars)
 /*                                 No Uniqueness checking here                  */
 /*                                 Don't use this oper often!                   */
 /*                                                                              */
-/*           SYNOPSIS          :   void oper2(parent,fin_mat,nvars)             */
-/*                                                                              */
-/*           DESCRIPTION       :   This function returns a new vector generated */
-/*                                  from the parent vector, after applying      */
-/*                                  the operator, boundary mutation.            */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   find_range(),                                */
-/*                                 flip(),                                      */
-/*                                 irange_ran(),                                */
-/*                                 Gvector().                                   */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
-/*                                                                              */
 /********************************************************************************/
 
 
@@ -150,23 +120,6 @@ void oper2(VECTOR parent, double **domains, int nvars)
 /*           FUNCTION NAME     :   oper3()                                      */
 /*                                                                              */
 /*           SYNOPSIS          :   void oper3(parent,fin_mat,r,c,T,t,B)         */
-/*                                                                              */
-/*           DESCRIPTION       :   This function returns a new vector generated */
-/*                                  from the parent vector, after applying      */
-/*                                  the operator, non-uniform mutation.         */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   find_range(),                                */
-/*                                 flip(),                                      */
-/*                                 get_F(),                                     */
-/*                                 irange_ran(),                                */
-/*                                 Gvector().                                   */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
@@ -215,19 +168,43 @@ void oper3(VECTOR parent, double **domains, int nvars, int T, int t, int B)
 /*           FUNCTION NAME     :   oper4()                                      */
 /*                                 Polytope Crossover                           */
 /*                                                                              */
-/*           SYNOPSIS          :   void oper4(p1,p2,x2_vari)                    */
-/*                                                                              */
-/*           DESCRIPTION       :   This function returns two new vectors        */
-/*                                  generated after whole arithmetical          */
-/*                                  crossover, from the two parent vectors.     */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   matrix()                                     */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
+void oper4(MATRIX p, int p2use, int nvars)
+  /* int p The parents chosen for crossover */
+  /* p2use;     number of parents (rows) in p */
+  /* int nvars Length of the parameter vector (cols in p) */
+{
+  double *A, sum;
+  int    i,k;
+  
+  A = (double *) malloc((p2use+1)*sizeof(double));
+  
+  sum=0.0;
+  for (k=1; k<=p2use; k++) {
+    do
+      A[k] = frange_ran(0.0,1.0);
+    while (A[k]==0.0);                   /* insure A[k] is above 0.0 */
+    sum += A[k];
+  }
+  sum = 1.0/sum;
+  for (k=1; k<=p2use; k++) {    /* rescale A[k] to sum to 1.0 */
+    A[k] *= sum;
+  }
+  
+  for(i=1; i<=nvars; i++) {
+    sum = p[1][i] * A[1];
+    for (k=2; k<=p2use; k++)
+      sum += p[k][i] * A[k];
+    p[1][i] = sum;
+  }
+  
+  free(A);
+} /* end of oper4 */
+
+#ifdef NEVERDEFINED
+/* This is the arithmetic crossover operator */
 void oper4(VECTOR p1, VECTOR p2, int nvars)
      /* VECTOR p1,p2;  The two parents chosen for crossover*/
      /* int nvars;   Length of the vector*/
@@ -284,29 +261,13 @@ void oper4(VECTOR p1, VECTOR p2, int nvars)
   
   JaMatrixFree(child, 3);  
 } /* end of oper4() */
+#endif
 
 
 /********************************************************************************/
 /*                                                                              */
 /*           FUNCTION NAME     :   oper5()                                      */
 /*                                 Multiple Point Simple Crossover              */
-/*                                                                              */
-/*           SYNOPSIS          :   void oper5(p1,p2,STEP,nvars,fin_mat,X,x2)    */
-/*                                                                              */
-/*           DESCRIPTION       :   This function returns two new vectors        */
-/*                                  generated after simple arithmetical         */
-/*                                  crossover, from the two parent vectors.     */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   irange_ran()                                 */
-/*                                 matrix(),                                    */
-/*                                 satis_con()                                  */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
@@ -394,20 +355,6 @@ void oper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars)
 /*           FUNCTION NAME     :   oper6()                                      */
 /*                                 Whole Non-Uniform Mutation                   */
 /*                                                                              */
-/*           SYNOPSIS          :   void oper6(parent,fin_mat,nvars,T,t,B)       */
-/*                                                                              */
-/*           DESCRIPTION       :   This function returns a new vector generated */
-/*                                  from the parent vector, after applying      */
-/*                                  the operator, whole non-uniform mutation.   */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   find_range(),                                */
-/*                                 flip(),                                      */
-/*                                 get_F(),                                     */
-/*                                 irange_ran(),                                */
-/*                                 Gvector().                                   */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
 /********************************************************************************/
 
 
@@ -430,11 +377,12 @@ void oper6(VECTOR parent, double **domains, int nvars, int T, int t, int B)
 
   count=0;
   SAME=TRUE;
+  next = ivector(1, nvars);
+
   while (SAME==TRUE)
     {
       count++;
       
-      next = ivector(1, nvars);
       for(i=1; i<=nvars; i++)
 	next[i] = 0;
       
@@ -461,6 +409,9 @@ void oper6(VECTOR parent, double **domains, int nvars, int T, int t, int B)
 	SAME=FALSE;
     } /* end of while loop */
 
+  //this line added on 2004-03-02
+  parent[comp] = tmp;
+
   free_ivector(next,1);
 }
 
@@ -469,21 +420,6 @@ void oper6(VECTOR parent, double **domains, int nvars, int T, int t, int B)
 /*                                                                              */
 /*           FUNCTION NAME     :   oper7()                                      */
 /*                                 Heuristic Crossover                          */
-/*                                                                              */
-/*           SYNOPSIS          :   void oper7(p1,p2,nvars,fin_mat,X,x2)         */
-/*                                                                              */
-/*           DESCRIPTION       :   This function returns one new vector         */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   frange_ran()                                 */
-/*                                 Gvector(),                                   */
-/*                                 satis_con()                                  */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
@@ -558,17 +494,6 @@ void oper7(VECTOR p1, VECTOR p2, double **domains, int nvars)
 /*                                  limits, within which the mutation should    */
 /*                                  occur.                                      */
 /*                                                                              */
-/*           FUNCTIONS CALLED  :   none()                                       */
-/*                                                                              */
-/*           CALLING FUNCITONS :   oper1()                                      */
-/*                                 oper2()                                      */
-/*                                 oper3()                                      */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
-/*                                                                              */
 /********************************************************************************/
 
 void find_range(double *llim, double *ulim, int comp, double **domains, int nvars, VECTOR parent)
@@ -599,19 +524,6 @@ void find_range(double *llim, double *ulim, int comp, double **domains, int nvar
 /*           DESCRIPTION       :   This function returns a random integer       */
 /*                                  between the llim and ulim.                  */
 /*                                                                              */
-/*           FUNCTIONS CALLED  :   None                                         */
-/*                                                                              */
-/*           CALLING FUNCITONS :   find_parent(),                               */
-/*                                 oper1().                                     */
-/*                                 oper2().                                     */
-/*                                 oper3().                                     */
-/*                                 oper5().                                     */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
-/*                                                                              */
 /********************************************************************************/
 int irange_ran(int llim, int ulim)
 {
@@ -633,11 +545,6 @@ int irange_ran(int llim, int ulim)
 /*           DESCRIPTION       :   This function returns the double value which  */
 /*                                  is the evaluated value of the function,     */
 /*                                  needed for the operators 3 and 6            */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   none()                                       */
-/*                                                                              */
-/*           CALLING FUNCITONS :   oper3()                                      */
-/*           CALLING FUNCITONS :   oper6()                                      */
 /*                                                                              */
 /********************************************************************************/
 
@@ -671,12 +578,6 @@ double get_F(int T, int t, double y, int B)
 /*           FUNCTIONS CALLED  :   dfgsmin(),                                   */
 /*                                                                              */
 /*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
@@ -781,18 +682,6 @@ void oper8(double (*VMfunction)(double *LX, long *LStatus),
 /*                                  from the parent vector, after applying      */
 /*                                  the operator, uniform mutation.             */
 /*                                                                              */
-/*           FUNCTIONS CALLED  :   find_range(),                                */
-/*                                 frange_ran(),                                */
-/*                                 irange_ran(),                                */
-/*                                 Gvector().                                   */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
-/*                                                                              */
 /********************************************************************************/
 
 void JaIntegerOper1(VECTOR parent, double **domains, int nvars)
@@ -837,24 +726,6 @@ void JaIntegerOper1(VECTOR parent, double **domains, int nvars)
 /*                                 Boundary Mutatation                          */
 /*                                 No Uniqueness checking here                  */
 /*                                 Don't use this oper often!                   */
-/*                                                                              */
-/*           SYNOPSIS          :   void oper2(parent,fin_mat,rc)                */
-/*                                                                              */
-/*           DESCRIPTION       :   This function returns a new vector generated */
-/*                                  from the parent vector, after applying      */
-/*                                  the operator, boundary mutation.            */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   find_range(),                                */
-/*                                 flip(),                                      */
-/*                                 irange_ran(),                                */
-/*                                 Gvector().                                   */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
@@ -906,19 +777,6 @@ void JaIntegerOper2(VECTOR parent, double **domains, int nvars)
 /*                                  from the parent vector, after applying      */
 /*                                  the operator, non-uniform mutation.         */
 /*                                                                              */
-/*           FUNCTIONS CALLED  :   find_range(),                                */
-/*                                 flip(),                                      */
-/*                                 get_F(),                                     */
-/*                                 irange_ran(),                                */
-/*                                 Gvector().                                   */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
-/*                                                                              */
 /********************************************************************************/
 
 void JaIntegerOper3(VECTOR parent, double **domains, int nvars, int T, int t, int B)
@@ -966,28 +824,43 @@ void JaIntegerOper3(VECTOR parent, double **domains, int nvars, int T, int t, in
 /*           FUNCTION NAME     :   JaIntegeroper4()                             */
 /*                                 Polytope Crossover                           */
 /*                                                                              */
-/*           SYNOPSIS          :   void oper3(parent,fin_mat,r,c,T,t,B)         */
-/*                                                                              */
-/*           DESCRIPTION       :   This function returns a new vector generated */
-/*                                  from the parent vector, after applying      */
-/*                                  the operator, non-uniform mutation.         */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   find_range(),                                */
-/*                                 flip(),                                      */
-/*                                 get_F(),                                     */
-/*                                 irange_ran(),                                */
-/*                                 Gvector().                                   */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
+void JaIntegeroper4(MATRIX p, int p2use, int nvars)
+  /* int p The parents chosen for crossover */
+  /* p2use;     number of parents (rows) in p */
+  /* int nvars Length of the parameter vector (cols in p) */
+{
+  double *A, sum;
+  int    i,k;
 
+  A = (double *) malloc((p2use+1)*sizeof(double));
+
+  sum=0.0;
+  for (k=1; k<=p2use; k++) {
+    do
+      A[k] = frange_ran(0.0,1.0);
+    while (A[k]==0.0);                   /* insure A[k] is above 0.0 */
+    sum += A[k];
+  }
+  sum = 1.0/sum;
+  for (k=1; k<=p2use; k++) {    /* rescale A[k] to sum to 1.0 */
+    A[k] *= sum;
+  }
+
+  for(i=1; i<=nvars; i++) {
+    sum = p[1][i] * A[1];
+    for (k=2; k<=p2use; k++)
+      sum += p[k][i] * A[k];
+    p[1][i] = (int) sum;
+  }
+
+  free(A);
+}
+
+
+#ifdef NEVERDEFINED
 void JaIntegerOper4(VECTOR p1, VECTOR p2, int nvars)
      /* VECTOR p1,p2;  The two parents chosen for crossover*/
      /* int nvars;   Length of the vector*/
@@ -1045,6 +918,7 @@ void JaIntegerOper4(VECTOR p1, VECTOR p2, int nvars)
 
   JaMatrixFree(child, 3);  
 } /* end of JaIntegerOper4 */
+#endif
 
 
 /********************************************************************************/
@@ -1057,17 +931,6 @@ void JaIntegerOper4(VECTOR p1, VECTOR p2, int nvars)
 /*           DESCRIPTION       :   This function returns two new vectors        */
 /*                                  generated after simple arithmetical         */
 /*                                  crossover, from the two parent vectors.     */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   irange_ran()                                 */
-/*                                 matrix(),                                    */
-/*                                 satis_con()                                  */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
@@ -1157,20 +1020,6 @@ void JaIntegerOper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars)
 /*           FUNCTION NAME     :   JaIntegerOper6()                             */
 /*                                 Whole Non-Uniform Mutation                   */
 /*                                                                              */
-/*           SYNOPSIS          :   void oper6(parent,fin_mat,nvars,T,t,B)       */
-/*                                                                              */
-/*           DESCRIPTION       :   This function returns a new vector generated */
-/*                                  from the parent vector, after applying      */
-/*                                  the operator, whole non-uniform mutation.   */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   find_range(),                                */
-/*                                 flip(),                                      */
-/*                                 get_F(),                                     */
-/*                                 irange_ran(),                                */
-/*                                 Gvector().                                   */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
 /********************************************************************************/
 
 
@@ -1192,11 +1041,12 @@ void JaIntegerOper6(VECTOR parent, double **domains, int nvars, int T, int t, in
 
   count=0;
   SAME=TRUE;
+  next = ivector(1, nvars);
+
   while (SAME==TRUE)
     {
       count++;
 
-      next = ivector(1, nvars);
       for(i=1; i<=nvars; i++)
 	next[i] = 0;
       
@@ -1232,19 +1082,6 @@ void JaIntegerOper6(VECTOR parent, double **domains, int nvars, int T, int t, in
 /*                                                                              */
 /*           FUNCTION NAME     :   JaIntegerOper7()                             */
 /*                                 Heuristic Crossover                          */
-/*                                                                              */
-/*           DESCRIPTION       :   This function returns one new vector         */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   frange_ran()                                 */
-/*                                 Gvector(),                                   */
-/*                                 satis_con()                                  */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
@@ -1315,14 +1152,6 @@ void JaIntegerOper7(VECTOR p1, VECTOR p2, double **domains, int nvars)
 /*           DESCRIPTION       :   This function returns TRUE or FALSE depending*/
 /*                                  on whether the vector passed satisfies all  */
 /*                                  the constraints or not.                     */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   none()                                       */
-/*                                                                              */
-/*           CALLING FUNCITONS :   oper5()                                      */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 FLAG InBounds(VECTOR child, double **domains, int nvars)

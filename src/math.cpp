@@ -1,6 +1,6 @@
 /*
 
-  RGENOUD (limited version)
+  RGENOUD
 
   Walter R. Mebane, Jr.
   Cornell University
@@ -8,11 +8,11 @@
   wrm1@macht.arts.cornell.edu
 
   Jasjeet Singh Sekhon 
-  Harvard University and Lamarck, Inc.
+  Harvard University
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/math.cpp,v 1.23 2004/02/02 08:01:50 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/math.cpp,v 1.25 2004/03/03 22:56:19 jsekhon Exp $
 
 */
 

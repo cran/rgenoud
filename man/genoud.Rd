@@ -58,14 +58,13 @@
     certain that the relevant restrictions are satisfied.  These
     restrictions originate
     in what is required by several of the operators.  In particular,
-    operators 5 (Polytope Crossover), 6 (Multiple Point Simple
-    Crossover) and 8 (Heuristic Crossover) require an even number of individuals
-    to work on---i.e., they require two parents.  Therefore,
-    the \code{pop.size} variable and the operators sets must be such
-    that these three operators have
-    an even number of individuals to work with.  If this does not occur,
-    the population size is automatically increased until this constraint
-    is satisfied.}
+    operators 6 (Multiple Point Simple Crossover) and 8 (Heuristic
+    Crossover) require an even number of individuals to work on---i.e., they
+    require two parents.  Therefore, the \code{pop.size} variable and the
+    operators sets must be such that these three operators have an even
+    number of individuals to work with.  If this does not occur, the
+    population size is automatically increased until this constraint is
+    satisfied.}
   \item{max.generations}{
     Maximum Generations.  This is the maximum number of generations that
     GENOUD will run when attempting to optimize a function.  This is a
@@ -244,14 +243,15 @@
     The default value of this seed is 53058.}
   \item{print.level}{
     This variable controls the level of printing that GENOUD does.  There
-    are three possible levels: 0 (minimal printing), 1 (normal), and 2
-    (detailed).  If level 2 is selected, GENOUD will print details about
-    the population at each generation.  The \code{print.level} variable
-    also significantly affects how much detail is placed in the project
-    file---see \code{project.path}.  Note that R convention would have
+    are four possible levels: 0 (minimal printing), 1 (normal), 2
+    (detailed), and 3 (debug).  If level 2 is selected, GENOUD will
+    print details about the population at each generation.  The
+    \code{print.level} variable also significantly affects how much
+    detail is placed in the project file---see \code{project.path}.
+    Note that R convention would have
     us at print level 0 (minimal printing).  However, because GENOUD
     runs may take a long time, it is important for the user to receive
-    feedback.  Hence, print level 1 has been set as the default.}
+    feedback.  Hence, print level 2 has been set as the default.}
   \item{share.type}{
     If \code{share.type} is equal to 1, then GENOUD, at startup, checks
     to see if there is an existing project file (see
@@ -319,9 +319,8 @@
     Non-Uniform Mutation.  Please see the Operators Section for details
     about operators and how they are weighted.}
   \item{P5}{
-    This is the polytope crossover.  This operator requires two
-    parents.  Please see the Operators Section for details about
-    operators and how they are weighted.}
+    This is the polytope crossover.  Please see the Operators Section
+    for details about operators and how they are weighted.}
   \item{P6}{
     Multiple Point Simple Crossover.  Please see the Operators Section
     for details about operators and how they are weighted.}
@@ -378,13 +377,13 @@
   times an operator is called usually equals \eqn{c_{n} = W_{n} \times
   pop.size}{c_n = W_n * pop.size}. \cr
   
-  Operators 5 (Polytope Crossover), 6 (Multiple Point Simple Crossover)
-  and 8 (Heuristic Crossover) require an even number of individuals
-  to work on---i.e., they require two parents.  Therefore, the
-  \code{pop.size} variable and the operators sets must be such that
-  these three operators have an even number of individuals to
-  work with.  If this does not occur, GENOUD automatically upwardly
-  adjusts the population size to make this constraint hold. \cr
+  Operators 6 (Multiple Point Simple Crossover) and 8 (Heuristic
+  Crossover) require an even number of individuals to work on---i.e.,
+  they require two parents.  Therefore, the \code{pop.size} variable and
+  the operators sets must be such that these three operators have an
+  even number of individuals to work with.  If this does not occur,
+  GENOUD automatically upwardly adjusts the population size to make this
+  constraint hold. \cr
   
   Strong uniqueness checks have been built into the operators to help
   ensure that the operators produce offspring different from their

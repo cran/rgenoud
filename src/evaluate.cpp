@@ -1,6 +1,6 @@
 /*
 
-  RGENOUD (limited version)
+  RGENOUD
 
   Walter R. Mebane, Jr.
   Cornell University
@@ -8,11 +8,11 @@
   wrm1@macht.arts.cornell.edu
 
   Jasjeet Singh Sekhon 
-  Harvard University and Lamarck, Inc.
+  Harvard University
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 1.23 2004/02/02 08:01:29 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 1.25 2004/03/03 22:56:19 jsekhon Exp $
 
 */
 
@@ -139,6 +139,9 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
          t_vec;
 
   IVECTOR live;
+  /* for oper4 */
+  IVECTOR parents;
+
 
 
   long count_gener= 1; /*Counter to keep track of the number of generations*/
@@ -165,6 +168,8 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
     i,
     j,
     s;
+  /* for oper 4 */
+  int p2use;
 
 
   double Q,                   /*Probability of the best agent*/
@@ -243,11 +248,15 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   new_genera    = JaMatrixAllocate(pop_size+2, nvars+2);
 
   /* new_genera = JaMatrixAllocate(pop_size+2, nvars+2); */
-  temp       = matrix(1,2,0,nvars);
+  temp       = matrix(0,nvars+1,0,nvars);
   probab     = Gvector(1,pop_size);
   t_vec      = Gvector(1,nvars);
   cum_probab = Gvector(1,pop_size);
   live       = ivector(1,pop_size);
+
+  /*for oper4 Find max(2,nvars) parents for crossover operator 4*/
+  p2use = nvars > 2 ? nvars : 2;
+  parents    = ivector(1,p2use);
 
   Gnvars[Structure->InstanceNumber]=nvars;
 
@@ -288,8 +297,10 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
     break;
   }
 
-  fprintf(output,"Parameter B (hardcoded): %d\n", B);
-  fprintf(output,"Parameter Q (hardcoded): %f\n", Q);
+  if (PrintLevel>2) {
+    fprintf(output,"Parameter B (hardcoded): %d\n", B); 
+    fprintf(output,"Parameter Q (hardcoded): %f\n", Q);
+  }
   fprintf(output,"\n");
 
   fflush(output);
@@ -338,11 +349,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	JaMatrixFree(population, pop_size+2);
 	JaMatrixFree(new_genera, pop_size+2);
 	
-	free_matrix(temp, 1, 2, 0);
+	free_matrix(temp, 0, nvars+1, 0);
 	free_vector(probab, 1);
 	free_vector(t_vec, 1);
 	free_vector(cum_probab, 1);
 	free_ivector(live, 1);
+	free_ivector(parents, 1);
 
 	return(ERROR_CODE);
       }
@@ -374,11 +386,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	JaMatrixFree(population, pop_size+2);
 	JaMatrixFree(new_genera, pop_size+2);
 	
-	free_matrix(temp, 1, 2, 0);
+	free_matrix(temp, 0, nvars+1, 0);
 	free_vector(probab, 1);
 	free_vector(t_vec, 1);
 	free_vector(cum_probab, 1);
 	free_ivector(live, 1);
+	free_ivector(parents, 1);
 
 	return(ERROR_CODE);
       }
@@ -461,11 +474,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  JaMatrixFree(population, pop_size+2);
 	  JaMatrixFree(new_genera, pop_size+2);
 	      
-	  free_matrix(temp, 1, 2, 0);
+	  free_matrix(temp, 0, nvars+1, 0);
 	  free_vector(probab, 1);
 	  free_vector(t_vec, 1);
 	  free_vector(cum_probab, 1);
 	  free_ivector(live, 1);
+	  free_ivector(parents, 1);
 	      
 	  return(ERROR_CODE);
 	}
@@ -504,11 +518,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 		JaMatrixFree(population, pop_size+2);
 		JaMatrixFree(new_genera, pop_size+2);
 		
-		free_matrix(temp, 1, 2, 0);
+		free_matrix(temp, 0, nvars+1, 0);
 		free_vector(probab, 1);
 		free_vector(t_vec, 1);
 		free_vector(cum_probab, 1);
 		free_ivector(live, 1);
+		free_ivector(parents, 1);
 		
 		return(ERROR_CODE);		
 	      } // end of Status < 0
@@ -550,11 +565,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 		    JaMatrixFree(population, pop_size+2);
 		    JaMatrixFree(new_genera, pop_size+2);
 		    
-		    free_matrix(temp, 1, 2, 0);
+		    free_matrix(temp, 0, nvars+1, 0);
 		    free_vector(probab, 1);
 		    free_vector(t_vec, 1);
 		    free_vector(cum_probab, 1);
 		    free_ivector(live, 1);
+		    free_ivector(parents, 1);
 		    
 		    return(ERROR_CODE);
 		  }
@@ -587,11 +603,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    JaMatrixFree(population, pop_size+2);
 	    JaMatrixFree(new_genera, pop_size+2);
 	    
-	    free_matrix(temp, 1, 2, 0);
+	    free_matrix(temp, 0, nvars+1, 0);
 	    free_vector(probab, 1);
 	    free_vector(t_vec, 1);
 	    free_vector(cum_probab, 1);
 	    free_ivector(live, 1);
+	    free_ivector(parents, 1);
 	    
 	    return(ERROR_CODE);
 	  }	      
@@ -701,11 +718,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
       JaMatrixFree(population, pop_size+2);
       JaMatrixFree(new_genera, pop_size+2);
       
-      free_matrix(temp, 1, 2, 0);
+      free_matrix(temp, 0, nvars+1, 0);
       free_vector(probab, 1);
       free_vector(t_vec, 1);
       free_vector(cum_probab, 1);
       free_ivector(live, 1);
+      free_ivector(parents, 1);
 			  
       return(ERROR_CODE);
     }
@@ -736,11 +754,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
       JaMatrixFree(population, pop_size+2);
       JaMatrixFree(new_genera, pop_size+2);
       
-      free_matrix(temp, 1, 2, 0);
+      free_matrix(temp, 0, nvars+1, 0);
       free_vector(probab, 1);
       free_vector(t_vec, 1);
       free_vector(cum_probab, 1);
       free_ivector(live, 1);
+      free_ivector(parents, 1);
 
       return(ERROR_CODE);
     }
@@ -864,62 +883,30 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
                     break;
 
               case 4:
-		/* JS Description: Polytope Crossover */
-                    /*Applying the fourth operator, whole arithmetical crossover*/
-                    if (j4 < (int) P4/2)
+                    /*Applying the fourth operator, GENOUD Polytope Crossover */
+                    if (j4 < (int) P4)
                       {
-                        /*Find two distinct parents for crossover operator 4*/
-                        same = TRUE;
-			SameCount=0;
-			while (same==TRUE) {
-			  SameCount++;
-
-			  first_live  = find_parent(live,pop_size);
-			  second_live = find_parent(live,pop_size);
-
-			  if (SameCount >= (UniquePairs) ) 
-			    break;
-			  
-			  for(i=1; i<=nvars; i++)
-			    if (population[first_live][i] != population[second_live][i])
-			      same = FALSE;
-			} /* end of while same==TRUE loop */
+                        /*Find max(2,nvars) parents for crossover operator 4*/
+			for (i=1; i<p2use; i++) {
+			  parents[i] = find_parent(live,pop_size);
+			  live[parents[i]]++;  /* no decr. first p2use-1 parents */
+			}
+			parents[p2use] = find_parent(live,pop_size);
 			/* check that agents to replace are in range */
-			if (die_now < 3) {
-			  fprintf(output,"Not enough agents to be replaced\n");
+			if (die_now < 2) {
+			  fprintf(output,"No agents to be replaced\n");
 			  exit(1);
 			}
-			live[first_live]--;
-			live[second_live]--;
-			first_die   = die_now-- ;
-			second_die  = die_now-- ;
-			new_genera[first_die][nvars+1]  = 4.0;
-			new_genera[second_die][nvars+1] = 4.0;
-                        if (!same)
-                          {
-                            for(i=1; i<=nvars; i++)
-                              {
-                                temp[1][i] = population[first_live][i];
-                                temp[2][i] = population[second_live][i];
-                              }
-                            oper4(temp[1],temp[2],nvars);
-                            for(i=1; i<=nvars; i++)
-                              {
-                                new_genera[first_die][i]  = temp[1][i];
-                                new_genera[second_die][i] = temp[2][i];
-			      }
-                          }
-			else {
-			  /* copy agent chosen twice into two new indivs */
-			  for(i=1; i<=nvars; i++) {
-			    new_genera[first_die][i]  = 
-			      population[first_live][i];
-			    new_genera[second_die][i] = 
-			      population[second_live][i];
-			  }
-			}
+			new_genera[die_now][nvars+1]  = 4.0;
+			for(j=1; j<=p2use; j++)
+			  for(i=1; i<=nvars; i++)
+			    temp[j][i] = population[parents[j]][i];
+			oper4(temp,p2use,nvars);
+			for(i=1; i<=nvars; i++)
+			  new_genera[die_now][i]  = temp[1][i];
+			die_now--;
                         j4++;
-                      }
+                      }		
                     break;
               case 5:
 		/* JS Description: Multiple Point Simple Crossover
@@ -1121,11 +1108,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 			  JaMatrixFree(population, pop_size+2);
 			  JaMatrixFree(new_genera, pop_size+2);
 
-			  free_matrix(temp, 1, 2, 0);
+			  free_matrix(temp, 0, nvars+1, 0);
 			  free_vector(probab, 1);
 			  free_vector(t_vec, 1);
 			  free_vector(cum_probab, 1);
 			  free_ivector(live, 1);
+			  free_ivector(parents, 1);
 			  
 			  return(ERROR_CODE);
 			}
@@ -1236,11 +1224,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    JaMatrixFree(population, pop_size+2);
 	    JaMatrixFree(new_genera, pop_size+2);
 		
-	    free_matrix(temp, 1, 2, 0);
+	    free_matrix(temp, 0, nvars+1, 0);
 	    free_vector(probab, 1);
 	    free_vector(t_vec, 1);
 	    free_vector(cum_probab, 1);
 	    free_ivector(live, 1);
+	    free_ivector(parents, 1);
 		
 	    return(ERROR_CODE);
 	  }	  
@@ -1279,11 +1268,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 		    JaMatrixFree(population, pop_size+2);
 		    JaMatrixFree(new_genera, pop_size+2);
 		
-		    free_matrix(temp, 1, 2, 0);
+		    free_matrix(temp, 0, nvars+1, 0);
 		    free_vector(probab, 1);
 		    free_vector(t_vec, 1);
 		    free_vector(cum_probab, 1);
 		    free_ivector(live, 1);
+		    free_ivector(parents, 1);
 		
 		    return(ERROR_CODE);		
 		  } // end of Status < 0
@@ -1324,11 +1314,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 			JaMatrixFree(population, pop_size+2);
 			JaMatrixFree(new_genera, pop_size+2);
 			
-			free_matrix(temp, 1, 2, 0);
+			free_matrix(temp, 0, nvars+1, 0);
 			free_vector(probab, 1);
 			free_vector(t_vec, 1);
 			free_vector(cum_probab, 1);
 			free_ivector(live, 1);
+			free_ivector(parents, 1);
 			
 			return(ERROR_CODE);
 		      }
@@ -1361,11 +1352,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 		JaMatrixFree(population, pop_size+2);
 		JaMatrixFree(new_genera, pop_size+2);
 		
-		free_matrix(temp, 1, 2, 0);
+		free_matrix(temp, 0, nvars+1, 0);
 		free_vector(probab, 1);
 		free_vector(t_vec, 1);
 		free_vector(cum_probab, 1);
 		free_ivector(live, 1);
+		free_ivector(parents, 1);
 		
 		return(ERROR_CODE);
 	      }	    
@@ -1412,11 +1404,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      JaMatrixFree(population, pop_size+2);
 	      JaMatrixFree(new_genera, pop_size+2);
 	    
-	      free_matrix(temp, 1, 2, 0);
+	      free_matrix(temp, 0, nvars+1, 0);
 	      free_vector(probab, 1);
 	      free_vector(t_vec, 1);
 	      free_vector(cum_probab, 1);
 	      free_ivector(live, 1);
+	      free_ivector(parents, 1);
 	    
 	      return(ERROR_CODE);
 	    }
@@ -1635,11 +1628,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  JaMatrixFree(population, pop_size+2);
 	  JaMatrixFree(new_genera, pop_size+2);
 	  
-	  free_matrix(temp, 1, 2, 0);
+	  free_matrix(temp, 0, nvars+1, 0);
 	  free_vector(probab, 1);
 	  free_vector(t_vec, 1);
 	  free_vector(cum_probab, 1);
 	  free_ivector(live, 1);
+	  free_ivector(parents, 1);
 
 	  return(ERROR_CODE);
 	}
@@ -1670,11 +1664,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  JaMatrixFree(population, pop_size+2);
 	  JaMatrixFree(new_genera, pop_size+2);
 	  
-	  free_matrix(temp, 1, 2, 0);
+	  free_matrix(temp, 0, nvars+1, 0);
 	  free_vector(probab, 1);
 	  free_vector(t_vec, 1);
 	  free_vector(cum_probab, 1);
 	  free_ivector(live, 1);
+	  free_ivector(parents, 1);
 
 	  return(ERROR_CODE);
 	}
@@ -1743,11 +1738,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      JaMatrixFree(population, pop_size+2);
 	      JaMatrixFree(new_genera, pop_size+2);
 	      
-	      free_matrix(temp, 1, 2, 0);
+	      free_matrix(temp, 0, nvars+1, 0);
 	      free_vector(probab, 1);
 	      free_vector(t_vec, 1);
 	      free_vector(cum_probab, 1);
 	      free_ivector(live, 1);
+	      free_ivector(parents, 1);
 	      
 	      return(ERROR_CODE);
 	  }
@@ -1868,6 +1864,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	free_vector(probab, 1);
 	free_vector(cum_probab, 1);
 	free_ivector(live, 1);
+	free_ivector(parents, 1);
 
 	new_genera    = JaMatrixAllocate(pop_size+2, nvars+2);
 	temp       = matrix(1,2,0,nvars);
@@ -1875,6 +1872,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	t_vec      = Gvector(1,nvars);
 	cum_probab = Gvector(1,pop_size);
 	live       = ivector(1,pop_size);
+	parents    = ivector(1,nvars);
 
 	Structure->AllowDynamicUpdating=0;
       } // end of if AllowDynamicUpdating==1
@@ -1922,11 +1920,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	/* free numeric.c allocations */
 	free_matrix(population, 1, pop_size,0);
 	free_matrix(new_genera, 1, pop_size, 0);
-	free_matrix(temp, 1, 2, 0);
+	free_matrix(temp, 0, nvars+1, 0);
 	free_vector(probab, 1);
 	free_vector(t_vec, 1);
 	free_vector(cum_probab, 1);
 	free_ivector(live, 1);
+	free_ivector(parents, 1);
 	
 	return(ERROR_CODE);
     }
@@ -1961,11 +1960,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   JaMatrixFree(population, pop_size+2);
   JaMatrixFree(new_genera, pop_size+2);
 
-  free_matrix(temp, 1, 2, 0);
+  free_matrix(temp, 0, nvars+1, 0);
   free_vector(probab, 1);
   free_vector(t_vec, 1);
   free_vector(cum_probab, 1);
   free_ivector(live, 1);
+  free_ivector(parents, 1);
 
   return(peak_val);
 
@@ -2438,12 +2438,7 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
     *P8 = 0;
   }
 
-  /* Check to make sure that all operators (i.e., 4, 5, 7) which have to be even numbers are */
-  if (fmod(*P4,2) > 0.0) {
-    fprintf(output,"\nWARNING: Operator 5 (Polytope Crossover) may only be started\n");
-    fprintf(output,"WARNING: an even number of times.  I am increasing this operator by one.\n");
-    *P4=*P4+1;
-  }
+  /* Check to make sure that all operators (i.e., 5, 7) which have to be even numbers are */
   if (fmod(*P5,2) > 0.0) {
     fprintf(output,"\nWARNING: Operator 6 (Multiple Point Simple Crossover) may only be started\n");
     fprintf(output,"WARNING: an even number of times.  I am increasing this operator by one.\n");
@@ -2579,6 +2574,8 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
          t_vec;
 
   IVECTOR live;
+  /* for oper4 */
+  IVECTOR parents;
 
 
   long count_gener= 1; /*Counter to keep track of the number of generations*/
@@ -2605,6 +2602,8 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     i,
     j,
     s;
+  /* for oper 4 */
+  int p2use;
 
 
   double Q,                   /*Probability of the best agent*/
@@ -2681,11 +2680,15 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   PopulationTmp = JaMatrixAllocate(pop_size+1, nvars+2);
   new_genera    = JaMatrixAllocate(pop_size+2, nvars+2);
 
-  temp       = matrix(1,2,0,nvars);
+  temp       = matrix(0,nvars+1,0,nvars);
   probab     = Gvector(1,pop_size);
   t_vec      = Gvector(1,nvars);
   cum_probab = Gvector(1,pop_size);
   live       = ivector(1,pop_size);
+
+  /*for oper4 Find max(2,nvars) parents for crossover operator 4*/
+  p2use = nvars > 2 ? nvars : 2;
+  parents    = ivector(1,p2use);
 
   Gnvars[Structure->InstanceNumber]=nvars;
 
@@ -2729,8 +2732,10 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     break;
   }
 
-  fprintf(output,"Parameter B (hardcoded): %d\n", B);
-  fprintf(output,"Parameter Q (hardcoded): %f\n", Q);
+  if (PrintLevel>2) {
+    fprintf(output,"Parameter B (hardcoded): %d\n", B); 
+    fprintf(output,"Parameter Q (hardcoded): %f\n", Q);
+  }
   fprintf(output,"\n");
 
   fflush(output);
@@ -2785,11 +2790,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	JaMatrixFree(population, pop_size+2);
 	JaMatrixFree(new_genera, pop_size+2);
 	
-	free_matrix(temp, 1, 2, 0);
+	free_matrix(temp, 0, nvars+1, 0);
 	free_vector(probab, 1);
 	free_vector(t_vec, 1);
 	free_vector(cum_probab, 1);
 	free_ivector(live, 1);
+	free_ivector(parents, 1);
 
 	return(ERROR_CODE);
       }
@@ -2820,11 +2826,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	JaMatrixFree(population, pop_size+2);
 	JaMatrixFree(new_genera, pop_size+2);
 	
-	free_matrix(temp, 1, 2, 0);
+	free_matrix(temp, 0, nvars+1, 0);
 	free_vector(probab, 1);
 	free_vector(t_vec, 1);
 	free_vector(cum_probab, 1);
 	free_ivector(live, 1);
+	free_ivector(parents, 1);
 	
 	return(ERROR_CODE);
       }
@@ -2903,11 +2910,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	JaMatrixFree(population, pop_size+2);
 	JaMatrixFree(new_genera, pop_size+2);
 	  
-	free_matrix(temp, 1, 2, 0);
+	free_matrix(temp, 0, nvars+1, 0);
 	free_vector(probab, 1);
 	free_vector(t_vec, 1);
 	free_vector(cum_probab, 1);
 	free_ivector(live, 1);
+	free_ivector(parents, 1);
 	  
 	return(ERROR_CODE);
       }      
@@ -2947,11 +2955,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		JaMatrixFree(population, pop_size+2);
 		JaMatrixFree(new_genera, pop_size+2);
 		
-		free_matrix(temp, 1, 2, 0);
+		free_matrix(temp, 0, nvars+1, 0);
 		free_vector(probab, 1);
 		free_vector(t_vec, 1);
 		free_vector(cum_probab, 1);
 		free_ivector(live, 1);
+		free_ivector(parents, 1);
 		
 		return(ERROR_CODE);
 	      } // end of Status < 0
@@ -2992,11 +3001,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		    JaMatrixFree(population, pop_size+2);
 		    JaMatrixFree(new_genera, pop_size+2);
 		    
-		    free_matrix(temp, 1, 2, 0);
+		    free_matrix(temp, 0, nvars+1, 0);
 		    free_vector(probab, 1);
 		    free_vector(t_vec, 1);
 		    free_vector(cum_probab, 1);
 		    free_ivector(live, 1);
+		    free_ivector(parents, 1);
 		    
 		    return(ERROR_CODE);
 		  }
@@ -3029,11 +3039,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	    JaMatrixFree(population, pop_size+2);
 	    JaMatrixFree(new_genera, pop_size+2);
 	    
-	    free_matrix(temp, 1, 2, 0);
+	    free_matrix(temp, 0, nvars+1, 0);
 	    free_vector(probab, 1);
 	    free_vector(t_vec, 1);
 	    free_vector(cum_probab, 1);
 	    free_ivector(live, 1);
+	    free_ivector(parents, 1);
 	    
 	    return(ERROR_CODE);
 	  }
@@ -3141,11 +3152,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       JaMatrixFree(population, pop_size+2);
       JaMatrixFree(new_genera, pop_size+2);
       
-      free_matrix(temp, 1, 2, 0);
+      free_matrix(temp, 0, nvars+1, 0);
       free_vector(probab, 1);
       free_vector(t_vec, 1);
       free_vector(cum_probab, 1);
       free_ivector(live, 1);
+      free_ivector(parents, 1);
       
       return(ERROR_CODE);
     }
@@ -3175,11 +3187,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       JaMatrixFree(population, pop_size+2);
       JaMatrixFree(new_genera, pop_size+2);
       
-      free_matrix(temp, 1, 2, 0);
+      free_matrix(temp, 0, nvars+1, 0);
       free_vector(probab, 1);
       free_vector(t_vec, 1);
       free_vector(cum_probab, 1);
       free_ivector(live, 1);
+      free_ivector(parents, 1);
       
       return(ERROR_CODE);
     }
@@ -3303,62 +3316,30 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	      break;
 	      
 	    case 4:
-	      /* JS Description: Polytope Crossover */
-	      /*Applying the fourth operator, whole arithmetical crossover*/
-	      if (j4 < (int) P4/2)
+	      /*Applying the fourth operator, GENOUD Polytope Crossover */
+	      if (j4 < (int) P4)
 		{
-		  /*Find two distinct parents for crossover operator 4*/
-		  same = TRUE;
-		  SameCount=0;
-		  while (same==TRUE) {
-		    SameCount++;
-		    
-		    first_live  = find_parent(live,pop_size);
-		    second_live = find_parent(live,pop_size);
-
-		    if (SameCount >= (UniquePairs) ) 
-		      break;
-
-		    for(i=1; i<=nvars; i++)
-		      if ( (int) population[first_live][i] != (int) population[second_live][i])
-			same = FALSE;
-		  } /* end of while same==TRUE loop */
+		  /*Find max(2,nvars) parents for crossover operator 4*/
+		  for (i=1; i<p2use; i++) {
+		    parents[i] = find_parent(live,pop_size);
+		    live[parents[i]]++;  /* no decr. first p2use-1 parents */
+		  }
+		  parents[p2use] = find_parent(live,pop_size);
 		  /* check that agents to replace are in range */
-		  if (die_now < 3) {
-		    fprintf(output,"Not enough agents to be replaced\n");
+		  if (die_now < 2) {
+		    fprintf(output,"No agents to be replaced\n");
 		    exit(1);
 		  }
-		  live[first_live]--;
-		  live[second_live]--;
-		  first_die   = die_now-- ;
-		  second_die  = die_now-- ;
-		  new_genera[first_die][nvars+1]  = 4.0;
-		  new_genera[second_die][nvars+1] = 4.0;
-		  if (!same)
-		    {
-		      for(i=1; i<=nvars; i++)
-			{
-			  temp[1][i] = population[first_live][i];
-			  temp[2][i] = population[second_live][i];
-			}
-		      JaIntegerOper4(temp[1],temp[2],nvars);
-		      for(i=1; i<=nvars; i++)
-			{
-			  new_genera[first_die][i]  = temp[1][i];
-			  new_genera[second_die][i] = temp[2][i];
-			}
-		    }
-		  else {
-		    /* copy agent chosen twice into two new indivs */
-		    for(i=1; i<=nvars; i++) {
-		      new_genera[first_die][i]  = 
-			population[first_live][i];
-		      new_genera[second_die][i] = 
-			population[second_live][i];
-		    }
-		  }
+		  new_genera[die_now][nvars+1]  = 4.0;
+		  for(j=1; j<=p2use; j++)
+		    for(i=1; i<=nvars; i++)
+		      temp[j][i] = population[parents[j]][i];
+		  JaIntegeroper4(temp,p2use,nvars);
+		  for(i=1; i<=nvars; i++)
+		    new_genera[die_now][i]  = temp[1][i];
+		  die_now--;
 		  j4++;
-		}
+		}		
 	      break;
 	    case 5:
 	      /* JS Description: Multiple Point Simple Crossover
@@ -3615,11 +3596,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	    JaMatrixFree(population, pop_size+2);
 	    JaMatrixFree(new_genera, pop_size+2);
 	      
-	    free_matrix(temp, 1, 2, 0);
+	    free_matrix(temp, 0, nvars+1, 0);
 	    free_vector(probab, 1);
 	    free_vector(t_vec, 1);
 	    free_vector(cum_probab, 1);
 	    free_ivector(live, 1);
+	    free_ivector(parents, 1);
 	      
 	    return(ERROR_CODE);
 	  }
@@ -3659,11 +3641,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		    JaMatrixFree(population, pop_size+2);
 		    JaMatrixFree(new_genera, pop_size+2);
 		
-		    free_matrix(temp, 1, 2, 0);
+		    free_matrix(temp, 0, nvars+1, 0);
 		    free_vector(probab, 1);
 		    free_vector(t_vec, 1);
 		    free_vector(cum_probab, 1);
 		    free_ivector(live, 1);
+		    free_ivector(parents, 1);
 		
 		    return(ERROR_CODE);
 		  } // end of Status < 0
@@ -3704,11 +3687,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 			JaMatrixFree(population, pop_size+2);
 			JaMatrixFree(new_genera, pop_size+2);
 			
-			free_matrix(temp, 1, 2, 0);
+			free_matrix(temp, 0, nvars+1, 0);
 			free_vector(probab, 1);
 			free_vector(t_vec, 1);
 			free_vector(cum_probab, 1);
 			free_ivector(live, 1);
+			free_ivector(parents, 1);
 			
 			return(ERROR_CODE);
 		      }	      
@@ -3743,11 +3727,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		  JaMatrixFree(population, pop_size+2);
 		  JaMatrixFree(new_genera, pop_size+2);
 		  
-		  free_matrix(temp, 1, 2, 0);
+		  free_matrix(temp, 0, nvars+1, 0);
 		  free_vector(probab, 1);
 		  free_vector(t_vec, 1);
 		  free_vector(cum_probab, 1);
 		  free_ivector(live, 1);
+		  free_ivector(parents, 1);
 		  
 		  return(ERROR_CODE);
 		}	      
@@ -3854,11 +3839,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  JaMatrixFree(population, pop_size+2);
 	  JaMatrixFree(new_genera, pop_size+2);
 	  
-	  free_matrix(temp, 1, 2, 0);
+	  free_matrix(temp, 0, nvars+1, 0);
 	  free_vector(probab, 1);
 	  free_vector(t_vec, 1);
 	  free_vector(cum_probab, 1);
 	  free_ivector(live, 1);
+	  free_ivector(parents, 1);
 
 	  return(ERROR_CODE);
 	}
@@ -3888,11 +3874,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  JaMatrixFree(population, pop_size+2);
 	  JaMatrixFree(new_genera, pop_size+2);
 	  
-	  free_matrix(temp, 1, 2, 0);
+	  free_matrix(temp, 0, nvars+1, 0);
 	  free_vector(probab, 1);
 	  free_vector(t_vec, 1);
 	  free_vector(cum_probab, 1);
 	  free_ivector(live, 1);
+	  free_ivector(parents, 1);
 	  
 	  return(ERROR_CODE);
 	}
@@ -3966,11 +3953,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	    JaMatrixFree(population, pop_size+2); 
 	    JaMatrixFree(new_genera,pop_size+2); 
 
-	    free_matrix(temp, 1, 2, 0);
+	    free_matrix(temp, 0, nvars+1, 0);
 	    free_vector(probab, 1);
 	    free_vector(t_vec, 1);
 	    free_vector(cum_probab, 1);
 	    free_ivector(live, 1);
+	    free_ivector(parents, 1);
 	    
 	    return(ERROR_CODE);
 	  }
@@ -4091,6 +4079,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	free_vector(probab, 1);
 	free_vector(cum_probab, 1);
 	free_ivector(live, 1);
+	free_ivector(parents, 1);
 
 	new_genera    = JaMatrixAllocate(pop_size+2, nvars+2);
 
@@ -4099,6 +4088,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	t_vec      = Gvector(1,nvars);
 	cum_probab = Gvector(1,pop_size);
 	live       = ivector(1,pop_size);
+	parents    = ivector(1,p2use);
 
 	Structure->AllowDynamicUpdating=0;
       } // end of if AllowDynamicUpdating==1
@@ -4150,11 +4140,13 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	JaMatrixFree(population, pop_size+2); 
 	JaMatrixFree(new_genera,pop_size+2); 
 	
-	free_matrix(temp, 1, 2, 0);
+	free_matrix(temp, 0, nvars+1, 0);
 	free_vector(probab, 1);
 	free_vector(t_vec, 1);
 	free_vector(cum_probab, 1);
 	free_ivector(live, 1);
+	free_ivector(parents, 1);
+
 	
 	return(ERROR_CODE);
     }
@@ -4190,11 +4182,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   JaMatrixFree(population, pop_size+2); 
   JaMatrixFree(new_genera,pop_size+2); 
 
-  free_matrix(temp, 1, 2, 0);
+  free_matrix(temp, 0, nvars+1, 0);
   free_vector(probab, 1);
   free_vector(t_vec, 1);
   free_vector(cum_probab, 1);
   free_ivector(live, 1);
+  free_ivector(parents, 1);
 
   return(peak_val);
 

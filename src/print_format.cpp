@@ -1,6 +1,6 @@
 /*
 
-  RGENOUD (limited version)
+  RGENOUD
 
   Walter R. Mebane, Jr.
   Cornell University
@@ -8,11 +8,11 @@
   wrm1@macht.arts.cornell.edu
 
   Jasjeet Singh Sekhon 
-  Harvard University and Lamarck, Inc.
+  Harvard University
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/print_format.cpp,v 1.23 2004/02/02 08:01:52 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/print_format.cpp,v 1.25 2004/03/03 22:56:19 jsekhon Exp $
 
 */
 
@@ -134,21 +134,34 @@ void print_domains(MATRIX equal, int t_equ, short DataType, FILE *output)
 {
   int i,j;
 
-  if (DataType==1) fprintf(output, "\n\nUpper Domain extended becase we are using integer data.\n");
   fprintf(output,"Domains:\n");
-
-
-  for(i=1; i<=t_equ; i++)
-    {
-      for(j=1; j<=3; j++)
-        {
-          if(j == 2)
-            fprintf(output,"  <=  X%-2d  <=   ",(int)equal[i][j]);
-          else
-            fprintf(output," %e ",equal[i][j]);
-        }
-      fprintf(output,"\n");
-    }
+  //Integer
+  if (DataType==1) 
+  {
+      for(i=1; i<=t_equ; i++)
+      {
+	  for(j=1; j<=3; j++)
+	  {
+	      if(j == 2)
+		  fprintf(output,"  <=  X%-2d  <=   ",(int)equal[i][j]);
+	      else
+		  fprintf(output," %d ",(int) equal[i][j]);
+	  }
+	  fprintf(output,"\n");
+      }
+  } else {
+      for(i=1; i<=t_equ; i++)
+      {
+	  for(j=1; j<=3; j++)
+	  {
+	      if(j == 2)
+		  fprintf(output,"  <=  X%-2d  <=   ",(int)equal[i][j]);
+	      else
+		  fprintf(output," %e ",equal[i][j]);
+	  }
+	  fprintf(output,"\n");
+      }
+  }
 }
 
 /********************************************************************************/

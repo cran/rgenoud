@@ -1,6 +1,6 @@
 #
 #
-#  RGENOUD (limited version)
+#  RGENOUD
 #
 #  Walter R. Mebane, Jr.
 #  Cornell University
@@ -8,11 +8,11 @@
 #  wrm1@macht.arts.cornell.edu
 #
 #  Jasjeet Singh Sekhon 
-#  Harvard University and Lamarck, Inc.
+#  Harvard University
 #  http://jsekhon.fas.harvard.edu/
 #  jsekhon@fas.harvard.edu
 #
-#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/rgenoud.R,v 1.23 2004/02/02 08:01:52 jsekhon Exp $
+#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/rgenoud.R,v 1.25 2004/03/03 22:56:19 jsekhon Exp $
 #
 
 
@@ -116,18 +116,19 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
 
 
   gout <- .Call("rgenoud", as.function(fn), new.env(),
-               as.integer(nvars), as.integer(pop.size), as.integer(max.generations),
-               as.integer(wait.generations),
-               as.integer(nStartingValues), as.vector(starting.values),
-               as.vector(P), as.matrix(Domains),
-               as.integer(max), as.integer(gradient.check), as.integer(boundary.enforcement),
-               as.double(solution.tolerance), as.integer(BFGS), as.integer(data.type.int),
-               as.integer(provide.seeds), as.integer(unif.seed), as.integer(int.seed),
-               as.integer(print.level), as.integer(share.type), as.integer(instance.number),
-               as.integer(MemoryMatrix), as.integer(Debug),
-               as.character(output.path), as.integer(output.type), as.character(project.path),
-               as.integer(hard.generation.limit),
-               as.function(genoud.optim.wrapper101), as.integer(roptim));
+                as.integer(nvars), as.integer(pop.size), as.integer(max.generations),
+                as.integer(wait.generations),
+                as.integer(nStartingValues), as.vector(starting.values),
+                as.vector(P), as.matrix(Domains),
+                as.integer(max), as.integer(gradient.check), as.integer(boundary.enforcement),
+                as.double(solution.tolerance), as.integer(BFGS), as.integer(data.type.int),
+                as.integer(provide.seeds), as.integer(unif.seed), as.integer(int.seed),
+                as.integer(print.level), as.integer(share.type), as.integer(instance.number),
+                as.integer(MemoryMatrix), as.integer(Debug),
+                as.character(output.path), as.integer(output.type), as.character(project.path),
+                as.integer(hard.generation.limit),
+                as.function(genoud.optim.wrapper101), as.integer(roptim),
+                PACKAGE="rgenoud");
 
   if (hessian==TRUE)
     {
