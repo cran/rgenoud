@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/unif.cpp,v 1.19 2002/10/19 08:30:20 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/unif.cpp,v 1.20 2002/11/06 02:12:19 jsekhon Exp $
 
 */
 

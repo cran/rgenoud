@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 1.19 2002/10/19 08:29:39 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 1.20 2002/11/06 02:11:21 jsekhon Exp $
 
 */
 
@@ -254,9 +254,9 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   if (Structure->MemoryUsage==1)
     {
       if (HardGenerationLimit==0)
-	MemorySize = MAXMEMORY+1;
+	MemorySize=(MaxGenerations+1)*pop_size+1+pop_size;
       else
-	MemorySize=(MaxGenerations+1)*pop_size+1;
+	MemorySize=(MaxGenerations+1)*pop_size+1+pop_size;
       
       Memory = JaMatrixAllocate(MemorySize, nvars+2);
     }
@@ -469,6 +469,11 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      
 	  return(ERROR_CODE);
 	}
+      if ( (UniqueCount+pop_size) >= MemorySize )
+	{
+	  Structure->MemoryUsage=0;
+	  fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
+	} /* end of if */
     } // end of Memory based evaluation
   else
     {
@@ -1239,7 +1244,11 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 		
 	    return(ERROR_CODE);
 	  }	  
-
+	  if ( (UniqueCount+pop_size) >= MemorySize )
+	    {
+	      Structure->MemoryUsage=0;
+	      fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
+	    } /* end of if */
 	} // end of MemoryUsage==1
       else
 	{
@@ -2683,9 +2692,9 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   if (Structure->MemoryUsage==1)
     {
       if (HardGenerationLimit==0)
-	MemorySize = MAXMEMORY+1;
+	MemorySize=(MaxGenerations+1)*pop_size+1+pop_size;
       else
-	MemorySize=(MaxGenerations+1)*pop_size+1;
+	MemorySize=(MaxGenerations+1)*pop_size+1+pop_size;
       
       Memory = JaMatrixAllocate(MemorySize, nvars+2);
     }
@@ -2902,6 +2911,11 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  
 	return(ERROR_CODE);
       }      
+      if ( (UniqueCount+pop_size) >= MemorySize )
+	{
+	  Structure->MemoryUsage=0;
+	  fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
+	} /* end of if */
     } // end of Memory based evaluation
   else
     {
@@ -3609,6 +3623,11 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	      
 	    return(ERROR_CODE);
 	  }
+	  if ( (UniqueCount+pop_size) >= MemorySize )
+	    {
+	      Structure->MemoryUsage=0;
+	      fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
+	    } /* end of if */
 	} // end of Memory based evaluation
         else
 	  {

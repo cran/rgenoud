@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.h,v 1.19 2002/10/19 08:29:49 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.h,v 1.20 2002/11/06 02:11:35 jsekhon Exp $
 
 */
 
@@ -64,7 +64,6 @@ inline void MyRprintf(FILE *foo, char *out, ...)
 #define MAXTHREADS 20
 #define MAXINSTANCES 20
 #define ERROR_CODE -99999
-#define MAXMEMORY 1250000
 #define BIGNUMBER 1e300
 #define MAX_OPER_UNIQUE_TRY 200
 
@@ -81,7 +80,6 @@ inline void MyRprintf(FILE *foo, char *out, ...)
 #define HEAD 1
 #define TAIL 0
 #define TRIES 1000
-#define MAX_VAR 25
 #define MULT 25173
 #define INCR 13849
 #define MOD ((long int) 65536)

@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.cpp,v 1.19 2002/10/19 08:29:47 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.cpp,v 1.20 2002/11/06 02:11:32 jsekhon Exp $
 
 */
 
@@ -138,10 +138,6 @@ double genoud(struct GND_IOstructure *Structure)
   fin.c =   Structure->nvars+2;          /*x2 variables + lower limits + upper limits*/
 
   nvars = Structure->nvars;
-  if (nvars > MAX_VAR)
-    fprintf(output, "Too many variables - Increase MAX_VAR in header file\n");
-
-  /* Boundary Enforcement: 1: no trespassing; 0: trespassing but no camping; -1 anything goes! */
 
   /*Allocating memory for all the vectors and matrices*/
   final_mat = matrix(1,fin.r,1,fin.c);

@@ -7,7 +7,7 @@
 #  http://jsekhon.fas.harvard.edu/
 #  jsekhon@fas.harvard.edu
 #
-#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/zzz.R,v 1.19 2002/10/19 08:30:28 jsekhon Exp $
+#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/zzz.R,v 1.20 2002/11/06 02:12:26 jsekhon Exp $
 #
 
 .First.lib <- function(lib, pkg) library.dynam("rgenoud", pkg, lib)
