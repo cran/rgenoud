@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/print_format.cpp,v 1.22 2003/07/12 04:57:23 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/print_format.cpp,v 1.23 2004/02/02 08:01:52 jsekhon Exp $
 
 */
 

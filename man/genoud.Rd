@@ -23,11 +23,10 @@
   derivative information is useful.
   }
 
-\usage{ genoud
-  (fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wait.generations=10,
-   hard.generation.limit=TRUE, starting.values=NULL, MemoryMatrix=NULL, Debug=FALSE, 
-   Domains=NULL, default.domains=10,
-   gradient.check=TRUE, boundary.enforcement=2,
+\usage{genoud(fn, nvars, max=FALSE, pop.size=1000, 
+   max.generations=100, wait.generations=10, hard.generation.limit=TRUE,
+   starting.values=NULL, MemoryMatrix=NULL, Debug=FALSE, Domains=NULL, 
+   default.domains=10, gradient.check=TRUE, boundary.enforcement=2,
    solution.tolerance=0.001, BFGS=TRUE, data.type.int=FALSE, hessian=FALSE,
    unif.seed=812821, int.seed=53058,
    print.level=2, share.type=0, instance.number=0,
@@ -431,8 +430,13 @@
 \references{
   Sekhon, Jasjeet Singh and Walter R. Mebane, Jr. 1998.  ``Genetic
   Optimization Using Derivatives: Theory and Application to Nonlinear
-  Models.'' \emph{Political Analysis} 7: 187-210.
-  \url{HTTP://jsekhon.fas.harvard.edu/genoud/genoud.pdf}
+  Models.'' \emph{Political Analysis}, 7: 187-210.
+  \url{http://jsekhon.fas.harvard.edu/genoud/genoud.pdf} \cr
+
+  Mebane, Walter R., Jr. and Jasjeet S. Sekhon. 2004. ``Robust
+  Estimation and Outlier Detection for Overdispersed Multinomial Models
+  of Count Data.''  \emph{American Journal of Political Science}, 48
+  (April): 391-410. \url{http://elections.fas.harvard.edu/election2000/MebaneSekhon.multinom.pdf}
 }
 \author{Walter R. Mebane, Jr., Cornell University,
   \email{wrm1@cornell.edu}, \url{http://macht.arts.cornell.edu/wrm1/} \cr
