@@ -24,7 +24,7 @@
   }
 
 \usage{ genoud
-  (fn, nvars, max=FALSE, pop.size=100, max.generations=100, wait.generations=10,
+  (fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wait.generations=10,
    hard.generation.limit=TRUE, starting.values=NULL, MemoryMatrix=NULL, Debug=FALSE, 
    Domains=NULL, default.domains=10,
    gradient.check=TRUE, boundary.enforcement=2,
@@ -36,22 +36,28 @@
 }
 \arguments{
   \item{fn}{
-    The function to be minimized by default (or maximized if max=T), with
-    first argument the vector of parameters over which minimizing is to
-    take place.  It should return a scalar result.
+    The function to be minimized (or maximized if
+    max=\emph{TRUE}).  The first argument of the function must be the
+    vector of parameters over which minimizing is to
+    occur.  The function must return a scalar result.
     
-    For example, say we wish to maximize the \code{sin()} function.  We
-    can simply call genoud by \code{genoud(sin, nvars=1)}.}
+    For example, if we wish to \emph{maximize} the \code{sin()}
+    function.  We can simply call genoud by \code{genoud(sin,
+    nvars=1,max=TRUE)}.}
   \item{nvars}{
     This is the number of variables the function to be minimized (or
     maximized) takes.}
   \item{max}{
-    Maximization (True) or Minimizing (False).  This variable tells GENOUD
+    Maximization (\emph{TRUE}) or Minimizing (\emph{FALSE}).  This
+    variable tells GENOUD
     if it is to minimize or maximize the objective function.}
   \item{pop.size}{
     Population Size.  This is the number of individuals GENOUD uses to
     solve the optimization problem.  There are several restrictions on
-    what the value of this number can be.  These constraints originate
+    what the value of this number can be.  No matter what population
+    size the user requests, the number is automatically adjusted to make
+    certain that the relevant restrictions are satisfied.  These
+    restrictions originate
     in what is required by several of the operators.  In particular,
     operators 5 (Polytope Crossover), 6 (Multiple Point Simple
     Crossover) and 8 (Heuristic Crossover) require an even number of individuals
@@ -59,83 +65,86 @@
     the \code{pop.size} variable and the operators sets must be such
     that these three operators have
     an even number of individuals to work with.  If this does not occur,
-    the population size is increased until this is so.}
+    the population size is automatically increased until this constraint
+    is satisfied.}
   \item{max.generations}{
     Maximum Generations.  This is the maximum number of generations that
     GENOUD will run when attempting to optimize a function.  This is a
     \emph{soft} limit.  The maximum generation limit will be binding for
     GENOUD only if \code{hard.generation.limit} has
-    been set equal to TRUE.  If it has not been set equal to TRUE,, two
-    soft  triggers control when GENOUD stops:
+    been set equal to \emph{TRUE}.  If it has not been set equal to
+    \emph{TRUE}, two soft  triggers control when GENOUD stops:
     \code{wait.generations} and \code{gradient.check}. \cr
     
     Although, the \code{max.generations} variable is not, by default,
     binding, it is nevertheless important because many operators use it
     to adjust
     their behavior.  In essence, many of the operators become less random
-    as the generation count gets closer to the max.generations limit.  If
-    the limit is hit and GENOUD, because of the soft triggers, decides to
-    continue working, GENOUD automatically increases the max.generation
-    limit.  GENOUD will print to the screen what it has decided to do. \cr
+    as the generation count gets closer to the \code{max.generations}
+    limit.  If
+    the limit is hit and GENOUD decides to
+    continue working, GENOUD automatically increases the
+    \code{max.generation}
+    limit.\cr
     
-    Please see \code{MemoryMatrix} for some interesting interactions
+    Please see \code{MemoryMatrix} for some important interactions
     with memory management.}
   \item{wait.generations}{
-    If there is no improvement in the objective function of
-    wait.generations number of generations, GENOUD will think that it has
+    If there is no improvement in the objective function in this number
+    of generations, GENOUD will think that it has
     found the optimum.  If the
     \code{gradient.check} trigger has been
-    turned on, GENOUD will only start counting wait.generations if the
-    gradients are zero (within
-    \code{solution.tolerance}).  The
-    other variable controlling termination is
-    \code{max.generations}.}
+    turned on, GENOUD will only start counting \code{wait.generations}
+    if the gradients are within
+    \code{solution.tolerance} of zero.  The
+    other variables controlling termination are
+    \code{max.generations} and \code{hard.generation.limit}.}
   \item{hard.generation.limit}{
-    By default the \code{max.generations}
-    variable is a binding constraint for GENOUD.  But it fails to be
-    binding if the hard.generation.limit is set to FALSE. \cr
+    This logical variable determines if the \code{max.generations}
+    variable is a binding constraint for GENOUD.  If
+    \code{hard.generation.limit} is \emph{FALSE}, then GENOUD may exceed
+    the \code{max.generations} count if either the objective function
+    has improved within a given number of generations (determined by
+    \code{wait.generations}) or if the gradients are not zero
+    (determined by \code{gradient.check}). \cr
 
-    Please see \code{MemoryMatrix} for some
-    interesting interactions with memory management.}
+    Please see \code{MemoryMatrix} for some important interactions
+    with memory management.}
   \item{starting.values}{
-    This is a vector contains the starting values that GENOUD will use
-    at startup.  The starting.values vector is a way for the user to
-    insert \emph{one} individual into the starting population.
-    GENOUD will randomly create the other individuals in the
-    population.}
+    This vector contains the starting values which GENOUD will use
+    at startup.  The \code{starting.values} vector is a way for the user
+    to insert \emph{one} individual into the starting population.
+    GENOUD will randomly create the other individuals.}
   \item{MemoryMatrix}{
-    This variable controls how aggressive GENOUD is in saving memory.  The
-    variable my be \eqn{T}{T} or \eqn{F}{F}.  If it is \eqn{F}{F} GENOUD
-    will
-    be aggressive in
-    conserving memory.  The most significant implication of this variable
-    being set to \eqn{F}{F} is that GENOUD will no longer maintain a memory
-    matrix off all evaluated individuals.  Therefore, GENOUD may request
+    This variable controls if GENOUD sets up a memory matrix.  Such a
+    matrix ensures that GENOUD will request the fitness evaluation
+    of a given set of parameters only once. The variable may be
+    \emph{TRUE} or \emph{FALSE}.  If it is \emph{FALSE}, GENOUD
+    will be aggressive in
+    conserving memory.  The most significant negative implication of
+    this variable being set to \emph{FALSE} is that GENOUD will no
+    longer maintain a memory
+    matrix of all evaluated individuals.  Therefore, GENOUD may request
     evaluations which it has already previously requested.  When
-    \code{nvars} is large---i.e., \eqn{> 50}{> 50}, the memory
-    matrix consumes a large amount of RAM.  Therefore, it is highly
-    recommended that will systems with 512MB of RAM, this variable be set
-    to \eqn{F}{F} if the number of variables being optimized is greater
-    than 50. \cr
+    \code{nvars} is large, the memory matrix consumes a large amount of RAM.\cr
     
-    By default GENOUD sets MemoryMatrix equal to \eqn{T}{T} unless the
-    number of
-    parameters is greater than 20.  In that case, GENOUD sets the default
-    value equal to \eqn{F}{F}. \cr
+    By default GENOUD sets \code{MemoryMatrix} equal to \emph{TRUE} unless the
+    number of parameters is greater than 20.  In that case, GENOUD sets the default
+    value equal to \emph{FALSE}. \cr
     
-    GENOUD's MemoryMatrix will usually require \emph{significantly} less
-    memory if the user sets
-    \code{hard.generation.limit} equal
-    to TRUE.  Doing this is usually a good way of conserving memory while
-    still making use of the MemoryMatrix structure.}
+    GENOUD's memory matrix will require \emph{significantly} less
+    memory if the user sets \code{hard.generation.limit} equal
+    to \emph{TRUE}.  Doing this is a good way of conserving
+    memory while still making use of the memory matrix structure.}
   \item{Debug}{
-    This variable turns on some debugging information.  This variable my
-    be \eqn{T}{T} or \eqn{F}{F}.}
+    This variable turns on some debugging information.  This variable may
+    be \emph{TRUE} or \emph{FALSE}.}
   \item{Domains}{
     This is a \code{nvars} \eqn{\times 2}{*2}
-    matrix.  The fist column is the lower bound, and the second column is
-    the upper bound.  None of GENOUD's starting population will be outside
-    of the bounds.  But some of the operators may generate children which
+    matrix.  The first column is the lower bound, and the second column is
+    the upper bound.  None of GENOUD's starting population will be
+    generated outside of the bounds.  But some of the operators may
+    generate children which
     will be outside of the bounds unless the
     \code{boundary.enforcement} flag is
     turned on. \cr
@@ -143,78 +152,86 @@
     If the user does not provide any values for Domains, GENOUD will setup
     default domains using \code{default.domains}.}
   \item{default.domains}{
-    If \code{Domains}, GENOUD will create a
+    If the user does not want to provide a \code{Domains} matrix,
+    domains may nevertheless be set by the user with this easy to use
+    scalar option.  GENOUD will create a
     Domains matrix by setting the lower bound for all of the parameters
     equal to -1 \eqn{\times}{*} \code{default.domains} and the upper
     bound equal to \code{default.domains}.}
   \item{gradient.check}{
-    If this variable is \eqn{T}{T}, GENOUD will not start counting
-    \code{wait.generations} unless the gradients are zero or
-    \code{solution.tolerance} close to
-    zero.  This variable has not effect if the
-    \code{max.generations} limit is hit.}
+    If this variable is \emph{TRUE}, GENOUD will not start counting
+    \code{wait.generations} unless each gradient is
+    \code{solution.tolerance} close to zero.  This
+    variable has no effect if the \code{max.generations} limit has been
+    hit and the \code{hard.generation.limit} option has been set to
+    \emph{TRUE}.}
   \item{boundary.enforcement}{
     This variable determines the degree to which GENOUD obeys the
-    \code{boundary constraints}.  Notwithstanding
+    boundary constraints.  Notwithstanding
     the value of the variable, none of GENOUD's starting population will
     be outside of the bounds.  But some of the operators may generate
     children which will be outside of the bounds unless the
-    boundary.enforcement flag is turned on. \cr
+    \code{boundary.enforcement} flag is turned on. \cr
     
     \code{boundary.enforcement} has three possible values: 0 (anything goes), 1
     (regular), and 2 (no trespassing):
     \itemize{
       \item{\emph{0: Anything Goes}}{
 	This option allows any of the operators to
-	create out-of-bounds individuals and these will be included in the
-	population if their fit is good enough.  No special attention is
-	payed to the boundaries after random individual creation (which is
-	guaranteed to create in-bounds individuals).}
+	create out-of-bounds individuals and these individuals will be
+	included in the
+	population if their fit values are good enough.  The boundaries are only
+	important when generating random individuals.}
       \item{\emph{1: Regular}}{
 	This allows operators (particularly those operators
 	which use the derivative based optimizer, BFGS) to go out-of-bounds
-	during the creation of an individual (i.e., out-of-bounds) values
-	will often have to be evaluated.  But when the operator has decided
-	on an individual, it \emph{must} be in bounds to be accepted. \cr}
+	during the creation of an individual (i.e., out-of-bounds values
+	will often be evaluated).  But when the operator has decided
+	on an individual, it \emph{must} be in bounds to be acceptable.}
       \item{\emph{2: No Trespassing}}{
 	No out-of-bounds evaluations will ever be requested.}}}
   \item{solution.tolerance}{
     This is the tolerance level used by GENOUD.  Numbers within
-    solution.tolerance are considered to be equal.  This is particularly
+    \code{solution.tolerance} are considered to be equal.  This is
+    particularly
     important when it comes to evaluating \code{wait.generations} and
     conducting the \code{gradient.check}.}
   \item{BFGS}{
     This variable denotes whether or not GENOUD applies a quasi-Newton
     derivative optimizer (BFGS) to the best individual at the end of each
-    generation after the initial one.  Turning BFGS to false does not mean
-    that the BFGS will never be used.  In particular, Operator 9
-    (Local-Minimum Crossover) has to be set to zero.}
+    generation after the initial one.  Setting BFGS to \emph{FALSE} does
+    not mean that the BFGS will never be used.  In particular, Operator 9
+    (Local-Minimum Crossover) must also be set to zero.}
   \item{data.type.int}{
-    This variable informs GENOUD of the data type of the parameters that
-    the function to be optimized uses.  If the variable is \eqn{T}{T},
+    This option sets the data type of the parameters of the function to
+    be optimized.  If the variable is \emph{TRUE},
     GENOUD is
     informed that it is dealing with integer values.  \emph{Use of the
       integer data type is supported only as a beta feature.}  Some of the
-    included operators will not work well with the integer data type. \cr
+    included operators will not work well with integer type
+    parameters. \cr
     
-    When the integer type is used, GENOUD never uses derivative
+    With integer parameters, GENOUD never uses derivative
     information.  This implies that the BFGS quasi-Newton optimizer is
-    never used---i.e., the \code{BFGS} flag is false.  It also implies
+    never used---i.e., the \code{BFGS} flag is set to \emph{FALSE}.  It
+    also implies
     that Operator 9 (Local-Minimum Crossover) is set to zero and that
     gradient checking (as a convergence criterion) is turned off.  No
-    matter what the values of these other variables is, the value of
-    data.type.int takes precedence---i.e., if GENOUD is told that its is
-    searching over an integer parameter space all everything that
-    requires gradient information is turned off. \cr
+    matter what other options have been set to,
+    \code{data.type.int} takes precedence---i.e., if GENOUD is told that
+    it is searching over an integer parameter space, gradient
+    information is never considered. \cr
     
-    There is no option to mix the two types of data.  If one wants to
-    mix the two, it is suggested that the user pick integer type and in
+    There is no option to mix integer and floating point parameters.  If
+    one wants
+    to mix the two, it is suggested that the user pick integer type and in
     her objective function map a particular integer range into a
     floating point number range.  For example, tell GENOUD to search
     from 0 to 100 and divide by 100 to obtain a search grid of 0 to 1.0
     (by .1).}
   \item{hessian}{
-    When this flag is set to TRUE, GENOUD will return the hessian matrix
+    When this flag is set to \emph{TRUE}, GENOUD will return the hessian
+    matrix
     at the solution as part of its return list.  A user can use this
     matrix to calculate standard errors.}
   \item{unif.seed}{
@@ -227,54 +244,61 @@
     This variable controls the level of printing that GENOUD does.  There
     are three possible levels: 0 (minimal printing), 1 (normal), and 2
     (detailed).  If level 2 is selected, GENOUD will print details about
-    the population at each generation.  The print.level variable also
-    significantly affects how much detail is placed in the Project
-    File---see \code{project.path}.}
+    the population at each generation.  The \code{print.level} variable
+    also significantly affects how much detail is placed in the project
+    file---see \code{project.path}.  Note that R convention would have
+    us at print level 0 (minimal printing).  However, because GENOUD
+    runs may take a long time, it is important for the user to receive
+    feedback.  Hence, print level 1 has been set as the default.}
   \item{share.type}{
-    If share.type is equal to 1, then GENOUD, at startup, checks to see if
-    there is an existing Project File (see \code{project.path}).  If such a file exists,
-    it initializes its original population using it. \cr
+    If \code{share.type} is equal to 1, then GENOUD, at startup, checks
+    to see if there is an existing project file (see
+    \code{project.path}).  If such a file exists, it initializes its
+    original population using it. \cr
     
-    If the Project File contains a smaller population than the current
+    If the project file contains a smaller population than the current
     GENOUD run, GENOUD will randomly create the necessary individuals.  If
-    the Project File contains a larger population than the current GENOUD
+    the project file contains a larger population than the current GENOUD
     run, GENOUD will kill the necessary individuals using exponential
     selection. \cr
     
     If the number of variables (see \code{nvars})
-    reported in the Project File is different from the current GENOUD run,
-    GENOUD does not use the Project File (regardless of the value of
-    share.type) and generates the necessary starting population at
-    random.}
+    reported in the project file is different from the current GENOUD run,
+    GENOUD does not use the project file (regardless of the value of
+    \code{share.type}) and GENOUD generates the necessary starting
+    population at random.}
   \item{instance.number}{
-    Number of Concurrent instances of GENOUD.  This number (starting from
-    0) denotes the number of parallel running instances of GENOUD.  GENOUD
-    then sets up its random number generators and other such structures so
-    that the multiple instances do not interfere with each other.  It is
-    up to the user to make certain that GENOUD is not always writing to
+    This number (starting from 0) denotes the number of recursive
+    instances of GENOUD.  GENOUD then sets up its random number
+    generators and other such structures so that the multiple instances
+    do not interfere with each other.  It is
+    up to the user to make certain that the different instances of
+    GENOUD are not writing to
     the same output file(s): see \code{output.path} and
     \code{project.path}. \cr
     
-    For the R version of GENOUD, this variable is of greatly limited use.
-    It is basically there in case GENOUD is being used to optimize
-    GENOUD.}
+    For the R version of GENOUD this variable is of limited use.
+    It is basically there in case a GENOUD run is being used to optimize
+    the result of another GENOUD run (i.e., a recursive
+    implementation).}
   \item{output.path}{
     This is the full (relative) path to where GENOUD's output is to go.
-    If the value of output.path= ``stdout'', then GENOUD's output will go
-    to standard output.  Also see \code{output.append} and \code{project.path}.}
+    If the value of \code{output.path}= ``stdout'', then GENOUD's output
+    will go to standard output in UNIX and to the GUI console in Windows.
+    Also see \code{output.append} and \code{project.path}.}
   \item{output.append}{
     If output is being sent to a file (see \code{output.path}), this logical variable
     tells GENOUD whether it should append to the file if it already
-    exists, or if it should overwrite an existing file.}
+    exists or if it should overwrite an existing file.}
   \item{project.path}{
-    This is the path for the GENOUD project file.  The behavior of the
-    Project File depends on the \code{print.level} chosen.  If the
+    This is the path of the GENOUD project file.  The behavior of the
+    project file depends on the \code{print.level} chosen.  If the
     \code{print.level} variable is set to
     1, then the project file is rewritten after each generation.
     Therefore, only the currently fully completed generation is included
     in the file.  If the \code{print.level} variable is set
-    to 2, then each new generation is simply appended to the Project File.
-    For all other values of \code{print.level}, the Project File is not created.}
+    to 2, then each new generation is simply appended to the project file.
+    For all other values of \code{print.level}, the project file is not created.}
   \item{P1}{
     This is the cloning operator.  GENOUD always clones the best
     individual each generation.  But this operator clones others as
@@ -306,21 +330,22 @@
     Heuristic Crossover.  Please see the Operators Section for details
     about operators and how they are weighted.}
   \item{P9}{
-    Local-Minimum Crossover: BFGS.  This is \emph{very} CPU intensive,
-    and should be rarely used.  Please see the Operators Section for
-    details about operators and how they are weighted.}  
+    Local-Minimum Crossover: BFGS.  This is rather CPU intensive,
+    and should be generally used less than the other operators.  Please
+    see the Operators Section for details about operators and how they are weighted.}  
 }
 \value{
   GENOUD returns a list with 7 objects.  8 objects are returned if the
-  user as requested the hessian to be calculated at the
-    solution---see the \code{hessian} variable.  They are:
+  user has requested the hessian to be calculated at the
+    solution.  Please see the \code{hessian} option.  The returned
+    objects are:
 
   \item{value}{
     This variable contains the fitness value at the solution.}
   \item{generations}{
     This variables contains the number of generations GENOUD ran for.}
   \item{peakgeneration}{
-    This variables contains the generation number at which GENOUD found
+    This variable contains the generation number at which GENOUD found
     the solution.}
   \item{pop.size}{
     This variable contains the population size that GENOUD actually used.
@@ -330,13 +355,13 @@
     This vector contains the parameter values found at the solution.}
   \item{gradients}{
     This vector contains the gradients found at the solution.  If no
-    gradients were calculated, they are reported to by \eqn{-1.0}{-1.0}.}
+    gradients were calculated, they are reported to be \eqn{-1.0}.}
   \item{operators}{
     This vector reports the actual number of operators (of each type)
     GENOUD used.  Please see the Operators Section for details.}    
   \item{hessian}{
     If the user has requested the hessian
-      matrix to be returned---via the \code{hessian} flag, the hessian
+      matrix to be returned (via the \code{hessian} flag), the hessian
       at the solution will be returned.  The user may use this matrix to calculate standard
       errors.}    
 }
@@ -356,34 +381,52 @@
   to work on---i.e., they require two parents.  Therefore, the
   \code{pop.size} variable and the operators sets must be such that
   these three operators have an even number of individuals to
-  work with.  If this does not occur, GENOUD (upwardly) adjusts the
-  population size to make this constraint hold. \cr
+  work with.  If this does not occur, GENOUD automatically upwardly
+  adjusts the population size to make this constraint hold. \cr
   
   Strong uniqueness checks have been built into the operators to help
   ensure that the operators produce offspring different from their
-  parents, but this does not always happen! \cr
+  parents, but this does not always happen. \cr
   
   Note that GENOUD always keeps the best individual each generation. \cr
   
   GENOUD's 9 operators are: \cr
   
-  \itemize{
-    \item{1}{Cloning}
-    \item{2}{Uniform Mutation}
-    \item{3}{Boundary Mutation}
-    \item{4}{Non-Uniform Crossover}
-    \item{5}{Polytope Crossover}
-    \item{6}{Multiple Point Simple Crossover}
-    \item{7}{Whole Non-Uniform Mutation}
-    \item{8}{Heuristic Crossover}
-    \item{9}{Local-Minimum Crossover: BFGS}
-  }}
+  \enumerate{
+    \item Cloning
+    \item Uniform Mutation
+    \item Boundary Mutation
+    \item Non-Uniform Crossover
+    \item Polytope Crossover
+    \item Multiple Point Simple Crossover
+    \item Whole Non-Uniform Mutation
+    \item Heuristic Crossover
+    \item Local-Minimum Crossover: BFGS}
+  For more information please see Table 1 of the reference article: 
+  \url{http://jsekhon.fas.harvard.edu/genoud/node7.shtml}.}
+\note{
+  The most important options affecting performance are those determining
+  population size (\code{pop.size}) and the
+  number of generations the algorithm runs
+  (\code{max.generations}, \code{wait.generations},
+  \code{hard.generation.limit} and \code{gradient.check}).  Search
+  performance is expected to improve as
+  the population size and the number of generations the program runs
+  increase.  These and the other options should be adjusted for the
+  problem at hand.  Please pay particular attentions to the search
+  domains (\code{Domains} and \code{default.domains}). For more information
+  please see the reference article.}
 \references{
   Sekhon, Jasjeet Singh and Walter R. Mebane, Jr. 1998.  ``Genetic
   Optimization Using Derivatives: Theory and Application to Nonlinear
   Models.'' \emph{Political Analysis} 7: 187-210.
-  HTTP://jsekhon.fas.harvard.edu/genoud
+  \url{HTTP://jsekhon.fas.harvard.edu/genoud/genoud.pdf}
 }
+\author{Walter R. Mebane, Jr., Cornell University,
+  \email{wrm1@cornell.edu}, \url{http://macht.arts.cornell.edu/wrm1/} \cr
+
+  Jasjeet S. Sekhon, Harvard University, \email{jasjeet\_sekhon@harvard.edu},
+  \url{http://jsekhon.fas.harvard.edu/}}
 \seealso{
   \code{\link{optim}}.
 }
@@ -394,7 +437,8 @@
 #minimize the sin function
  sin2 <- genoud(sin, nvars=1, max=FALSE);
 
-#maximimize a univariate normal mixture which looks like a claw
+#maximize a univariate normal mixture which looks like a claw and
+#plot it
 claw <- function(xx) {
   Nd <- function(x, mu, sigma) {
     w <- (1.0/sqrt(2.0*pi*sigma*sigma)) ;
@@ -409,8 +453,11 @@ claw <- function(xx) {
   as.double(y);
 }
  claw1   <- genoud(claw, nvars=1,P9=100,max=TRUE);
+ xx <- seq(-3,3,.05);
+ plot(xx,lapply(xx,claw),type="l",xlab="Parameter",ylab="Fit",main="RGENOUD: Maximize the Claw Density");
+ points(claw1$par,claw1$value,col="red");
 
-#maximimize a bivariate normal mixture which looks like a claw
+#maximize a bivariate normal mixture which looks like a claw
 biclaw <- function(xx) {
   mNd2 <- function(x1, x2, mu1, mu2, sigma1, sigma2, rho)
     {
@@ -438,4 +485,5 @@ biclaw <- function(xx) {
 \keyword{nonlinear}
 %  LocalWords:  genoud GENetic GAs fn nvars max MemoryMatrix BFGS hessian unif
 %  LocalWords:  stdout Polytope cr emph eqn GENOUD's peakgeneration dfrac optim
-%  LocalWords:  seealso
+%  LocalWords:  seealso saddlepoints lapply xlab ylab biclaw mNd polytope cdots
+%  LocalWords:  frac url jasjeet RGENOUD

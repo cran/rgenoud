@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 1.18 2002/10/17 03:45:19 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 1.19 2002/10/19 08:29:39 jsekhon Exp $
 
 */
 
@@ -2407,15 +2407,15 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
   }
   
   if (tP > 0) {
-    *P0 = round(  (Structure->P[0] /  tP) * (double) (*PopSize-2) );
-    *P1 = round(  (Structure->P[1] /  tP) * (*PopSize-2) );
-    *P2 = round(  (Structure->P[2] /  tP) * (*PopSize-2) );
-    *P3 = round(  (Structure->P[3] /  tP) * (*PopSize-2) );
-    *P4 = round(  (Structure->P[4] /  tP) * (*PopSize-2) );
-    *P5 = round(  (Structure->P[5] /  tP) * (*PopSize-2) );
-    *P6 = round(  (Structure->P[6] /  tP) * (*PopSize-2) );
-    *P7 = round(  (Structure->P[7] /  tP) * (*PopSize-2) );
-    *P8 = round(  (Structure->P[8] /  tP) * (*PopSize-2) );
+    *P0 = Iround(  (Structure->P[0] /  tP) * (double) (*PopSize-2) );
+    *P1 = Iround(  (Structure->P[1] /  tP) * (*PopSize-2) );
+    *P2 = Iround(  (Structure->P[2] /  tP) * (*PopSize-2) );
+    *P3 = Iround(  (Structure->P[3] /  tP) * (*PopSize-2) );
+    *P4 = Iround(  (Structure->P[4] /  tP) * (*PopSize-2) );
+    *P5 = Iround(  (Structure->P[5] /  tP) * (*PopSize-2) );
+    *P6 = Iround(  (Structure->P[6] /  tP) * (*PopSize-2) );
+    *P7 = Iround(  (Structure->P[7] /  tP) * (*PopSize-2) );
+    *P8 = Iround(  (Structure->P[8] /  tP) * (*PopSize-2) );
   }
   else {
     *P0 = 0;

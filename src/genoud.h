@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.h,v 1.18 2002/10/17 03:45:20 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.h,v 1.19 2002/10/19 08:29:49 jsekhon Exp $
 
 */
 
@@ -281,7 +281,7 @@ void subtract(double *in1, double *in2, double *out, int row, int col);
 double trace(double *a, int n);
 void transpose(double *orig_matrix, double *t_matrix, int orig_rows, int orig_columns);
 void copy_matrix(MATRIX mat1, MATRIX mat2, int lr, int ur, int lc, int uc);
-int round(double in);
+int Iround(double in);
 void samplestats(double **obsdata, int numobsv, int novarsv, int weightflag, 
 		 double *weightdata, FILE *output);
 void populationstats(double **popdata, int numobsv, int novarsv, 

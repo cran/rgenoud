@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/urans.h,v 1.18 2002/10/17 03:45:25 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/urans.h,v 1.19 2002/10/19 08:30:26 jsekhon Exp $
 
 */
 

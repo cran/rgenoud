@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/math.cpp,v 1.18 2002/10/17 03:45:21 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/math.cpp,v 1.19 2002/10/19 08:29:59 jsekhon Exp $
 
 */
 
@@ -163,7 +163,7 @@ void copy_matrix(MATRIX mat1, MATRIX mat2, int lr, int ur, int lc, int uc)
 
 
 /* this rounds a double to the closest integer */
-int round(double in)
+int Iround(double in)
 {
   double ip, frac;
 

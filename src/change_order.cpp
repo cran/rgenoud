@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/change_order.cpp,v 1.17 2002/10/17 03:45:18 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/change_order.cpp,v 1.18 2002/10/19 08:29:34 jsekhon Exp $
 
 */
 

@@ -12,11 +12,11 @@
 #  http://jsekhon.fas.harvard.edu/
 #  jsekhon@fas.harvard.edu
 #
-#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/rgenoud.R,v 1.18 2002/10/17 03:45:23 jsekhon Exp $
+#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/rgenoud.R,v 1.19 2002/10/19 08:30:15 jsekhon Exp $
 #
 
 
-genoud <- function(fn, nvars, max=FALSE, pop.size=100, max.generations=100, wait.generations=10,
+genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wait.generations=10,
                   hard.generation.limit=TRUE, starting.values=NULL, MemoryMatrix=NULL, Debug=FALSE, 
                   Domains=NULL, default.domains=10,
                   gradient.check=TRUE, boundary.enforcement=2,
