@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/unif.h,v 1.20 2002/11/06 02:12:21 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/unif.h,v 1.22 2003/07/12 04:57:25 jsekhon Exp $
 
 */
 
@@ -20,7 +20,7 @@
 /* Tausworthe-Lewis-Payne generator */
 
 #ifndef DEFTLPGEN
-typedef long int integer;
+typedef int integer;
 
 #define TLPAUXSIZE 1300
 #define TLPDBSIZ 2000

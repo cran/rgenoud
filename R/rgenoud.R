@@ -12,7 +12,7 @@
 #  http://jsekhon.fas.harvard.edu/
 #  jsekhon@fas.harvard.edu
 #
-#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/rgenoud.R,v 1.20 2002/11/06 02:12:13 jsekhon Exp $
+#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/rgenoud.R,v 1.22 2003/07/12 04:57:23 jsekhon Exp $
 #
 
 

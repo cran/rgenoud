@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/LmkGenoud.h,v 1.20 2002/11/06 02:10:55 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/LmkGenoud.h,v 1.22 2003/07/12 04:57:03 jsekhon Exp $
 
 */
 
@@ -195,6 +195,7 @@ typedef struct {
 
 
 /* -------------- Lamarck Virtual Machines functions --------------------- */
+/* 
 #ifdef MS_WINDOWS
      #define CALL_STYLE __stdcall
 #else 
@@ -205,3 +206,4 @@ T_DATA_INDEX	CALL_STYLE	LVM_SubEval(T_VMRECORD *pvmParent, T_CHAR *SubAgent, T_D
 T_DATA_INDEX	CALL_STYLE	LVM_EvalSubScript(T_VMRECORD *pvmParent, T_CHAR *SubAgentName, T_CHAR *AgentScript, T_DATA_INDEX nArgs);
 T_GENOME_INDEX	CALL_STYLE	LVM_TextToGenome(T_CHAR *AgentText, T_CODON *Genome, T_BOOLEAN AutoRegister);
 T_GENOME_INDEX  CALL_STYLE	LVM_Max_Genome_Length(void);
+*/

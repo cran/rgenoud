@@ -150,7 +150,10 @@
     turned on. \cr
     
     If the user does not provide any values for Domains, GENOUD will setup
-    default domains using \code{default.domains}.}
+    default domains using \code{default.domains}. \cr
+    
+    For linear and nonlinear constraints please see the discussion in
+    the \code{Note} section.}
   \item{default.domains}{
     If the user does not want to provide a \code{Domains} matrix,
     domains may nevertheless be set by the user with this easy to use
@@ -415,7 +418,16 @@
   increase.  These and the other options should be adjusted for the
   problem at hand.  Please pay particular attentions to the search
   domains (\code{Domains} and \code{default.domains}). For more information
-  please see the reference article.}
+  please see the reference article. \cr
+
+  Linear and nonlinear constraints among the parameters can be
+  introduced by users in their fit function.  For example, if
+  the sum of parameters 1 and 2 must be less than 725, the following can
+  be placed in the fit function the user is going to have GENOUD
+  maximize: \code{if ( (parm1 + parm2) >= 725) \{ return(-99999999) \}}.
+  In this example, a very bad fit value is returned to GENOUD if the
+  linear constrain is violated.  GENOUD will then attempt to find
+  parameter values that satisfy the constraint.}
 \references{
   Sekhon, Jasjeet Singh and Walter R. Mebane, Jr. 1998.  ``Genetic
   Optimization Using Derivatives: Theory and Application to Nonlinear
