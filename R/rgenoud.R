@@ -12,7 +12,7 @@
 #  http://jsekhon.fas.harvard.edu/
 #  jsekhon@fas.harvard.edu
 #
-#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/rgenoud.R,v 1.25 2004/03/03 22:56:19 jsekhon Exp $
+#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/rgenoud.R,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
 #
 
 
@@ -23,7 +23,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                   solution.tolerance=0.001, BFGS=TRUE, data.type.int=FALSE, hessian=FALSE,
                   unif.seed=812821, int.seed=53058,
                   print.level=2, share.type=0, instance.number=0,
-                  output.path="stdout", output.append=FALSE, project.path="genoud.pro",
+                  output.path="stdout", output.append=FALSE, project.path=NULL,
                   P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0)
 {
   # let's load rgenoud.so if it is not already loaded.
@@ -39,6 +39,12 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
   #we can only use R's optim() with this version of rgenoud().
   roptim <- TRUE;
 
+  #setpath to tempdir
+  if(is.null(project.path))
+    {
+      project.path=paste(tempdir(),"/genoud.pro",sep="")
+    }
+  
   #do we have stating values?
   if (is.null(starting.values)) {
     nStartingValues <- 0;

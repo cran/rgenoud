@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.cpp,v 1.25 2004/03/03 22:56:19 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.cpp,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
 
 */
 
@@ -106,7 +106,8 @@ double genoud(struct GND_IOstructure *Structure)
       return(-1*ERROR_CODE);
   }
 
-  fprintf(output,"\n\n%s",time_str);
+  if(Structure->PrintLevel>0)
+    fprintf(output,"\n\n%s",time_str);
 
   ThreadNumber=Structure->ThreadNumber;
   if (ThreadNumber > MAXTHREADS) {
@@ -169,7 +170,8 @@ double genoud(struct GND_IOstructure *Structure)
     }
 
   /*Initialization*/
-  print_domains(domains,nvars,Structure->DataType, output);
+  if(Structure->PrintLevel>0)
+    print_domains(domains,nvars,Structure->DataType, output);
 
 
 #ifdef SQL_DEFINE
@@ -232,24 +234,30 @@ double genoud(struct GND_IOstructure *Structure)
   free_vector(X,1);
   
   /* print final numbers and the time this has taken */
-  fprintf(output, "\n");
-  fprintf(output, "Solution Found Generation %d\n", Structure->oPeakGeneration);
-  fprintf(output, "Number of Generations Run %d\n", Structure->oGenerations);
+  if(Structure->PrintLevel>0)
+    {
+      fprintf(output, "\n");
+      fprintf(output, "Solution Found Generation %d\n", Structure->oPeakGeneration);
+      fprintf(output, "Number of Generations Run %d\n", Structure->oGenerations);
+    }
 
   time(&stop_time);
 
   strcpy(time_str, ctime(&stop_time));
-  fprintf(output,"\n\n%s",time_str);
+  if(Structure->PrintLevel>0)
+    fprintf(output,"\n\n%s",time_str);
 
   delta_time = difftime(stop_time, start_time);
   hours   = (int) (delta_time/3600);
   minutes = (int) (delta_time - (hours*3600))/60;
   seconds = (int) delta_time - (hours*3600) - (minutes*60);
   
-  fprintf(output,"Total run time : %d hours %d minutes and %d seconds\n", 
-	  hours, minutes, seconds);
-
-  fflush(output);
+  if(Structure->PrintLevel>0)
+    {
+      fprintf(output,"Total run time : %d hours %d minutes and %d seconds\n", 
+	      hours, minutes, seconds);
+      fflush(output);
+    }
 
   if (Structure->OutputType==1) fclose(output);
 

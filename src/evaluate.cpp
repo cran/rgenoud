@@ -12,7 +12,7 @@
   http://jsekhon.fas.harvard.edu/
   jsekhon@fas.harvard.edu
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 1.25 2004/03/03 22:56:19 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
 
 */
 
@@ -206,7 +206,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   double **population_old;
 
   /* Summary Statistics (mean, variance etc) */
-  double popmean, popvar, popwrk, popstat;
+  /* double popmean, popvar, popwrk, popstat; */
 
   /* Population Print population*/
   FILE *popout;
@@ -286,31 +286,40 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   B=6;
   STEP=10;
 
-  fprintf(output,"\n\n");
+  if(PrintLevel>0)
+    {
+      fprintf(output,"\n\n");
 
-  switch(MinMax) {
-  case 0:
-    fprintf(output,"Minimization Problem.\n\n");  
-    break;
-  case 1:
-    fprintf(output,"Maximization Problem.\n\n");  
-    break;
-  }
+      switch(MinMax) {
+      case 0:
+	fprintf(output,"Minimization Problem.\n\n");  
+	break;
+      case 1:
+	fprintf(output,"Maximization Problem.\n\n");  
+	break;
+      }
+    }
 
   if (PrintLevel>2) {
     fprintf(output,"Parameter B (hardcoded): %d\n", B); 
     fprintf(output,"Parameter Q (hardcoded): %f\n", Q);
   }
-  fprintf(output,"\n");
 
-  fflush(output);
+  if(PrintLevel>0)
+    {
+      fprintf(output,"\n");
+      fflush(output);
+    }
 
   peak_val = 0;
   peak_cnt = 0;
 
   pop_size_old=0;
   if (Structure->ShareType == 1 || Structure->ShareType == 3) {
-    fprintf(output, "Using old population file to initialize new population\n");
+
+    if(PrintLevel>0)
+      fprintf(output, "Using old population file to initialize new population\n");
+
     if((popout = fopen(Structure->ProjectPath, "r")) == NULL) {
       fprintf(output,"WARNING: Unable to open the old project file: %s\n", 
 	      Structure->ProjectPath);
@@ -325,7 +334,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	pop_size_old=0;
       }
     }
-    if (PrintLevel==2) {
+    if (PrintLevel>1) {
       if((popout = fopen(Structure->ProjectPath, "a")) == NULL) {
 	fprintf(output,"Unable to open the project file: %s", 
 		Structure->ProjectPath);
@@ -362,7 +371,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
     }
   } /* end of ShareType 0 */
   else {
-    if (PrintLevel==2) {
+    if (PrintLevel>1) {
       if((popout = fopen(Structure->ProjectPath, "w")) == NULL) {
 	fprintf(output,"Unable to open the project file: %s", 
 		Structure->ProjectPath);
@@ -402,7 +411,8 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   /* The new initial value matrix: setting a new initial value for every individual */
   if (ExternStructure->nStartingValues > 0) 
     {
-      fprintf(output,"\nSTARTING VALUES\n\n");
+      if(PrintLevel>0)
+	fprintf(output,"\nSTARTING VALUES\n\n");
       // seed the starting values until we run out of population or starting values!
       j = pop_size_old;
       for(s=0; s<ExternStructure->nStartingValues; s++) {
@@ -632,22 +642,29 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
     break;
   }
 
-  fprintf(output,"\nThe 2 best initial individuals are\n");
-  for(i=1; i<3; i++) {
-    print_vector(population[i],1,nvars,output);
-    fprintf(output,"\nfitness = %e", population[i][0]);
-    fprintf(output,"\n\n");
-  }
+  if(PrintLevel>0)
+    {
+      fprintf(output,"\nThe 2 best initial individuals are\n");
+      for(i=1; i<3; i++) {
+	print_vector(population[i],1,nvars,output);
+	fprintf(output,"\nfitness = %e", population[i][0]);
+	fprintf(output,"\n\n");
+      }
+      
+      fprintf(output,"\nThe worst fit of the population is: %e\n", 
+	      population[pop_size][0]);
+      fprintf(output,"\n\n");
+    }
 
-  fprintf(output,"\nThe worst fit of the population is: %e\n", 
-      population[pop_size][0]);
-  fprintf(output,"\n\n");
+  if(PrintLevel==1)
+    {
+      fprintf(output,"\n\nGeneration#\t    Solution Value\n");
+      fprintf(output,"\n%7d \t%e\n", 0, population[1][0]);
+    }
 
-  fprintf(output,"\n\nGeneration#\t    Solution Value\n");
-  fprintf(output,"\n%7d \t%e\n", 0, population[1][0]);
 
   /* compute and print mean and variance of population */
-  if (PrintLevel==2) {
+  if (PrintLevel>1) {
       fprintf(output,"GENERATION: 0 (initializing the population)\n");
       populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
       for (i=0; i<=nvars; i++) {
@@ -661,7 +678,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      if(Structure->MemoryUsage==1)
 		fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
 			UniqueCount-OldUniqueCount, UniqueCount);
-	      fprintf(output, "tobs............ %d\n", tobs[i]);
+	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
 	  }
 	  else {
 	      fprintf(output, "var %d:\n", i);
@@ -671,11 +688,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      fprintf(output, "skewness........ %e\n", skew[i]);
 	      fprintf(output, "kurtosis........ %e\n", kur[i]);
 	      fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-	      fprintf(output, "tobs............ %d\n", tobs[i]);
+	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
 	  }
       }
   } /* end of printlevel if */
 
+  /*
   if (PrintLevel==1) {
     popmean = popvar = 0.0 ;
     popwrk = 1.0 / pop_size ;
@@ -690,8 +708,10 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
     popvar *= popwrk ;
     fprintf(output, "   mean = %e, variance = %e\n\n", popmean, popvar);
   }
+  */
 
-  fflush(output);
+  if(PrintLevel>0)
+    fflush(output);
 
   /* Print the population file */
   if ( PrintLevel == 1 ) {
@@ -730,7 +750,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
     print_population(pop_size, nvars, 0, population, popout);
     fclose(popout);
   } /* end of PrintLevel if */
-  if ( PrintLevel == 2 ) {
+  if ( PrintLevel>1 ) {
     if((popout = fopen(Structure->ProjectPath, "a")) == NULL) {
       fprintf(output,"Unable to open the project file: %s", 
 	      Structure->ProjectPath);
@@ -1144,8 +1164,9 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    Structure->DynamicPopulation=0;
 	    break;
 	  }
-	  
-	  fprintf(output,"\nDynamically Reading in Individuals from: %s\n", Structure->DynamicPopulationPath);
+
+	  if(PrintLevel>0)	  
+	    fprintf(output,"\nDynamically Reading in Individuals from: %s\n", Structure->DynamicPopulationPath);
 
 	  j = pop_size;
 	  i=0;
@@ -1514,9 +1535,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  if(Teval > population[1][0])
 	    {
 	      Teval = population[1][0];
-	      fprintf(output,"%7lu \t%e\n",
-		      count_gener,population[1][0]); 
-	      fflush(output);
+	      if(PrintLevel==1)	  
+		{
+		  fprintf(output,"%7lu \t%e\n",
+			  count_gener,population[1][0]); 
+		  fflush(output);
+		}
 	      peak_cnt = count_gener;
 	      peak_val = population[1][0];
 	    }
@@ -1525,9 +1549,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  if(Teval < population[1][0])
 	    {
 	      Teval = population[1][0];
-	      fprintf(output,"%7lu \t%e\n",
-		      count_gener,population[1][0]);
-	      fflush(output);
+	      if(PrintLevel==1)	  
+		{
+		  fprintf(output,"%7lu \t%e\n",
+			  count_gener,population[1][0]);
+		  fflush(output);
+		}
 	      peak_cnt = count_gener;
 	      peak_val = population[1][0];
 	    }
@@ -1535,7 +1562,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
         }
       
       /* compute and print mean and variance of population */
-      if (PrintLevel==2) {
+      if (PrintLevel>1) {
 	fprintf(output,"\nGENERATION: %d\n", count_gener);
 	populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
 	for (i=0; i<=nvars; i++) {
@@ -1549,7 +1576,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      if(Structure->MemoryUsage==1)
 		fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
 			UniqueCount-OldUniqueCount, UniqueCount);
-	      fprintf(output, "tobs............ %d\n", tobs[i]);
+	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
 	  }
 	  else {
 	      fprintf(output, "var %d:\n", i);
@@ -1559,11 +1586,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      fprintf(output, "skewness........ %e\n", skew[i]);
 	      fprintf(output, "kurtosis........ %e\n", kur[i]);
 	      fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-	      fprintf(output, "tobs............ %d\n", tobs[i]);
+	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
 	  }
 	}
       } /* end of printlevel if */
 
+      /*
       if (PrintLevel==1) {
 	popmean = popvar = 0.0 ;
 	popwrk = 1.0 / pop_size ;
@@ -1578,8 +1606,10 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	popvar *= popwrk ;
 	fprintf(output, "   mean = %e, variance = %e\n\n", popmean, popvar);
       }
+      */
 
-      fflush(output);
+      if (PrintLevel>0)
+	fflush(output);
 
       /*
 #ifdef MS_WINDOWS
@@ -1640,7 +1670,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	print_population(pop_size, nvars, count_gener, population, popout);
 	fclose(popout);
       } /* end of PrintLevel if */
-      if ( PrintLevel == 2 ) {
+      if ( PrintLevel>1) {
 	if((popout = fopen(Structure->ProjectPath, "a")) == NULL) {
 	  fprintf(output,"Unable to open the project file: %s", 
 		  Structure->ProjectPath);
@@ -1703,9 +1733,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
       if (nochange_gen > (WaitGenerations)) {
 	/* increase the number of WaitGenerations if the gradients are NOT zero! */	  
 	if (GradientCheck==0) {
-	  fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
-	  fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
-	  fflush(output);
+	  if(PrintLevel>0)	  
+	    {
+	      fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
+	      fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
+	      fflush(output);
+	    }
 	  MaxGenerations = 0;
 	  nochange_gen=0;
 	}
@@ -1757,19 +1790,25 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  if (GradientTrigger==1) {
 	    IncreaseGenerations = WaitGenerations;
 	    WaitGenerations += IncreaseGenerations;
+	    if(PrintLevel>0)	  
+	      {
 		fprintf(output,
 			"\nDoubling Soft Maximum Wait Generation Limit to %d (from %d).\n", 
 			WaitGenerations, IncreaseGenerations);
 		fprintf(output,"I'm doing this because at least one gradient is too large.\n");
 		fprintf(output,"G[%d]: %e\t Solution Tolerance: %e\n\n", 
 			i+1, grad[i], SolutionTolerance);
+	      }
 	  }
 	  else {
-	    fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
-	    fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
+	    if(PrintLevel>0)	  
+	      {
+		fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
+		fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
 		fflush(output);
-		MaxGenerations = 0;
-		nochange_gen=0;
+	      }
+	    MaxGenerations = 0;
+	    nochange_gen=0;
 	  }
 	}/* end if loop */
       }
@@ -1780,15 +1819,21 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    {
 	      IncreaseGenerations = MaxGenerations;
 	      MaxGenerations += IncreaseGenerations;
-	      fprintf(output,
-		      "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
-		      IncreaseGenerations, MaxGenerations);
-	      fprintf(output,"I'm doing this because at least one gradient is too large.\n\n");
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,
+			  "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
+			  IncreaseGenerations, MaxGenerations);
+		  fprintf(output,"I'm doing this because at least one gradient is too large.\n\n");
+		}
 	    } // if (Structure->HardGenerationLimit==0)
 	  else
 	    {
-	      fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
-	      fprintf(output,"          At least one gradient is still too large\n");
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		  fprintf(output,"          At least one gradient is still too large\n");
+		}
 	    } // else
 	} // if ( (count_gener == MaxGenerations) && (GradientTrigger==1) ) 
 
@@ -1800,34 +1845,45 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    if (WaitGenerations > MaxGenerations) {
 	      IncreaseGenerations = WaitGenerations;
 	      MaxGenerations += (int) (IncreaseGenerations);
-	      fprintf(output,
-		      "\nIncreasing Soft Maximum Generation Limit by %d (WaitGenerations) to %d\n", 
-		      IncreaseGenerations, MaxGenerations);
-	      fprintf(output,"I'm doing this because the fitness is still impoving.\n\n");
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,
+			  "\nIncreasing Soft Maximum Generation Limit by %d (WaitGenerations) to %d\n", 
+			  IncreaseGenerations, MaxGenerations);
+		  fprintf(output,"I'm doing this because the fitness is still impoving.\n\n");
+		}
 	    }
 	    else {
 	      IncreaseGenerations = MaxGenerations;
 	      MaxGenerations += (int) (IncreaseGenerations);
-	      fprintf(output,
-		      "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
-		      IncreaseGenerations, MaxGenerations);
-	      fprintf(output,"I'm doing this because the fitness is still improving.\n\n");
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,
+			  "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
+			  IncreaseGenerations, MaxGenerations);
+		  fprintf(output,"I'm doing this because the fitness is still improving.\n\n");
+		}
 	    }
 	  } // if (Structure->HardGenerationLimit==0)
 	else
 	  {
-	    fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
-	    fprintf(output,"          But fitness is still improving\n");
+	    if(PrintLevel>0)	  
+	      {
+		fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		fprintf(output,"          But fitness is still improving\n");
+	      }
 	  }
       } // if ( (count_gener == MaxGenerations) &&  (nochange_gen < WaitGenerations) )
       
-      fflush(output);
+      if(PrintLevel>0)	  
+	fflush(output);
 
       /* Should we recheck the main data structure for changes to the operator set? If so, let's
        do it now */
       if (Structure->AllowDynamicUpdating==1) {
 	pop_size_old = pop_size;
-	fprintf(output,"\nUpdating Main Data Structure:\n");
+	if(PrintLevel>0)	  
+	  fprintf(output,"\nUpdating Main Data Structure:\n");
 	SetRunTimeParameters(Structure, 0,
 			     &pop_size, &nvars, &MaxGenerations, &WaitGenerations,
 			     &MinMax, &GradientCheck, &BoundaryEnforcement, &UseBFGS, &SolutionTolerance,
@@ -1880,9 +1936,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
     } /* end of do loop */
   /*Increment iteration count and test whether all generations are done*/
   while (++count_gener <= MaxGenerations);
-  
-  fprintf(output,"\nBest Fit Found at Generation %lu\nFit Value = %e\n",peak_cnt,peak_val);
-  fprintf(output,"\n\nParameters at the Solution (value, gradient):\n\n");
+
+  if(PrintLevel>0)	    
+    {
+      fprintf(output,"\nBest Fit Found at Generation %lu\nFit Value = %e\n",peak_cnt,peak_val);
+      fprintf(output,"\n\nParameters at the Solution (value, gradient):\n\n");
+    }
 
   /* output data structure */
   Structure->oPeakGeneration=peak_cnt;
@@ -1890,7 +1949,8 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 
   /* obtain gradients */
   if (GradientCheck==0 && UseBFGS==0) {
-    fprintf(output,"\nNot Obtaining Gradient Information\n");
+    if(PrintLevel>0)	  
+      fprintf(output,"\nNot Obtaining Gradient Information\n");
     for (i=0; i< nvars; i++) {
       grad[i]=-1.0;
     }
@@ -1934,7 +1994,8 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   /* print best solution */
   for(j = 1; j <= nvars; j++) {
     i = j-1;
-    fprintf(output," X[%2d] :\t%e\tG[%2d] :\t%e\n",j,population[1][j],j,grad[i]);
+    if(PrintLevel>0)	  
+      fprintf(output," X[%2d] :\t%e\tG[%2d] :\t%e\n",j,population[1][j],j,grad[i]);
     Results[i] = population[1][j];
     Gradients[i] = grad[i];
   }
@@ -2440,13 +2501,19 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 
   /* Check to make sure that all operators (i.e., 5, 7) which have to be even numbers are */
   if (fmod(*P5,2) > 0.0) {
-    fprintf(output,"\nWARNING: Operator 6 (Multiple Point Simple Crossover) may only be started\n");
-    fprintf(output,"WARNING: an even number of times.  I am increasing this operator by one.\n");
+    if(Structure->PrintLevel>0)
+      {
+	fprintf(output,"\nNOTE: Operator 6 (Multiple Point Simple Crossover) may only be started\n");
+	fprintf(output,"NOTE: an even number of times.  I am increasing this operator by one.\n");
+      }
     *P5=*P5+1;
   }
   if (fmod(*P7,2) > 0.0) {
-    fprintf(output,"\nWARNING: Operator 8 (Heuristic Crossover) may only be started\n");
-    fprintf(output,"WARNING: an even number of times.  I am increasing this operator by one.\n");
+    if(Structure->PrintLevel>0)
+      {
+	fprintf(output,"\nNOTE: Operator 8 (Heuristic Crossover) may only be started\n");
+	fprintf(output,"NOTE: an even number of times.  I am increasing this operator by one.\n");
+      }
     *P7=*P7+1;
   }
 
@@ -2454,33 +2521,54 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
   *P = *P1 + *P2 + *P3 + *P4 + *P5 + *P6 + *P7 + *P8;
   if(*P > *PopSize)
     {
-      fprintf(output,"\nWARNING: The total number of operators greater than population size\n");
+      if(Structure->PrintLevel>0)
+	{
+	  fprintf(output,"\nNOTE: The total number of operators greater than population size\n");
+	}
 
       if (fmod(*P+1,2) > 0.0) {
 	*PopSize = *P+2;
-      fprintf(output,"WARNING: I'm increasing the population size to %d (operators+2).\n", *PopSize);
+	if(Structure->PrintLevel>0)
+	  {
+	    fprintf(output,"NOTE: I'm increasing the population size to %d (operators+2).\n", *PopSize);
+	  }
       }
       else {
 	*PopSize = *P+1;
-	fprintf(output,"WARNING: I'm increasing the population size to %d (operators+1).\n", *PopSize);
+	if(Structure->PrintLevel>0)
+	  {
+	    fprintf(output,"NOTE: I'm increasing the population size to %d (operators+1).\n", *PopSize);
+	  }
       }
     }
   else if ( *P== *PopSize) {
-      fprintf(output,"\nWARNING: The total number of operators equal to the population size\n");
+    if(Structure->PrintLevel>0)
+      {
+	fprintf(output,"\nNOTE: The total number of operators equal to the population size\n");
+      }
 
       if (fmod(*P+1,2) > 0.0) {
 	*PopSize = *P+2;
-      fprintf(output,"WARNING: I'm increasing the population size to %d (operators+2).\n", *PopSize);
+	if(Structure->PrintLevel>0)
+	  {
+	    fprintf(output,"NOTE: I'm increasing the population size to %d (operators+2).\n", *PopSize);
+	  }
       }
       else {
 	*PopSize = *P+1;
-	fprintf(output,"WARNING: I'm increasing the population size to %d (operators+1).\n", *PopSize);
+	if(Structure->PrintLevel>0)
+	  {
+	    fprintf(output,"NOTE: I'm increasing the population size to %d (operators+1).\n", *PopSize);
+	  }
       }
   }
 
   if (fmod(*PopSize,2) > 0.0) {
-    fprintf(output,"WARNING: population size is not an even number.\n");
-    fprintf(output,"WARNING: Increasing population size by 1\n");
+    if(Structure->PrintLevel>0)
+      {
+	fprintf(output,"WARNING: population size is not an even number.\n");
+	fprintf(output,"WARNING: Increasing population size by 1\n");
+      }
     *PopSize=*PopSize+1;
   }
 
@@ -2497,56 +2585,63 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
   Structure->oP[8]=*P8;
   Structure->oPopSize=*PopSize;
 
-  fprintf(output, "\n");
-  if (Structure->DataType==1) fprintf(output, "Data Type: Integer\n");
-  else fprintf(output, "Data Type: Floating Point\n");
-  fprintf(output,"Operators (code number, name, population) \n");
-  fprintf(output,"\t(1) Cloning........................... \t%d\n", *P0);
-  fprintf(output,"\t(2) Uniform Mutation.................. \t%d\n", *P1);
-  fprintf(output,"\t(3) Boundary Mutation................. \t%d\n", *P2);
-  fprintf(output,"\t(4) Non-Uniform Mutation.............. \t%d\n", *P3);
-  fprintf(output,"\t(5) Polytope Crossover................ \t%d\n", *P4);
-  fprintf(output,"\t(6) Multiple Point Simple Crossover... \t%d\n", *P5);
-  fprintf(output,"\t(7) Whole Non-Uniform Mutation........ \t%d\n", *P6);
-  fprintf(output,"\t(8) Heuristic Crossover............... \t%d\n", *P7);
-  fprintf(output,"\t(9) Local-Minimum Crossover........... \t%d\n\n", *P8);
-  if (*HardGenerationLimit==0)
-    fprintf(output,"SOFT Maximum Number of Generations: %lu\n", *MaxGenerations);
-  else
-    fprintf(output,"HARD Maximum Number of Generations: %lu\n", *MaxGenerations);
-  fprintf(output,"Maximum Nonchanging Generations: %lu\n", *WaitGenerations);
-  fprintf(output,"Population size       : %d\n", *PopSize);
-  fprintf(output,"Convergence Tolerance: %e\n", *SolutionTolerance);
-
-  fprintf(output, "\n");
-  if (*UseBFGS !=0) {
-    fprintf(output,
-	    "Using the BFGS Derivative Based Optimizer on the Best Individual Each Generation.\n");
-  }
-  else {
-    fprintf(output,
-	    "Not Using the BFGS Derivative Based Optimizer on the Best Individual Each Generation.\n");
-  }
-  if (*GradientCheck==0)
-    fprintf(output,"Not Checking Gradients before Stoping\n");
-  else 
-    fprintf(output,"Checking Gradients before Stoping\n");
-
-  if (*BoundaryEnforcement==0) 
-    fprintf(output,"Using Out of Bounds Individuals.\n\n");
-  else if (*BoundaryEnforcement==1) 
-    fprintf(output,"Not Using Out of Bounds Individuals But Allowing Trespassing.\n\n");
-  else if (*BoundaryEnforcement==2) 
-    fprintf(output,"Not Using Out of Bounds Individuals and Not Allowing Trespassing.\n\n");
-
+  if(Structure->PrintLevel>0)
+    {
+      fprintf(output, "\n");
+      if (Structure->DataType==1) fprintf(output, "Data Type: Integer\n");
+      else fprintf(output, "Data Type: Floating Point\n");
+      
+      fprintf(output,"Operators (code number, name, population) \n");
+      fprintf(output,"\t(1) Cloning........................... \t%d\n", *P0);
+      fprintf(output,"\t(2) Uniform Mutation.................. \t%d\n", *P1);
+      fprintf(output,"\t(3) Boundary Mutation................. \t%d\n", *P2);
+      fprintf(output,"\t(4) Non-Uniform Mutation.............. \t%d\n", *P3);
+      fprintf(output,"\t(5) Polytope Crossover................ \t%d\n", *P4);
+      fprintf(output,"\t(6) Multiple Point Simple Crossover... \t%d\n", *P5);
+      fprintf(output,"\t(7) Whole Non-Uniform Mutation........ \t%d\n", *P6);
+      fprintf(output,"\t(8) Heuristic Crossover............... \t%d\n", *P7);
+      fprintf(output,"\t(9) Local-Minimum Crossover........... \t%d\n\n", *P8);
+      if (*HardGenerationLimit==0)
+	fprintf(output,"SOFT Maximum Number of Generations: %lu\n", *MaxGenerations);
+      else
+	fprintf(output,"HARD Maximum Number of Generations: %lu\n", *MaxGenerations);
+      fprintf(output,"Maximum Nonchanging Generations: %lu\n", *WaitGenerations);
+      fprintf(output,"Population size       : %d\n", *PopSize);
+      fprintf(output,"Convergence Tolerance: %e\n", *SolutionTolerance);
+      
+      fprintf(output, "\n");
+      if (*UseBFGS !=0) {
+	fprintf(output,
+		"Using the BFGS Derivative Based Optimizer on the Best Individual Each Generation.\n");
+      }
+      else {
+	fprintf(output,
+		"Not Using the BFGS Derivative Based Optimizer on the Best Individual Each Generation.\n");
+      }
+      if (*GradientCheck==0)
+	fprintf(output,"Not Checking Gradients before Stopping\n");
+      else 
+	fprintf(output,"Checking Gradients before Stopping\n");
+      
+      if (*BoundaryEnforcement==0) 
+	fprintf(output,"Using Out of Bounds Individuals.\n\n");
+      else if (*BoundaryEnforcement==1) 
+	fprintf(output,"Not Using Out of Bounds Individuals But Allowing Trespassing.\n\n");
+      else if (*BoundaryEnforcement==2) 
+	fprintf(output,"Not Using Out of Bounds Individuals and Not Allowing Trespassing.\n\n");
+    }
   // some more consistency checks
   if (Structure->Network==1 && Structure->MemoryUsage==1)
     {
-      fprintf(output,"Turning Memory Usage off because Network GENOUD has been requested\n"); 
+      if(Structure->PrintLevel>0)
+	{
+	  fprintf(output,"Turning Memory Usage off because Network GENOUD has been requested\n"); 
+	}
       Structure->MemoryUsage=0;
     }
     
-  fflush(output);
+  if(Structure->PrintLevel>0)
+    fflush(output);
 
 } /* End SetOperators */
 
@@ -2636,7 +2731,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   double **population_old, **PopulationTmp;
 
   /* Summary Statistics (mean, variance etc) */
-  double popmean, popvar, popwrk, popstat;
+  /* double popmean, popvar, popwrk, popstat; */
 
   /* Population Print population*/
   FILE *popout;
@@ -2721,31 +2816,40 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   /* Read the Population File if we are told to.  For the moment we
      shall assume that we are supposed to read the file */
 
-  fprintf(output,"\n\n");
-
-  switch(MinMax) {
-  case 0:
-    fprintf(output,"Minimization Problem.\n\n");  
-    break;
-  case 1:
-    fprintf(output,"Maximization Problem.\n\n");  
-    break;
-  }
+  if(PrintLevel>0)
+    {
+      fprintf(output,"\n\n");
+      
+      switch(MinMax) {
+      case 0:
+	fprintf(output,"Minimization Problem.\n\n");  
+	break;
+      case 1:
+	fprintf(output,"Maximization Problem.\n\n");  
+	break;
+      }
+    }
 
   if (PrintLevel>2) {
     fprintf(output,"Parameter B (hardcoded): %d\n", B); 
     fprintf(output,"Parameter Q (hardcoded): %f\n", Q);
   }
-  fprintf(output,"\n");
 
-  fflush(output);
+  if(PrintLevel>0)
+    {
+      fprintf(output,"\n");
+      fflush(output);
+    }
 
   peak_val = 0;
   peak_cnt = 0;
 
   pop_size_old=0;
   if (Structure->ShareType == 1 || Structure->ShareType == 3) {
-    fprintf(output, "Using old population file to initialize new population\n");
+
+    if(PrintLevel>0)
+      fprintf(output, "Using old population file to initialize new population\n");
+
     if((popout = fopen(Structure->ProjectPath, "r")) == NULL) {
       fprintf(output,"WARNING: Unable to open the old project file: %s\n", 
 	      Structure->ProjectPath);
@@ -2767,7 +2871,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	pop_size_old=0;
       }
     }
-    if (PrintLevel==2) {
+    if (PrintLevel>1) {
       if((popout = fopen(Structure->ProjectPath, "a")) == NULL) {
 	fprintf(output,"Unable to open the project file: %s", 
 		Structure->ProjectPath);
@@ -2803,7 +2907,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     }
   } /* end of ShareType 0 */
   else {
-    if (PrintLevel==2) {
+    if (PrintLevel>1) {
       if((popout = fopen(Structure->ProjectPath, "w")) == NULL) {
 	fprintf(output,"Unable to open the project file: %s", 
 		Structure->ProjectPath);
@@ -3067,22 +3171,29 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     break;
   }
 
-  fprintf(output,"\nThe 2 best initial individuals are\n");
-  for(i=1; i<3; i++) {
-    print_vector(population[i],1,nvars,output);
-    fprintf(output,"\nfitness = %e", population[i][0]);
-    fprintf(output,"\n\n");
-  }
+  if(PrintLevel>0)
+    {
+      fprintf(output,"\nThe 2 best initial individuals are\n");
+      for(i=1; i<3; i++) {
+	print_vector(population[i],1,nvars,output);
+	fprintf(output,"\nfitness = %e", population[i][0]);
+	fprintf(output,"\n\n");
+      }
+      
+      fprintf(output,"\nThe worst fit of the population is: %e\n", 
+	      population[pop_size][0]);
+      fprintf(output,"\n\n");
+    }
 
-  fprintf(output,"\nThe worst fit of the population is: %e\n", 
-      population[pop_size][0]);
-  fprintf(output,"\n\n");
+  if(PrintLevel==1)
+    {
+      fprintf(output,"\n\nGeneration#\t    Solution Value\n");
+      fprintf(output,"\n%7d \t%e\n", 0, population[1][0]);
+    }
 
-  fprintf(output,"\n\nGeneration#\t    Solution Value\n");
-  fprintf(output,"\n%7d \t%e\n", 0, population[1][0]);
 
   /* compute and print mean and variance of population */
-  if (PrintLevel==2) {
+  if (PrintLevel>1) {
       fprintf(output,"GENERATION: 0 (initializing the population)\n");
       populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
       for (i=0; i<=nvars; i++) {
@@ -3096,7 +3207,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	      if(Structure->MemoryUsage==1)
 		fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
 			UniqueCount-OldUniqueCount, UniqueCount);
-	      fprintf(output, "tobs............ %d\n", tobs[i]);
+	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
 	  }
 	  else {
 	      fprintf(output, "var %d:\n", i);
@@ -3106,11 +3217,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	      fprintf(output, "skewness........ %e\n", skew[i]);
 	      fprintf(output, "kurtosis........ %e\n", kur[i]);
 	      fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-	      fprintf(output, "tobs............ %d\n", tobs[i]);
+	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
 	  }
       }
   } /* end of printlevel if */
 
+  /*
   if (PrintLevel==1) {
     popmean = popvar = 0.0 ;
     popwrk = 1.0 / pop_size ;
@@ -3125,8 +3237,10 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     popvar *= popwrk ;
     fprintf(output, "   mean = %e, variance = %e\n\n", popmean, popvar);
   }
+  */
 
-  fflush(output);
+  if(PrintLevel>0)
+    fflush(output);
 
   /* Print the population file */
   if ( PrintLevel == 1 ) {
@@ -3164,7 +3278,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     print_population(pop_size, nvars, 0, population, popout);
     fclose(popout);
   } /* end of PrintLevel if */
-  if ( PrintLevel == 2 ) {
+  if ( PrintLevel>1) {
     if((popout = fopen(Structure->ProjectPath, "a")) == NULL) {
       fprintf(output,"Unable to open the project file: %s", 
 	      Structure->ProjectPath);
@@ -3519,7 +3633,8 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	    break;
 	  }
 
-	  fprintf(output,"\nDynamically Reading in Individuals from: %s\n", Structure->DynamicPopulationPath);
+	  if(PrintLevel>0)	  
+	    fprintf(output,"\nDynamically Reading in Individuals from: %s\n", Structure->DynamicPopulationPath);
 	  
 	  j = pop_size;
 	  i=0;
@@ -3748,9 +3863,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  if(Teval > population[1][0])
 	    {
 	      Teval = population[1][0];
-	      fprintf(output,"%7lu \t%e\n",
-		      count_gener,population[1][0]); 
-	      fflush(output);
+	      if(PrintLevel==1)	  
+		{
+		  fprintf(output,"%7lu \t%e\n",
+			  count_gener,population[1][0]); 
+		  fflush(output);
+		}
 	      peak_cnt = count_gener;
 	      peak_val = population[1][0];
 	    }
@@ -3759,9 +3877,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
             if(Teval < population[1][0])
               {
                 Teval = population[1][0];
-                fprintf(output,"%7lu \t%e\n",
-			count_gener,population[1][0]);
-		fflush(output);
+		if(PrintLevel==1)	  
+		  {
+		    fprintf(output,"%7lu \t%e\n",
+			    count_gener,population[1][0]);
+		    fflush(output);
+		  }
                 peak_cnt = count_gener;
                 peak_val = population[1][0];
               }
@@ -3769,7 +3890,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
         }
 
       /* compute and print mean and variance of population */
-      if (PrintLevel==2) {
+      if (PrintLevel>1) {
 	  fprintf(output,"\nGENERATION: %d\n", count_gener);
 	  populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
 	  for (i=0; i<=nvars; i++) {
@@ -3783,7 +3904,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		  if(Structure->MemoryUsage==1)
 		    fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
 			    UniqueCount-OldUniqueCount, UniqueCount);
-		  fprintf(output, "tobs............ %d\n", tobs[i]);
+		  /* fprintf(output, "tobs............ %d\n", tobs[i]); */
 	      }
 	      else {
 		  fprintf(output, "var %d:\n", i);
@@ -3793,11 +3914,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		  fprintf(output, "skewness........ %e\n", skew[i]);
 		  fprintf(output, "kurtosis........ %e\n", kur[i]);
 		  fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-		  fprintf(output, "tobs............ %d\n", tobs[i]);
+		  /* fprintf(output, "tobs............ %d\n", tobs[i]); */
 	      }
 	  }
       } /* end of printlevel if */
       
+      /*
       if (PrintLevel==1) {
 	popmean = popvar = 0.0 ;
 	popwrk = 1.0 / pop_size ;
@@ -3812,8 +3934,10 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	popvar *= popwrk ;
 	fprintf(output, "   mean = %e, variance = %e\n\n", popmean, popvar);
       }
+      */
 
-      fflush(output);
+      if (PrintLevel>0)
+	fflush(output);
 	
       /* Print the population file */
       if ( PrintLevel == 1 ) {
@@ -3851,7 +3975,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	print_population(pop_size, nvars, count_gener, population, popout);
 	fclose(popout);
       } /* end of PrintLevel if */
-      if ( PrintLevel == 2 ) {
+      if ( PrintLevel>1) {
 	if((popout = fopen(Structure->ProjectPath, "a")) == NULL) {
 	  fprintf(output,"Unable to open the project file: %s", 
 		  Structure->ProjectPath);
@@ -3919,9 +4043,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       if (nochange_gen > (WaitGenerations)) {
 	/* increase the number of WaitGenerations if the gradients are NOT zero! */	  
 	if (GradientCheck==0) {
-	  fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
-	  fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
-	  fflush(output);
+	  if(PrintLevel>0)	  
+	    {
+	      fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
+	      fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
+	      fflush(output);
+	    }
 	  MaxGenerations = 0;
 	  nochange_gen=0;
 	}
@@ -3972,19 +4099,25 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  if (GradientTrigger==1) {
 	    IncreaseGenerations = WaitGenerations;
 	    WaitGenerations += IncreaseGenerations;
+	    if(PrintLevel>0)	  
+	      {
 		fprintf(output,
 			"\nDoubling Soft Maximum Wait Generation Limit to %d (from %d).\n", 
 			WaitGenerations, IncreaseGenerations);
 		fprintf(output,"I'm doing this because at least one gradient is too large.\n");
 		fprintf(output,"G[%d]: %e\t Solution Tolerance: %e\n\n", 
 			i+1, grad[i], SolutionTolerance);
+	      }
 	  }
 	  else {
-	    fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
-	    fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
+	    if(PrintLevel>0)	  
+	      {
+		fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
+		fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
 		fflush(output);
-		MaxGenerations = 0;
-		nochange_gen=0;
+	      }
+	    MaxGenerations = 0;
+	    nochange_gen=0;
 	  }
 	}/* end if loop */
       }
@@ -3995,15 +4128,21 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	    {
 	      IncreaseGenerations = MaxGenerations;
 	      MaxGenerations += IncreaseGenerations;
-	      fprintf(output,
-		      "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
-		      IncreaseGenerations, MaxGenerations);
-	      fprintf(output,"I'm doing this because at least one gradient is too large.\n\n");
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,
+			  "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
+			  IncreaseGenerations, MaxGenerations);
+		  fprintf(output,"I'm doing this because at least one gradient is too large.\n\n");
+		}
 	    } // if (Structure->HardGenerationLimit==0)
 	  else
 	    {
-	      fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
-	      fprintf(output,"          At least one gradient is still too large\n");
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		  fprintf(output,"          At least one gradient is still too large\n");
+		}
 	    } // else
 	} // if ( (count_gener == MaxGenerations) && (GradientTrigger==1) ) 
 
@@ -4015,34 +4154,45 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	    if (WaitGenerations > MaxGenerations) {
 	      IncreaseGenerations = WaitGenerations;
 	      MaxGenerations += (int) (IncreaseGenerations);
-	      fprintf(output,
-		      "\nIncreasing Soft Maximum Generation Limit by %d (WaitGenerations) to %d\n", 
-		      IncreaseGenerations, MaxGenerations);
-	      fprintf(output,"I'm doing this because the fitness is still impoving.\n\n");
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,
+			  "\nIncreasing Soft Maximum Generation Limit by %d (WaitGenerations) to %d\n", 
+			  IncreaseGenerations, MaxGenerations);
+		  fprintf(output,"I'm doing this because the fitness is still impoving.\n\n");
+		}
 	    }
 	    else {
 	      IncreaseGenerations = MaxGenerations;
 	      MaxGenerations += (int) (IncreaseGenerations);
-	      fprintf(output,
-		      "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
-		      IncreaseGenerations, MaxGenerations);
-	      fprintf(output,"I'm doing this because the fitness is still improving.\n\n");
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,
+			  "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
+			  IncreaseGenerations, MaxGenerations);
+		  fprintf(output,"I'm doing this because the fitness is still improving.\n\n");
+		}
 	    }
 	  } // if (Structure->HardGenerationLimit==0)
 	else
 	  {
-	    fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
-	    fprintf(output,"          But fitness is still improving\n");
+	    if(PrintLevel>0)	  
+	      {
+		fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		fprintf(output,"          But fitness is still improving\n");
+	      }
 	  }
       } // if ( (count_gener == MaxGenerations) &&  (nochange_gen < WaitGenerations) )
       
-      fflush(output);
+      if(PrintLevel>0)	  
+	fflush(output);
 
       /* Should we recheck the main data structure for changes to the operator set? If so, let's
        do it now */
       if (Structure->AllowDynamicUpdating==1) {
 	pop_size_old = pop_size;
-	fprintf(output,"\nUpdating Main Data Structure:\n");
+	if(PrintLevel>0)	  
+	  fprintf(output,"\nUpdating Main Data Structure:\n");
 	SetRunTimeParameters(Structure, 0,
 			     &pop_size, &nvars, &MaxGenerations, &WaitGenerations,
 			     &MinMax, &GradientCheck, &BoundaryEnforcement, &UseBFGS, &SolutionTolerance,
@@ -4096,9 +4246,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     } /* end of do loop */
   /*Increment iteration count and test whether all generations are done*/
   while (++count_gener <= MaxGenerations);
-  
-  fprintf(output,"\nBest Fit Found at Generation %lu\nFit Value = %e\n",peak_cnt,peak_val);
-  fprintf(output,"\n\nParameters at the Solution (value, gradient):\n\n");
+
+  if(PrintLevel>0)	  
+    {  
+      fprintf(output,"\nBest Fit Found at Generation %lu\nFit Value = %e\n",peak_cnt,peak_val);
+      fprintf(output,"\n\nParameters at the Solution (value, gradient):\n\n");
+    }
 
   /* output data structure */
   Structure->oPeakGeneration=peak_cnt;
@@ -4106,7 +4259,8 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 
   /* obtain gradients */
   if (GradientCheck==0 && UseBFGS==0) {
-    fprintf(output,"\nNot Obtaining Gradient Information\n");
+    if(PrintLevel>0)	  
+      fprintf(output,"\nNot Obtaining Gradient Information\n");
     for (i=0; i< nvars; i++) {
       grad[i]=-1.0;
     }
@@ -4155,7 +4309,8 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   /* print best solution */
   for(j = 1; j <= nvars; j++) {
     i = j-1;
-    fprintf(output," X[%2d] :\t%e\tG[%2d] :\t%e\n",j,population[1][j],j,grad[i]);
+    if(PrintLevel>0)	  
+      fprintf(output," X[%2d] :\t%e\tG[%2d] :\t%e\n",j,population[1][j],j,grad[i]);
     Results[i] = population[1][j];
     Gradients[i] = grad[i];
   }
@@ -4642,15 +4797,19 @@ void JaDynamicPopulationCheck(struct GND_IOstructure *Structure,
 
 
   if((DynamicInput = fopen(Structure->DynamicPopulationPath, "r")) == NULL) {
-    fprintf(output,"WARNING: Unable to open the DynamicPopulationPath: %s\n", 
-	    Structure->DynamicPopulationPath);
-    fprintf(output,"         Continuing the process.\n");
+    if(Structure->PrintLevel>0)
+      {
+	fprintf(output,"WARNING: Unable to open the DynamicPopulationPath: %s\n", 
+		Structure->DynamicPopulationPath);
+	fprintf(output,"         Continuing the process.\n");
+      }
     
     Structure->DynamicPopulation=0;
     return;
   }
 
-  fprintf(output,"\nDynamically Reading in Individuals from: %s\n", Structure->DynamicPopulationPath);
+  if(Structure->PrintLevel>0)
+    fprintf(output,"\nDynamically Reading in Individuals from: %s\n", Structure->DynamicPopulationPath);
 
   j=0;
   i=0;
@@ -4685,8 +4844,9 @@ void JaDynamicPopulationCheck(struct GND_IOstructure *Structure,
   fclose(DynamicInput);
 		
   Dobs = j+1;
-		
-  fprintf(output,"   Read in %d Individuals\n\n", Dobs);		
+	
+  if(Structure->PrintLevel>0)	
+    fprintf(output,"   Read in %d Individuals\n\n", Dobs);		
 		
   Structure->DynamicPopulation=0; 
 } // end of DynamicPopulationCheck

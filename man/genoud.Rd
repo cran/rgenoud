@@ -30,7 +30,7 @@
    solution.tolerance=0.001, BFGS=TRUE, data.type.int=FALSE, hessian=FALSE,
    unif.seed=812821, int.seed=53058,
    print.level=2, share.type=0, instance.number=0,
-   output.path="stdout", output.append=FALSE, project.path="genoud.pro",
+   output.path="stdout", output.append=FALSE, project.path=NULL,
    P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0)
 }
 \arguments{
@@ -278,7 +278,7 @@
     GENOUD are not writing to
     the same output file(s): see \code{output.path} and
     \code{project.path}. \cr
-    
+
     For the R version of GENOUD this variable is of limited use.
     It is basically there in case a GENOUD run is being used to optimize
     the result of another GENOUD run (i.e., a recursive
@@ -293,14 +293,16 @@
     tells GENOUD whether it should append to the file if it already
     exists or if it should overwrite an existing file.}
   \item{project.path}{
-    This is the path of the GENOUD project file.  The behavior of the
-    project file depends on the \code{print.level} chosen.  If the
-    \code{print.level} variable is set to
-    1, then the project file is rewritten after each generation.
-    Therefore, only the currently fully completed generation is included
-    in the file.  If the \code{print.level} variable is set
-    to 2, then each new generation is simply appended to the project file.
-    For all other values of \code{print.level}, the project file is not created.}
+    This is the path of the GENOUD project file.  By default GENOUD
+    places it's output in a file called "genoud.pro" located in the
+    temporary directory provided by \code{\link{tempdir}}.  The behavior
+    of the project file depends on the \code{print.level} chosen.  If
+    the \code{print.level} variable is set to 1, then the project file
+    is rewritten after each generation.  Therefore, only the currently
+    fully completed generation is included in the file.  If the
+    \code{print.level} variable is set to 2, then each new generation is
+    simply appended to the project file.  For all other values of
+    \code{print.level}, the project file is not created.}
   \item{P1}{
     This is the cloning operator.  GENOUD always clones the best
     individual each generation.  But this operator clones others as
