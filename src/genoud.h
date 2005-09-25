@@ -5,17 +5,18 @@
   Walter R. Mebane, Jr.
   Cornell University
   http://macht.arts.cornell.edu/wrm1
-  wrm1@macht.arts.cornell.edu
+  <wrm1@macht.arts.cornell.edu>
 
   Jasjeet Singh Sekhon 
-  Harvard University
-  http://jsekhon.fas.harvard.edu/
-  jsekhon@fas.harvard.edu
+  UC Berkeley
+  http://sekhon.polisci.berkeley.edu
+  <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.h,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.h,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
 
 */
 
+#include <R.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
@@ -24,47 +25,49 @@
 #include <stdarg.h>
 #include "LmkGenoud.h"
 
-#ifdef OPTIM
 extern "C"
 {
-  extern double genoud_optim(double *X, int parameters);
-}
-#endif
+  // <Rdefines.h> must appear inside the {extern "C"} declaration
+  // because this header file, unlike <R.h>, does not have an {#ifdef
+  // __cplusplus} statment included.
+#include <Rdefines.h>
 
-extern "C"
-{
-
-void MyRprintf(FILE *foo, char *out, ...);
-
-inline void MyRprintf(FILE *foo, char *out, ...)
-{
-  extern void Rprintf(char*, ...);
-  extern void Rvprintf(const char *format, va_list arg);
+  void MyRprintf(FILE *foo, char *out, ...);
   
-  va_list(ap); /*will point to each unnamed argument in turn*/
-  va_start(ap, out);
-  if (foo == stdout) {
-    Rvprintf(out,ap); 
-  }
-  else if (foo == stderr) {
-    Rvprintf(out,ap); 
-  }
-  else {
-    vfprintf(foo, out, ap); 
-  }
-  va_end(ap); 
-} // end of MyRprintf
-
+  inline void MyRprintf(FILE *foo, char *out, ...)
+  {
+    extern void Rprintf(char*, ...);
+    extern void Rvprintf(const char *format, va_list arg);
+    
+    va_list(ap); /*will point to each unnamed argument in turn*/
+    va_start(ap, out);
+    if (foo == stdout) {
+      Rvprintf(out,ap); 
+    }
+    else if (foo == stderr) {
+      Rvprintf(out,ap); 
+    }
+    else {
+      vfprintf(foo, out, ap); 
+    }
+    va_end(ap); 
+  } // end of MyRprintf
+  
 #define fprintf MyRprintf  
-}
+
+  /* function definitions */
+  double evaluate(SEXP fn, SEXP rho, double *X, long nvars, short int MinMax);
+  void EvaluateLexical(SEXP fn, SEXP rho,
+		       double *X, long nvars, long lexical, short int MinMax, double *ret);
+} /*end of extern C */
 
 #define M(ROW,COL,NCOLS) (((ROW)*(NCOLS))+(COL))
 #define EVALUATE -645271937
+#define DOUBLEMAX DOUBLE_XMAX
 #define MAXPATH 1000
 #define MAXTHREADS 20
 #define MAXINSTANCES 20
 #define ERROR_CODE -99999
-#define BIGNUMBER 1e300
 #define MAX_OPER_UNIQUE_TRY 200
 
 #define TRUE 1
@@ -76,7 +79,6 @@ inline void MyRprintf(FILE *foo, char *out, ...)
 #define flip()  ((int) ((newrand()*(long)2)/(long) 65535))
 #define MIN -32768
 #define MAX 32768
-#define BIGINT 100000000
 #define HEAD 1
 #define TAIL 0
 #define TRIES 1000
@@ -104,8 +106,11 @@ typedef struct {int r; int c;}INDEX;
 struct GND_IOstructure
 {
   /* --- Basic Input Parameters ---- */
-  double	(*AgentFit)(double *LX, long *LStatus);
-  long      (*AgentFitMatrix)(double **Population, long population, long nvars);
+  SEXP          fn;
+  SEXP          rho;
+  SEXP          fnLexicalSort;
+  SEXP          fnMemoryMatrixEvaluate;
+  SEXP          fnGR;
   long		nvars;
   long		PopSize;
   long		MaxGenerations;
@@ -116,18 +121,13 @@ struct GND_IOstructure
   short		GradientCheck;
   short		BoundaryEnforcement;  /* 0=anything goes, 1: regular; 2: no trespassing! */
   double	SolutionTolerance;
-  long		Status;
   long		ThreadNumber;	/* indexed from zero */
   long          InstanceNumber; /* indexed from zero, the number of parallel runs */
   short		UseBFGS;        /* Use BFGS on the Best Individual 1= True, 0=False */
-  short         AllowDynamicUpdating; /* T, F */
   short         DataType;       /* 1== integer, everything else equals float */
-  short         DynamicPopulation; /* T, F */
   short         MemoryUsage;    /* 0=minimize, 1=normal */
   short         Debug;          /* T, F */
   short         HardGenerationLimit; // T, F
-  short         Optim;               // T, F
-  short         Network;             // T, F
 
   /* Starting Values (if we want to provide any) */
   double        **StartingValues; /* a matrix of starting values (each set consists of a row) */
@@ -139,6 +139,7 @@ struct GND_IOstructure
   long          IntSeed;
 
   /* --- Ouput Diagnostics --- */
+  double	*oFitValues; 
   double	*oResults; 
   double	*oGradients;
   long		oP[9];				/* operators used */
@@ -149,29 +150,26 @@ struct GND_IOstructure
   /* Output Files */
   char*		OutputPath;
   char*         ProjectPath;
-  char*         PublicPopulationPath;
 
   /* I/O types */
   short		OutputType;
   short         PrintLevel;
 
   /* Parallel Processing Stuff */
-  short         ShareLevel;
   short         ShareType;
-  char*		DynamicPopulationPath;
-  char*         DBname;         // The Name of the Agent to optimize
-  char*         AgentName;      // The Name of the Agent to optimize
 
+  /* lexical sorting */
+  long          Lexical;
 
-  T_VMRECORD	*pvm; /* read only.  Required for rentrant call to LamarckVM */
+  short int     UserGradient;
 
 };
 
 /* bfgs.c */
-void dfgsmin(double (*VMfunction)(double *LX, long *LStatus),
+void dfgsmin(SEXP fn, SEXP rho,
 	     double *p, int n, double gtol, int *iter, double *fret, double *hessian,
 	     short int MinMax, short int BoundaryEnforcement, long InstanceNumber,
-	     double **Domains, long *LVMstatus, short PrintLevel, FILE *output);
+	     double **Domains, short PrintLevel, FILE *output);
 
 /* change_order.c file */
 void get_var_order(IVECTOR tot, IVECTOR cart, IMATRIX var_order);
@@ -187,34 +185,8 @@ void find_final_mat1(VECTOR l2, VECTOR u2, MATRIX finmat, int row, int col);
 void find_final_mat2(MATRIX newin, int r, int c, int finr, MATRIX finmat);
 void find_final_mat3(MATRIX orgin, int r, int c, int finr, MATRIX finmat);
 
-/* eval.c */
-double evaluate(double (*VMfunction)(double *LX, long *LStatus),
-		VECTOR X, int nvars, long *Status);
-void EvaluateMatrix(long (*VMfunctionMatrix)(double **Population, long population, long nvars),
-		    MATRIX Population, long npopulation, long nvars, long *Status);
-
-#ifdef SQL_DEFINE
-long NetworkEvaluate(double (*VMfunction)(double *LX, long *LStatus), 
-		     char *DBname, char *AgentName, 
-		     MATRIX population, long pop_size, long nvars, long NetworkNumber,
-		     long *Status, long PackageSize);
-short setup_database(char *DBname, char *AgentName);
-#else
-inline long NetworkEvaluate(double (*VMfunction)(double *LX, long *LStatus), 
-		     char *DBname, char *AgentName, 
-		     MATRIX population, long pop_size, long nvars, long NetworkNumber,
-		     long *Status, long PackageSize)
-{
-  long a;
-  a=1;
-  return(a);
-  
-}
-#endif
-
-
 /* evaluate.c */
-double optimization(struct GND_IOstructure *Structure, VECTOR X, 
+void optimization(struct GND_IOstructure *Structure, VECTOR X, 
 		    MATRIX domains, FILE *output);
 void sort(short int MinMax, MATRIX  population, int pop_size,
 	  long nvar);
@@ -233,32 +205,12 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 			  long *InstanceNumber, long *P, long *P0, long *P1, long *P2, long *P3, long *P4, long *P5, 
 			  long *P6, long *P7, long *P8, short *PrintLevel, 
 			  short *HardGenerationLimit, FILE *output);
-double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X, 
+void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X, 
 			     MATRIX domains, FILE *output);
 void JaIntegerSort(double **InMatrix, long n, long k);
 int JaIntegerCMP(double **a, double **b) ;
 void JaDoubleSort(double **InMatrix, long n, long k);
 int JaDoubleCMP(double **a, double **b) ;
-void JaDoubleMemoryMatrix_Gen0(struct GND_IOstructure *Structure, 
-			       double **Memory, double **population, double *X,
-			       long *UniqueCount, long OldUniqueCount,
-			       int pop_size, int nvars, 
-			       FILE *output, long *Status);
-void JaDoubleMemoryMatrix(struct GND_IOstructure *Structure, 
-			  double **Memory, double **population, double *X,
-			  long *UniqueCount, long OldUniqueCount,
-			  int pop_size, int nvars, FILE *output, long *Status);
-void JaIntMemoryMatrix_Gen0(struct GND_IOstructure *Structure, 
-			       double **Memory, double **population, double *X,
-			       long *UniqueCount, long OldUniqueCount,
-			       int pop_size, int nvars, FILE *output, long *Status);
-void JaIntMemoryMatrix(struct GND_IOstructure *Structure, 
-			  double **Memory, double **population, double *X,
-			  long *UniqueCount, long OldUniqueCount,
-			  int pop_size, int nvars, FILE *output, long *Status);
-void JaDynamicPopulationCheck(struct GND_IOstructure *Structure,
-			      double **population, int location, int pop_size, int nvars, 
-			      FILE *output, long *Status);
 
 /* frange_ran.c */
 double newunif(void);
@@ -314,12 +266,11 @@ void oper4(MATRIX p, int p2use, int nvars);
 void oper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars);
 void oper6(VECTOR parent, double **domains, int nvars, int T, int t, int B);
 void oper7(VECTOR p1, VECTOR p2, double **domains, int nvars);
-void oper8(double (*VMfunction)(double *LX, long *LStatus),
+void oper8(SEXP fn, SEXP rho,
 	   VECTOR parent, MATRIX domains, 
-	   double SolutionTolerance, short Optim, int nvars, 
+	   double SolutionTolerance, long nvars, 
 	   short int MinMax, short BoundaryEnforcement, 
-	   long InstanceNumber, FILE *output, long *LVMstatus,
-	   short PrintLevel);
+	   FILE *output, short PrintLevel);
 void find_range(double *llim, double *ulim, int comp, double **domains, int nvars, VECTOR parent);
 int irange_ran(int llim, int ulim);
 double get_F(int T, int t, double y, int B);
@@ -336,22 +287,10 @@ FLAG InBounds(VECTOR child, double **domains, int nvars);
 long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, FILE *fp);
 void print_domains(MATRIX equal, int t_equ, short DataType, FILE *output);
 void print_matrix(int lr, int ur, int lc, int uc, MATRIX mat, FILE *output);
-void print_population(int popsize, int nvars, int generation, double **foo, FILE *out);
+void print_population(long popsize, long nvars, long generation, long lexical, double **foo, FILE *out);
 void print_vector(VECTOR arr, int l, int u, FILE *output);
 void print_ivector(IVECTOR arr, int l, int u, FILE *output);
 
-
-// mysql.cpp
-#ifdef SQL_DEFINE
-
-int InitializeMySQL(char *CnfFileName, char *dbname);
-int gDestroy_MySQL(void);
-long mysql_insert_pop( char *DBname, double *vec_parms, long nvars );
-long mysql_check_completion(char *DBname);
-double mysql_extract_value(char *DBname, long rownumb);
-short mysql_noreturn_command(char *command);
-
-#endif
 
 // if we don't have any Numerical Recipes code
 

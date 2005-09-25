@@ -5,14 +5,14 @@
   Walter R. Mebane, Jr.
   Cornell University
   http://macht.arts.cornell.edu/wrm1
-  wrm1@macht.arts.cornell.edu
+  <wrm1@macht.arts.cornell.edu>
 
   Jasjeet Singh Sekhon 
-  Harvard University
-  http://jsekhon.fas.harvard.edu/
-  jsekhon@fas.harvard.edu
+  UC Berkeley
+  http://sekhon.polisci.berkeley.edu
+  <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/eval.cpp,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/eval.cpp,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
 
 */
 
@@ -22,233 +22,229 @@
 
 #include "genoud.h"
 
-#ifdef SQL_DEFINE
-#include "mysql.h"
-#endif
-
-#ifdef UNIX
-  #include <sys/time.h>
-  #include <sys/types.h>
-  #include <unistd.h>   
-#endif
-
-#ifdef UNIX
-	#include <unistd.h>   
-	#ifndef os_getpid
-		#define os_getpid getpid
-	#endif
-#else
-        #include <winsock.h>
-	#include <process.h>
-	#ifndef os_getpid
-		#define os_getpid _getpid
-	#endif
-#endif
-
-double evaluate(double (*VMfunction)(double *LX, long *LStatus),
-		VECTOR X, int nvars, long int *Status)
+extern "C" 
 {
-  double fit;
+  double evaluate(SEXP fn, SEXP rho, double *X, long nvars, short int MinMax)
+  {
+    SEXP R_fcall, Rx, Rret;
+    double fit;
+    long i;
+    int isFinite=0;
+    
+    PROTECT(Rx = allocVector(REALSXP, nvars));  
+    
+    for (i=0; i<nvars; i++)
+      {
+	REAL(Rx)[i] = X[(i+1)];
+      }
+    
+    PROTECT(R_fcall = lang2(fn, R_NilValue));
+    SETCADR(R_fcall, Rx);
+    fit =  REAL(eval(R_fcall, rho))[0];
+    UNPROTECT(2);
+    
+    isFinite = R_finite(fit);  
+    if (!isFinite)
+      {
+	if (MinMax)
+	  {
+	    return(-1*DOUBLEMAX);
+	  }
+	else
+	  {
+	    return(DOUBLEMAX);
+	  }
+      }  
+    
+ 
+   return(fit);
+  } /* double evaluate(SEXP fn, VECTOR X, long nvars, short int MinMax) */
 
-  fit = VMfunction(X+1, Status);
 
-  return(fit);
-}
+  void EvaluateLexical(SEXP fn, SEXP rho,
+		       double *X, long nvars, long lexical, short int MinMax, double *ret)
+  {
+    SEXP R_fcall, Rx, Rret;
+    long i;
+    int isFinite=0;
+    
+    PROTECT(Rx = allocVector(REALSXP, nvars));
 
+    for (i=0; i<nvars; i++)
+      {
+	REAL(Rx)[i] = X[i+1];
+      }
 
-void EvaluateMatrix(long (*VMfunctionMatrix)(double **Population, long population, long nvars),
-		    MATRIX Population, long npopulation, long nvars, long *Status)
-{
+    PROTECT(R_fcall = lang2(fn, R_NilValue));
+    SETCADR(R_fcall, Rx);
+    Rret = eval(R_fcall, rho);
 
-  *Status = VMfunctionMatrix(Population, npopulation, nvars);
+    for (i=0; i<lexical; i++)
+      {
+	ret[i] =  REAL(Rret)[i];
+      }
+    UNPROTECT(2);
 
-}
-
-
-#ifdef SQL_DEFINE
-/*
-  This function stacks up evaluation requests for parallel processing.
-  But this does not allow for Memory Matrix.  That must be turned off!
-
-  For the time being let's evaluate everything in the population matrix.
-*/
-long NetworkEvaluate(double (*VMfunction)(double *LX, long *LStatus), 
-		     char *DBname, char *AgentName, 
-		     MATRIX population, long pop_size, long nvars, long NetworkNumber,
-		     long *Status, long PackageSize)
-{
-  double *X, tmp;
-  long *VRowNumber, *VPnumber, RowNumber=0;
-  int i, p, retval;
-  struct timeval tv;                        // Timeout value
-  fd_set rd_set;
-
-  //printf("Network Evaluation\n");
-
-  // Memory Allocation
-  X = (double *) malloc((nvars)*sizeof(double));
-  VRowNumber = (long *) malloc((pop_size)*sizeof(long));
-  VPnumber = (long *) malloc((pop_size)*sizeof(long));
-
-  // dispatch the individuals needed to be evaluated
-  for (p=1; p<=pop_size; p++)
-    {
-      if (population[p][0] == EVALUATE)
-	{
-	  for (i=0; i<nvars; i++)
-	    {
-	      X[i] = population[p][i+1];
-	    }
-	  VPnumber[RowNumber]=p;
-
-	  VRowNumber[RowNumber] = mysql_insert_pop(DBname, X, nvars);
-	  if (VRowNumber[RowNumber] < 0)
-	    {
-	      *Status = -1;
-	      retval = VRowNumber[RowNumber];
-	      //printf("VRowNumber[RowNumber] < 0: %d\n", VRowNumber[RowNumber]);
-	      goto CleanUP;
-	    }
-	  RowNumber++;
-	} // end of if (population[p][0] == EVALUATE)
-    } // end of for
-
-  // use select for OS independent microsecond sleep
-  // sample timeout of 0 seconds, needs to be reset each time!
-  FD_ZERO(&rd_set);          // initialize
-  FD_SET(893,&rd_set);	
-
-  i=0;
-  for (;;)
-    {
-      tmp = VMfunction(X, Status);
-      if (*Status < 0)
-	{
-	  retval = -1;
-	  goto CleanUP;
-	}
-
-      tv.tv_sec =  1;       //seconds
-      tv.tv_usec = 0;     //microseconds (1/1,000,000)
-
-      retval = select(1, &rd_set, NULL, NULL, &tv);
-
-      retval = mysql_check_completion(DBname);
-      //printf("remaining agents: %d, %d \n", retval, ++i);
-      if (retval==0)
-	break;
-    }
-
-  // retrieve results
-  for (i=0; i<RowNumber; i++)
-    {
-      p=VPnumber[i];
-      // printf("retrieving row: %d\n", VRowNumber[i]);
-      population[p][0] = mysql_extract_value(DBname, VRowNumber[i]);
-      // printf("got it\n");
-      if (population[p][0]==EVALUATE)
-	{
-	  *Status = -1;
-	  retval = -1;
-	  goto CleanUP;
-	}
-    } // end of i loop;
+    for (i=0; i<lexical; i++)
+      {
+	isFinite = R_finite(ret[i]);  
+	if (!isFinite)
+	  {
+	    if (MinMax)
+	      {
+		ret[i]=(-1*DOUBLEMAX);
+	      }
+	    else
+	      {
+		ret[i]=(DOUBLEMAX);
+	      }
+	  }  
+      }
+  } /*   void EvaluateLexical(SEXP fn, SEXP rho */
   
-  retval = 0;
 
- CleanUP:
+  void userGradientfn(SEXP fnGR, SEXP rho, double *parms, double *grad, long nvars)
+  {
+    SEXP Rparms, R_fcall, Rgrad;
+    long i;
+    
+    PROTECT(Rparms = allocVector(REALSXP, nvars));    
+    PROTECT(Rgrad  = allocVector(REALSXP, nvars));    
+    
+    for(i=0; i<nvars; i++)
+      {
+	REAL(Rparms)[i] = parms[i];
+      }
 
-  free(VPnumber);
-  free(VRowNumber);
-  free(X);
-  return(retval);
-} // end of EvaluateStacked
+    PROTECT(R_fcall = lang2(fnGR, R_NilValue));
+    SETCADR(R_fcall, Rparms);    
+    Rgrad = eval(R_fcall, rho);  
+    
+    for(i=0; i<nvars; i++)
+      {
+	grad[i] = REAL(Rgrad)[i];
+      }
+    
+    UNPROTECT(3);    
+  } /*   void userGradientfn(SEXP fnGR, SEXP rho, double *parms, double *grad, long nvars) */
 
 
-short setup_database(char *DBname, char *AgentName)
-{
+  void RlexicalSort(SEXP fnLexicalSort, SEXP rho,
+		    double **population, 
+		    short int MinMax, long pop_size, long nvars, long lexical_end,
+		    short int type)
+  {
+    SEXP parms, MAT, R_fcall, MATret;
+    long i,j,k=0;
 
-  const int  MAX_bbSQL_INSERT = 10240;
-  char *command;
-  short retval;
-  int   p       = 0;
-  
-  /* create SQL command string  */
-  if ((command = (char *) malloc(MAX_bbSQL_INSERT)) == NULL) {
-    printf("Failed to allocated command in setup_database()\n");
-    return -1;
+    /* MinMax: 0 min, 1 max */
+    /* parms = (1) MinMax, (2) nvars, (3) lexical_end, (4) [nvars/or lexical sort] */
+    /* using: #define M(ROW,COL,NCOLS) (((ROW)*(NCOLS))+(COL)) */
+    
+    PROTECT(MAT = allocMatrix(REALSXP, pop_size, lexical_end));
+    PROTECT(parms = allocVector(REALSXP, 4));
+    
+    REAL(parms)[0] = MinMax;
+    REAL(parms)[1] = nvars;
+    REAL(parms)[2] = lexical_end;
+    REAL(parms)[3] = type; /* 0=nvars, 1=lexical on obj function */
+
+    for(j=0; j<lexical_end; j++)
+      for (i=1; i<=pop_size; i++)
+	{
+	  {
+	    REAL(MAT)[k] = population[i][j];
+	    k++;
+	  }
+	}  
+    
+    PROTECT(R_fcall = lang3(fnLexicalSort, MAT, parms));
+    SETCADR(R_fcall, parms);
+    SETCADR(R_fcall, MAT);
+    MATret = eval(R_fcall, rho);  
+
+    k = 0;
+    for(j=0; j<lexical_end; j++)
+      for (i=1; i<=pop_size; i++)
+	{
+	  {
+	    population[i][j] = REAL(MATret)[k];
+	    k++;
+	  }
+	}  
+    UNPROTECT(3);
   }
 
-  // printf("p\n");
-  sprintf(command,"DROP DATABASE %s", DBname);
-  retval = mysql_noreturn_command(command);
-  // printf("p\n");
+  long RmemoryMatrixEvaluate(SEXP fnMemoryMatrixEvaluate, SEXP rho,
+			     double **Memory, double **population, 
+			     short int MinMax, long pop_size, long UniqueCount,
+			     long nvars, long lexical, long lexical_end)
+  {
+    SEXP parms, Rmemory, Rpopulation, R_fcall, Rret;
+    long i,j,k;    
 
-  // printf("p\n");
-  sprintf(command,"CREATE DATABASE %s", DBname);
-  retval = mysql_noreturn_command(command);
-  // printf("p\n");
-  if (retval < 0)
-    return retval;
+    /* MinMax: 0 min, 1 max */
+    /* parms = (1) MinMax, (2) UniqueCount, (3) nvars, (4) lexical */
+    
+    PROTECT(Rmemory = allocMatrix(REALSXP, UniqueCount, lexical_end));
+    PROTECT(Rpopulation = allocMatrix(REALSXP, pop_size, lexical_end));
+    PROTECT(parms = allocVector(REALSXP, 3));
 
-  p = 0;
-  p += sprintf(command+p,"CREATE TABLE %s.status ", DBname);
-  p += sprintf(command+p,"( ");
-  p += sprintf(command+p,"jobname       varchar(255) NOT NULL, ");
-  p += sprintf(command+p,"tabname       varchar(20)  NOT NULL, ");
-  p += sprintf(command+p,"row           int(11)      NOT NULL, ");
-  p += sprintf(command+p,"computername  varchar(255) , ");
-  p += sprintf(command+p,"ipaddress     varchar(16)  , ");
-  p += sprintf(command+p,"port          int(11)      , ");
-  p += sprintf(command+p,"pid           int(11)      , ");
-  p += sprintf(command+p,"time1         datetime     , ");
-  p += sprintf(command+p,"time2         datetime     , ");
-  p += sprintf(command+p,"jobtime       double       , ");
-  p += sprintf(command+p,"status        int(11)      , ");
-  p += sprintf(command+p,"attempts      int(11)      , ");
-  p += sprintf(command+p,"PRIMARY KEY (jobname,tabname,row), ");
-  p += sprintf(command+p,"INDEX tidx (computername), ");
-  p += sprintf(command+p,"INDEX tidx2 (status) ");
-  p += sprintf(command+p,")");
-  retval = mysql_noreturn_command(command);
-  if (retval < 0)
-    return retval;
+    REAL(parms)[0] = MinMax;
+    REAL(parms)[1] = nvars;
+    REAL(parms)[2] = lexical;
 
-  p = 0;
-  p += sprintf(command+p,"CREATE TABLE %s.list ", DBname);
-  p += sprintf(command+p,"( ");
-  p += sprintf(command+p,"arg1 double, ");
-  p += sprintf(command+p,"ret1 double, ");
-  p += sprintf(command+p,"row integer AUTO_INCREMENT, ");
-  p += sprintf(command+p,"PRIMARY KEY (row), ");
-  p += sprintf(command+p,"INDEX tidx (row)  ");
-  p += sprintf(command+p,")");
-  retval = mysql_noreturn_command(command);
-  if (retval < 0)
-    return retval;
+    if(UniqueCount > 1)
+      {
+	k=0;
+	for(j=0; j<lexical_end; j++)
+	  for (i=1; i<=UniqueCount; i++)
+	    {
+	      {
+		REAL(Rmemory)[k] = Memory[i][j];
+		k++;
+	      }
+	    }  	
+      }
 
-  p = 0;
-  p += sprintf(command+p,"CREATE TABLE %s.job ",DBname);
-  p += sprintf(command+p,"( ");
-  p += sprintf(command+p,"jobname varchar(255) NOT NULL, ");
-  p += sprintf(command+p,"program text, ");
-  p += sprintf(command+p,"argc	  integer, ");
-  p += sprintf(command+p,"retc	  integer, ");
-  p += sprintf(command+p,"INDEX  tidx (jobname), ");
-  p += sprintf(command+p,"PRIMARY KEY (jobname) ");
-  p += sprintf(command+p,")");
-  retval = mysql_noreturn_command(command);
-  // printf("retval: %d\n", retval);
-  if (retval < 0)
-    return retval;
+    k =0;
+    for(j=0; j<lexical_end; j++)
+      for (i=1; i<=pop_size; i++)
+	{
+	  {
+	    REAL(Rpopulation)[k] = population[i][j];
+	    k++;
+	  }
+	}  
 
-  p = 0;
-  p += sprintf(command+p,"INSERT INTO pgenoudTest.job ",DBname);
-  p += sprintf(command+p," VALUES ('pgenoud','arg1 %s',1,1)",AgentName);
-  // printf("sending:%s*\n", command);
-  retval = mysql_noreturn_command(command);
-  if (retval < 0)
-    return retval;
+    PROTECT(R_fcall = lang4(fnMemoryMatrixEvaluate, Rmemory, Rpopulation, parms));    
+    SETCADR(R_fcall, parms);
+    SETCADR(R_fcall, Rpopulation);
+    SETCADR(R_fcall, Rmemory);
+    Rret = eval(R_fcall, rho);      
 
-} // endof setup_database
-#endif
+    UniqueCount = (long) REAL(Rret)[0];
+    k =1;
+    for(j=0; j<lexical_end; j++)
+      for (i=1; i<=UniqueCount; i++)
+	{
+	  {
+	    Memory[i][j] = REAL(Rret)[k];
+	    k++;
+	  }
+	}      
+
+    for(j=0; j<lexical_end; j++)
+      for (i=1; i<=pop_size; i++)
+	{
+	  {
+	    population[i][j] = REAL(Rret)[k];
+	    k++;
+	  }
+	}  
+
+    UNPROTECT(4);
+    return(UniqueCount);
+  }
+} /* end of extern "C" */
+

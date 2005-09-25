@@ -5,14 +5,14 @@
   Walter R. Mebane, Jr.
   Cornell University
   http://macht.arts.cornell.edu/wrm1
-  wrm1@macht.arts.cornell.edu
+  <wrm1@macht.arts.cornell.edu>
 
   Jasjeet Singh Sekhon 
-  Harvard University
-  http://jsekhon.fas.harvard.edu/
-  jsekhon@fas.harvard.edu
+  UC Berkeley
+  http://sekhon.polisci.berkeley.edu
+  <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/gradient.cpp,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/gradient.cpp,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
 
 */
 
@@ -53,10 +53,10 @@ double GammaLN(double xx)
 
 double VMgamma(double xx)
 {
-	#define PI 3.141592654
+	#define PI2 3.141592654
 
 	if		(xx > 0) return exp(GammaLN(xx));
-	else if (xx < 0) return PI / exp(GammaLN(1 - xx)) / sin( PI * (1 - xx));
+	else if (xx < 0) return PI2 / exp(GammaLN(1 - xx)) / sin( PI2 * (1 - xx));
 	else			 return 0;
 
 }
@@ -71,9 +71,9 @@ double VMgamma(double xx)
   The code internal to the function does this.
   */
 
-double func4g(double (*VMfunction)(double *LX, long *LStatus),
+double func4g(SEXP fn, SEXP rho,
 	      double *X, long nvars, short MinMax, short BoundaryEnforcement, 
-	      double **Domains, long *Status)
+	      double **Domains)
 {
   double fit;
   short BoundaryTrigger=0;
@@ -94,14 +94,14 @@ double func4g(double (*VMfunction)(double *LX, long *LStatus),
     if (BoundaryTrigger > 0) {
       // *Status=-3;
       // min
-      if (MinMax==0) return(-1*ERROR_CODE);
+      if (MinMax==0) return(-1*DOUBLEMAX);
       //max
-      else return(ERROR_CODE);
+      else return(DOUBLEMAX);
     }
   }
 
-  if (MinMax==0) fit= evaluate(VMfunction, X-1, nvars, Status);
-  else fit = -1*evaluate(VMfunction, X-1, nvars, Status);
+  if (MinMax==0) fit=evaluate(fn, rho, X-1, nvars, MinMax);
+  else fit = -1*evaluate(fn, rho, X-1, nvars, MinMax);
   return(fit);
 }
 
@@ -114,14 +114,13 @@ double func4g(double (*VMfunction)(double *LX, long *LStatus),
        g[0] is the derivative for the first parameter;
    nparms, the number of parameters, p[nparms-1] is the last parameter.
 */
-void gradient(double (*VMfunction)(double *LX, long *LStatus),
+void gradient(SEXP fn, SEXP rho,
 	      double *p, double *g, long nparms, short MinMax, short BoundaryEnforcement,
-	      long InstanceNumber, double **Domains, long *LVMstatus)
+	      double **Domains)
 {
 
   double *wrk;
   int ndiffs;
-  // static long DoneInstanceNumbers=-1;
 
   /* formally declared global in graddata.h */
   // double *epsacc, *optint, *ihessians;
@@ -133,22 +132,12 @@ void gradient(double (*VMfunction)(double *LX, long *LStatus),
 
   ndiffs = 9;  /* order of differences for num grad optimal interval calcs */
 
-  estoptint(VMfunction, epsacc, optint, nparms, ndiffs, 2, p, func4g, 
-	    MinMax, BoundaryEnforcement, Domains, LVMstatus);
-  
-  if (*LVMstatus < 0) {
-    /* Free Memory */
-    free(wrk);
-    free(epsacc);
-    free(optint);
-    
-    return;
-  }
-  
+  estoptint(fn, rho, epsacc, optint, nparms, ndiffs, 2, p, func4g, 
+	    MinMax, BoundaryEnforcement, Domains);
   
   /* numgradc:  numerical gradient, central-difference */
-  numgradc(VMfunction, epsacc, optint, nparms, p, g, wrk, func4g, MinMax,
-	   BoundaryEnforcement, Domains, LVMstatus);
+  numgradc(fn, rho, epsacc, optint, nparms, p, g, wrk, func4g, MinMax,
+	   BoundaryEnforcement, Domains);
 
   free(wrk);
   free(epsacc);
@@ -162,12 +151,11 @@ void gradient(double (*VMfunction)(double *LX, long *LStatus),
 
 /* invals, grads, wrk should point to double w[nparms+1] arrays;
    func is the function whose gradient is to be evaluated */
-void numgrad(double (*VMfunction)(double *LX, long *LStatus),
+void numgrad(SEXP fn, SEXP rho,
 	     double *epsacc, double *optint,
 	     int nparms, double *invals, double *grads, double *wrk,
-	      double (*func)(double (*VMfunction)(double *LX, long *LStatus),
-			     double *X, int nvars, short int MinMax, long *Status), 
-	     short MinMax, long *LVMstatus)
+	     double (*func)(SEXP fn, SEXP rho, double *X, int nvars, short int MinMax), 
+	     short MinMax)
 {
   int i;
   //  double u, rf, fplus, fminus;
@@ -176,10 +164,7 @@ void numgrad(double (*VMfunction)(double *LX, long *LStatus),
   double duse;
   
   /* evaluate func at the input point */
-  u = func(VMfunction, invals, nparms, MinMax, LVMstatus);
-  if (*LVMstatus < 0) {
-    return;
-  }
+  u = func(fn, rho, invals, nparms, MinMax);
   
   /* copy the parameter values for point at which to evaluate the gradient */
   for (i=0; i<nparms; i++) wrk[i] = invals[i];
@@ -189,23 +174,15 @@ void numgrad(double (*VMfunction)(double *LX, long *LStatus),
     epsuse = epsacc[i];
     duse = optint[i];
     wrk[i] += duse;
-    grads[i] = (func(VMfunction, wrk, nparms, MinMax, LVMstatus) - u) / duse ;
-    if (*LVMstatus < 0) {
-      return;
-    }
+    grads[i] = (func(fn, rho, wrk, nparms, MinMax) - u) / duse ;
+
     /* check the gradient */
     if (2.0*epsuse / (duse*fabs(grads[i])) > 0.1) { /* switch to central-diff */
       duse = pow(duse, 2.0/3.0);  /* see GMW p 131 */
       wrk[i] = invals[i] + duse;
-      fplus = func(VMfunction, wrk, nparms, MinMax, LVMstatus);
-      if (*LVMstatus < 0) {
-	return;
-      }
+      fplus = func(fn, rho, wrk, nparms, MinMax);
       wrk[i] = invals[i] - duse;
-      fminus = func(VMfunction, wrk, nparms, MinMax, LVMstatus);
-      if (*LVMstatus < 0) {
-	return;
-      }
+      fminus = func(fn, rho, wrk, nparms, MinMax);
       grads[i] = (fplus-fminus) * 0.5 / duse ;
     }
     wrk[i] = invals[i];
@@ -218,13 +195,13 @@ void numgrad(double (*VMfunction)(double *LX, long *LStatus),
 
 /* invals, grads, wrk should point to double w[nparms+1] arrays;
    func is the function whose gradient is to be evaluated */
-void numgradc(double (*VMfunction)(double *LX, long *LStatus),
+void numgradc(SEXP fn, SEXP rho,
 	      double *epsacc, double *optint,	      
 	      int nparms, double *invals, double *grads, double *wrk,
-	      double (*func)(double (*VMfunction)(double *LX, long *LStatus),
+	      double (*func)(SEXP fn, SEXP rho,
 			     double *X, long nvars, short MinMax, 
-			     short BoundaryEnforcement, double **Domains, long *Status), 
-	      short MinMax, short BoundaryEnforcement, double **Domains, long *LVMstatus)
+			     short BoundaryEnforcement, double **Domains), 
+	      short MinMax, short BoundaryEnforcement, double **Domains)
 {
   int i;
   // double u, rf, fplus, fminus;
@@ -233,10 +210,7 @@ void numgradc(double (*VMfunction)(double *LX, long *LStatus),
   double duse;
 
   /* evaluate func at the input point */
-  u = func(VMfunction, invals, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-  if (*LVMstatus < 0) {
-    return;
-  }
+  u = func(fn, rho, invals, nparms, MinMax, BoundaryEnforcement, Domains);
 
   /* copy the parameter values for point at which to evaluate the gradient */
   for (i=0; i<nparms; i++) wrk[i] = invals[i];
@@ -248,15 +222,11 @@ void numgradc(double (*VMfunction)(double *LX, long *LStatus),
     duse = optint[i];
     duse = pow(duse, 2.0/3.0);  /* see GMW p 131 */
     wrk[i] = invals[i] + duse;
-    fplus = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-    if (*LVMstatus < 0) {
-      return;
-    }
+    fplus = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
     wrk[i] = invals[i] - duse;
-    fminus = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-    if (*LVMstatus < 0) {
-      return;
-    }
+    fminus = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
     grads[i] = (fplus-fminus) * 0.5 / duse ;
     wrk[i] = invals[i];
   }
@@ -336,13 +306,13 @@ double *numopgc(double *epsacc, double *optint,
 /* estimate accuracy */
 /* see Gill, Murray and Wright, 1981, "Practical Optimization," p. 337 */
 
-double **eaccuracy(double (*VMfunction)(double *LX, long *LStatus),
+double **eaccuracy(SEXP fn, SEXP rho,
 		   int nparms, int ndiffs, double h, double *invals,
 		   double *wrk, 
-		   double (*func)(double (*VMfunction)(double *LX, long *LStatus),
+		   double (*func)(SEXP fn, SEXP rho,
 				  double *X, long nvars, short MinMax, 
-				  short BoundaryEnforcement, double **Domains, long *Status), 
-		   short MinMax, short BoundaryEnforcement, double **Domains, long *LVMstatus)
+				  short BoundaryEnforcement, double **Domains), 
+		   short MinMax, short BoundaryEnforcement, double **Domains)
 {
   double **table;
 
@@ -357,10 +327,7 @@ double **eaccuracy(double (*VMfunction)(double *LX, long *LStatus),
     table[i] = (double *) calloc(nrows, sizeof(double));
 
   /* evaluate func at the input point */
-  u = func(VMfunction, invals, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-  if (*LVMstatus < 0) {
-    return(table);
-  }
+  u = func(fn, rho, invals, nparms, MinMax, BoundaryEnforcement, Domains);
   for (i=0; i<nparms; i++) table[0][i*nsteps] = u;
 
   /* copy the parameter values for point at which to evaluate the gradient */
@@ -377,10 +344,7 @@ double **eaccuracy(double (*VMfunction)(double *LX, long *LStatus),
     }
     for (j=1; j<nsteps; j++) {
       wrk[i] += huse;
-      table[0][i*nsteps+j] = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus) ;
-      if (*LVMstatus < 0) {
-	return(table);
-      }
+      table[0][i*nsteps+j] = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains) ;
     }
     wrk[i] = invals[i];
   }
@@ -400,12 +364,12 @@ double **eaccuracy(double (*VMfunction)(double *LX, long *LStatus),
 /* estimate intervals for use in numerical gradients */
 /* see Gill, Murray and Wright, 1981, "Practical Optimization," p. 343-344 */
 
-struct estints *algfd(double (*VMfunction)(double *LX, long *LStatus),
+struct estints *algfd(SEXP fn, SEXP rho,
 		      int nparms, double *eps, double *invals, double *wrk,
-		      double (*func)(double (*VMfunction)(double *LX, long *LStatus),
+		      double (*func)(SEXP fn, SEXP rho,
 				     double *X, long nvars, short MinMax, 
-				     short BoundaryEnforcement, double **Domains, long *Status), 
-		      short MinMax, short BoundaryEnforcement, double **Domains, long *LVMstatus)
+				     short BoundaryEnforcement, double **Domains), 
+		      short MinMax, short BoundaryEnforcement, double **Domains)
 {
   struct estints *outstruc;
 
@@ -431,10 +395,7 @@ struct estints *algfd(double (*VMfunction)(double *LX, long *LStatus),
   outstruc->nparms = nparms;
 
   /* evaluate func at the input point */
-  u = func(VMfunction, invals, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-  if (*LVMstatus < 0) {
-    return(outstruc);
-  }
+  u = func(fn, rho, invals, nparms, MinMax, BoundaryEnforcement, Domains);
 
   /* copy the parameter values for point at which to evaluate the gradient */
   for (i=0; i<nparms; i++) wrk[i] = invals[i];
@@ -445,12 +406,9 @@ struct estints *algfd(double (*VMfunction)(double *LX, long *LStatus),
     hbar = 2.0*(eta+fabs(invals[i]))* sqrt(eps[i]/(omega + fabs(u))) ;
     hk = 10.0 * hbar;
     k = 0;
-    fdestimates(VMfunction, i, u, invals, wrk, eps[i], hk,
+    fdestimates(fn, rho, i, u, invals, wrk, eps[i], hk,
 		&fplus, &fminus, &phif, &phib, &phic, &phi2, &cf, &cb, &c2,
-		func, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-    if (*LVMstatus < 0) {
-      return(outstruc);
-    }
+		func, nparms, MinMax, BoundaryEnforcement, Domains);
     hs = -1.0;
   FD2:
     if ((cf>cb ? cf : cb) <= 0.1) hs = hk;
@@ -463,12 +421,9 @@ struct estints *algfd(double (*VMfunction)(double *LX, long *LStatus),
     do {
       k++;
       hk *= 10.0;
-      fdestimates(VMfunction, i, u, invals, wrk, eps[i], hk,
+      fdestimates(fn, rho, i, u, invals, wrk, eps[i], hk,
 		  &fplus, &fminus, &phif, &phib, &phic, &phi2, &cf, &cb, &c2,
-		  func, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-      if (*LVMstatus < 0) {
-	return(outstruc);
-      }
+		  func, nparms, MinMax, BoundaryEnforcement, Domains);
       if (hs<0 && ((cf>cb ? cf : cb) <= 0.1)) hs = hk;
       if (c2 <= 0.1) {
 	hphi = hk;
@@ -480,12 +435,9 @@ struct estints *algfd(double (*VMfunction)(double *LX, long *LStatus),
     do {
       k++;
       hk /= 10.0;
-      fdestimates(VMfunction, i, u, invals, wrk, eps[i], hk,
+      fdestimates(fn, rho, i, u, invals, wrk, eps[i], hk,
 		  &fplus, &fminus, &phif, &phib, &phic, &phi2, &cf, &cb, &c2,
-		  func, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-      if (*LVMstatus < 0) {
-	return(outstruc);
-      }
+		  func, nparms, MinMax, BoundaryEnforcement, Domains);
       if (c2 > 0.1) {
 	hphi = hk * 10.0;
 	goto FD5;
@@ -500,21 +452,14 @@ struct estints *algfd(double (*VMfunction)(double *LX, long *LStatus),
   FD5:
     hf = 2.0*sqrt(eps[i]/fabs(phi2));
     wrk[i] = invals[i] + hf;
-    fplus = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-    if (*LVMstatus < 0) {
-      return(outstruc);
-    }
+    fplus = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
     phi = (fplus-u)/hf;
     wrk[i] = invals[i] + hphi;
-    fplus = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-    if (*LVMstatus < 0) {
-      return(outstruc);
-    }
+    fplus = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
     wrk[i] = invals[i] - hphi;
-    fminus = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-    if (*LVMstatus < 0) {
-      return(outstruc);
-    }
+    fminus = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
     wrk[i] = invals[i];
     phic = (fplus-fminus)/(2.0*hphi);
 
@@ -541,10 +486,8 @@ struct estints *algfd(double (*VMfunction)(double *LX, long *LStatus),
     else if (hs > 0 && c2 > 0.1) {
       hf = hs;
       wrk[i] = invals[i] + hf;
-      fplus = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-      if (*LVMstatus < 0) {
-	return(outstruc);
-      }
+      fplus = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
       wrk[i] = invals[i];
       phi = (fplus-u)/hf;
       phi2 = 0.0;
@@ -554,16 +497,12 @@ struct estints *algfd(double (*VMfunction)(double *LX, long *LStatus),
     else {
       hf = hk;
       wrk[i] = invals[i] + hf;
-      fplus = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-      if (*LVMstatus < 0) {
-	return(outstruc);
-      }
+      fplus = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
       phi = (fplus-u)/hf;
       wrk[i] = invals[i] - hf;
-      fminus = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-      if (*LVMstatus < 0) {
-	return(outstruc);
-      }
+      fminus = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
       wrk[i] = invals[i];
       phic = (fplus-fminus)/(2.0*hf);
       ef = hf*fabs(phi2)*0.5 + 2.0*eps[i]/hf ;
@@ -580,30 +519,25 @@ struct estints *algfd(double (*VMfunction)(double *LX, long *LStatus),
   return outstruc;
 }
 
-void fdestimates(double (*VMfunction)(double *LX, long *LStatus),
+void fdestimates(SEXP fn, SEXP rho,
 		 int parm, double fvalue, double *invals, double *wrk,
 		 double eps, double h,
 		 double *fplus, double *fminus,
 		 double *phif, double *phib, double *phic, double *phi2,
 		 double *cf, double *cb, double *c2,
-		 double (*func)(double (*VMfunction)(double *LX, long *LStatus),
+		 double (*func)(SEXP fn, SEXP rho,
 				double *X, long nvars, short MinMax, 
-				short BoundaryEnforcement, double **Domains, long *Status), 
-		 int nparms, short MinMax, short BoundaryEnforcement, double **Domains, 
-		 long *LVMstatus)
+				short BoundaryEnforcement, double **Domains), 
+		 int nparms, short MinMax, short BoundaryEnforcement, double **Domains)
 {
   double ih = 1.0/h;
 
   wrk[parm] = invals[parm] + h;
-  *fplus = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-  if (*LVMstatus < 0) {
-    return;
-  }
+  *fplus = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
   wrk[parm] = invals[parm] - h;
-  *fminus = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-  if (*LVMstatus < 0) {
-    return;
-  }
+  *fminus = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
   wrk[parm] = invals[parm];
   *phif = (*fplus-fvalue) * ih;
   *phib = (fvalue-*fminus) * ih;
@@ -669,12 +603,12 @@ struct estints *numhessian(struct estints *instruc, double *invals, double *wrk,
 /*   phi2 =
        f(x+hj ej+hi ei) - f(x+hj ej-hi ei) - f(x-hj ej+hi ei) + f(x-hj ej-hi ei) */
 /* instruc should have been set by algfd */
-struct estints *numhessianc(double (*VMfunction)(double *LX, long *LStatus),
+struct estints *numhessianc(SEXP fn, SEXP rho,
 			    struct estints *instruc, double *invals, double *wrk,
-			    double (*func)(double (*VMfunction)(double *LX, long *LStatus),
+			    double (*func)(SEXP fn, SEXP rho,
 					   double *X, long nvars, short MinMax, 
-					   short BoundaryEnforcement, double **Domains, long *Status), 
-			    short MinMax, short BoundaryEnforcement, double **Domains, long *LVMstatus)
+					   short BoundaryEnforcement, double **Domains), 
+			    short MinMax, short BoundaryEnforcement, double **Domains)
 {
   int nparms;
   int nelems;
@@ -701,15 +635,7 @@ struct estints *numhessianc(double (*VMfunction)(double *LX, long *LStatus),
   instruc->hessian = (double *) calloc(nelems,sizeof(double));
 
   /* evaluate func at the input point */
-  fvalue = func(VMfunction, invals, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-  if (*LVMstatus < 0) {
-    free(fmmi);
-    free(fpmi);
-    free(fppi);
-    free(fplusi);
-    
-    return(instruc);
-  }
+  fvalue = func(fn, rho, invals, nparms, MinMax, BoundaryEnforcement, Domains);
 
   /* copy the parameter values for point at which to evaluate the gradient */
   for (i=0; i<nparms; i++) wrk[i] = invals[i];
@@ -718,71 +644,29 @@ struct estints *numhessianc(double (*VMfunction)(double *LX, long *LStatus),
     hi = pow(instruc->hf[i], 2.0/3.0);
     idx = (i*(i-1))/2;
     wrk[i] = invals[i] + 2.0*hi;
-    fplusi[i] = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-    if (*LVMstatus < 0) {
-      free(fmmi);
-      free(fpmi);
-      free(fppi);
-      free(fplusi);
-      
-      return(instruc);
-    }
+    fplusi[i] = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
     wrk[i] = invals[i] - 2.0*hi;
-    fminusi[i] = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-    if (*LVMstatus < 0) {
-      free(fmmi);
-      free(fpmi);
-      free(fppi);
-      free(fplusi);
-      
-      return(instruc);
-    }
+    fminusi[i] = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
     for (j=0; j<i; j++) {
       hj = pow(instruc->hf[j], 2.0/3.0);
       wrk[i] = invals[i] + hi;
       wrk[j] = invals[j] + hj;
-      fppi[idx + j] = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-      if (*LVMstatus < 0) {
-	free(fmmi);
-	free(fpmi);
-	free(fppi);
-	free(fplusi);
-	
-	return(instruc);
-      }
+      fppi[idx + j] = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
       wrk[i] = invals[i] + hi;
       wrk[j] = invals[j] - hj;
-      fpmi[i*nparms + j] = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-      if (*LVMstatus < 0) {
-	free(fmmi);
-	free(fpmi);
-	free(fppi);
-	free(fplusi);
-	
-	return(instruc);
-      }
+      fpmi[i*nparms + j] = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
       wrk[i] = invals[i] - hi;
       wrk[j] = invals[j] + hj;
-      fpmi[j*nparms + i] = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-      if (*LVMstatus < 0) {
-	free(fmmi);
-	free(fpmi);
-	free(fppi);
-	free(fplusi);
-	
-	return(instruc);
-      }
+      fpmi[j*nparms + i] = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
       wrk[i] = invals[i] - hi;
       wrk[j] = invals[j] - hj;
-      fmmi[idx + j] = func(VMfunction, wrk, nparms, MinMax, BoundaryEnforcement, Domains, LVMstatus);
-      if (*LVMstatus < 0) {
-	free(fmmi);
-	free(fpmi);
-	free(fppi);
-	free(fplusi);
-	
-	return(instruc);
-      }
+      fmmi[idx + j] = func(fn, rho, wrk, nparms, MinMax, BoundaryEnforcement, Domains);
+
       wrk[j] = invals[j];
     }
     wrk[i] = invals[i];
@@ -810,13 +694,13 @@ struct estints *numhessianc(double (*VMfunction)(double *LX, long *LStatus),
   return instruc;
 }
 
-void estoptint(double (*VMfunction)(double *LX, long *LStatus),
+void estoptint(SEXP fn, SEXP rho,
 	       double *epsacc, double *optint,
 	       int nparms, int ndiffs, int pflag, double *invals,
-	       double (*func)(double (*VMfunction)(double *LX, long *LStatus),
+	       double (*func)(SEXP fn, SEXP rho,
 			      double *X, long nvars, short MinMax, short BoundaryEnforcement,
-			      double **Domains, long *Status), 
-	       short MinMax, short BoundaryEnforcement, double **Domains, long *LVMstatus) 
+			      double **Domains), 
+	       short MinMax, short BoundaryEnforcement, double **Domains) 
 {
   double *wrk;
 
@@ -831,19 +715,8 @@ void estoptint(double (*VMfunction)(double *LX, long *LStatus),
 
   h = 0.0000002;
 
-  table = eaccuracy(VMfunction, nparms, ndiffs, h, invals, wrk, func, MinMax,
-		    BoundaryEnforcement, Domains, LVMstatus);
-  if (*LVMstatus < 0) {
-    for (i=0; i < (ndiffs+1); i++) 
-      free(table[i]);
-    
-    free(table);
-    free(wrk);
-    /* free the estructure */
-    // free(estructure);
-
-    return;
-  }
+  table = eaccuracy(fn, rho, nparms, ndiffs, h, invals, wrk, func, MinMax,
+		    BoundaryEnforcement, Domains);
 
   for (i=0; i<nparms*ndiffs; i++) wrk[i] = 0.0;
 
@@ -887,25 +760,9 @@ void estoptint(double (*VMfunction)(double *LX, long *LStatus),
   }
 #endif
 
-  estructure = algfd(VMfunction, nparms, epsacc, invals, wrk, func, MinMax, 
-		     BoundaryEnforcement, Domains, LVMstatus);
-  if (*LVMstatus < 0) {
-    for (i=0; i < (ndiffs+1); i++) 
-      free(table[i]);
-    
-    free(table);
-    free(wrk);
-    /* free the estructure */
-    free(estructure->errors);
-    free(estructure->hf);
-    free(estructure->phi);
-    free(estructure->phic);
-    free(estructure->phi2);
-    free(estructure->ef);
-    free(estructure);
-    
-    return;
-  }
+  estructure = algfd(fn, rho, nparms, epsacc, invals, wrk, func, MinMax, 
+		     BoundaryEnforcement, Domains);
+
   if (pflag==1) {
     printf("err   interval          f'                fc'               f''               errorbound\n");
     for (i=0; i<nparms; i++) {
@@ -936,14 +793,14 @@ void estoptint(double (*VMfunction)(double *LX, long *LStatus),
   free(estructure);
 }
 
-void dohessians(double (*VMfunction)(double *LX, long *LStatus),
+void dohessians(SEXP fn, SEXP rho,
 		double *epsacc, 
 		int nparms, int nobs, int ndiffs, double *invals,
-		double (*func)(double (*VMfunction)(double *LX, long *LStatus),
+		double (*func)(SEXP fn, SEXP rho,
 			       double *X, long nvars, short MinMax, 
-			       short BoundaryEnforcment, double **Domains, long *Status), 
+			       short BoundaryEnforcment, double **Domains), 
 		double (*funco)(double *, double *),
-		short MinMax, short BoundaryEnforcement, double **Domains, long *LVMstatus)
+		short MinMax, short BoundaryEnforcement, double **Domains)
 {
   double *wrk;
 
@@ -956,12 +813,8 @@ void dohessians(double (*VMfunction)(double *LX, long *LStatus),
 
   wrk = (double *) malloc(nparms*(ndiffs+1)*sizeof(double));
 
-  estructure = algfd(VMfunction, nparms, epsacc, invals, wrk, func, MinMax, 
-		     BoundaryEnforcement, Domains, LVMstatus);
-  if (*LVMstatus < 0) {
-     free(wrk);
-     return;
-  }
+  estructure = algfd(fn, rho, nparms, epsacc, invals, wrk, func, MinMax, 
+		     BoundaryEnforcement, Domains);
 
 #ifdef NEVERDEFINED
   /* numerical hessian, using forward differences for off-diagonal elements */
@@ -982,12 +835,9 @@ void dohessians(double (*VMfunction)(double *LX, long *LStatus),
 #endif
 
   /* numerical hessian, using central differences */
-  numhessianc(VMfunction, estructure, invals, wrk, func, MinMax, BoundaryEnforcement, 
-	      Domains, LVMstatus);
-  if (*LVMstatus < 0) {
-     free(wrk);
-     return;
-  }
+  numhessianc(fn, rho, estructure, invals, wrk, func, MinMax, BoundaryEnforcement, 
+	      Domains);
+
   printf("numerical hessian, central differences:\n");
   for (i=0; i<nparms; i++) {
     for (j=0; j<nparms; j++) {

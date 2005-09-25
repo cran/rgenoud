@@ -5,14 +5,14 @@
   Walter R. Mebane, Jr.
   Cornell University
   http://macht.arts.cornell.edu/wrm1
-  wrm1@macht.arts.cornell.edu
+  <wrm1@macht.arts.cornell.edu>
 
   Jasjeet Singh Sekhon 
-  Harvard University
-  http://jsekhon.fas.harvard.edu/
-  jsekhon@fas.harvard.edu
+  UC Berkeley
+  http://sekhon.polisci.berkeley.edu
+  <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/LmkGenoud.h,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/LmkGenoud.h,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
 
 */
 

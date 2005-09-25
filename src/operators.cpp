@@ -5,22 +5,23 @@
   Walter R. Mebane, Jr.
   Cornell University
   http://macht.arts.cornell.edu/wrm1
-  wrm1@macht.arts.cornell.edu
+  <wrm1@macht.arts.cornell.edu>
 
   Jasjeet Singh Sekhon 
-  Harvard University
-  http://jsekhon.fas.harvard.edu/
-  jsekhon@fas.harvard.edu
+  UC Berkeley
+  http://sekhon.polisci.berkeley.edu
+  <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/operators.cpp,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/operators.cpp,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
 
 */
 
 #include "genoud.h"
 
-#ifndef OPTIM
-extern double genoud_optim(double *X, int nvars);
-#endif
+extern "C" 
+{
+  double genoud_optim(SEXP fn_optim, SEXP rho, double *X, long parameters);
+}
 
 /********************************************************************************/
 /*                                                                              */
@@ -581,17 +582,16 @@ double get_F(int T, int t, double y, int B)
 /*                                                                              */
 /********************************************************************************/
 
-void oper8(double (*VMfunction)(double *LX, long *LStatus),
+void oper8(SEXP fn, SEXP rho,
 	   VECTOR parent, MATRIX domains, 
-	   double SolutionTolerance, short Optim, int nvars, 
+	   double SolutionTolerance, long nvars, 
 	   short int MinMax, short BoundaryEnforcement, 
-	   long InstanceNumber, FILE *output, long *LVMstatus,
-	   short PrintLevel)
+	   FILE *output, short PrintLevel)
 {
 
   double *parm, *hessin, *work;
-  int i, j, evaliter, btest;
-  double bfgsfit, evalgtol;
+  long i, j, btest;
+  double bfgsfit;
   double A, B;
 
   parm  = (double *) malloc((nvars)*sizeof(double)); 
@@ -605,24 +605,7 @@ void oper8(double (*VMfunction)(double *LX, long *LStatus),
     parm[i] = parent[i+1];
   }
 
-  if(Optim==0)
-    {
-      evalgtol=SolutionTolerance;
-      dfgsmin(VMfunction, parm, nvars, evalgtol, &evaliter, &bfgsfit, hessin, MinMax,
-	      BoundaryEnforcement, InstanceNumber, domains, LVMstatus, PrintLevel, output);
-      if (*LVMstatus < 0) {
-	free(hessin);
-	free(work);
-	free(parm);
-    
-	return ;
-      }
-    }
-  else
-    {
-      bfgsfit = genoud_optim(parm, nvars);
-    }
-  
+  bfgsfit = genoud_optim(fn, rho, parm, nvars);
 
   if (BoundaryEnforcement<0) {
     for(i=1; i<=nvars; i++) {
@@ -641,8 +624,9 @@ void oper8(double (*VMfunction)(double *LX, long *LStatus),
 	    /* shrink point until all parameters are in bounds */
 	    if (btest) 
 	      {
-		fprintf(output, "WARNING: killing boundary trigger in bfgs oper(8). fit:%10.8lf\n",bfgsfit);
-		fprintf(output, "WARNING: oper(8) Parameter: %d \t Value: %e\n\n", i, work[i]);
+		fprintf(output, "WARNING: killing out-of-bounds individual created by bfgs oper(9). fit:%10.8lf\n",bfgsfit);
+		fprintf(output, "WARNING: oper(9) Parameter: %d \t Value: %e\n\n", i, work[i]);
+		warning("killed out-of-bounds individual created by bfgs oper(9)");
 	      }
 	  }
 	if (btest==0) break;

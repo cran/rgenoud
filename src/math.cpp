@@ -5,14 +5,14 @@
   Walter R. Mebane, Jr.
   Cornell University
   http://macht.arts.cornell.edu/wrm1
-  wrm1@macht.arts.cornell.edu
+  <wrm1@macht.arts.cornell.edu>
 
   Jasjeet Singh Sekhon 
-  Harvard University
-  http://jsekhon.fas.harvard.edu/
-  jsekhon@fas.harvard.edu
+  UC Berkeley
+  http://sekhon.polisci.berkeley.edu
+  <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/math.cpp,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/math.cpp,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
 
 */
 
@@ -319,10 +319,10 @@ void populationstats(double **popdata, int numobsv, int novarsv,
     tobs[j] = nobs;
     sum[0] = 0.0;
     for (i=1; i<=nobs; i++) {
-      if (popdata[i][j] > BIGNUMBER) {
+      if (popdata[i][j] > DOUBLEMAX) {
 	tobs[j]=tobs[j]-1;
 	}
-      if (popdata[i][j] < -1*BIGNUMBER) {
+      if (popdata[i][j] < -1*DOUBLEMAX) {
 	tobs[j]=tobs[j]-1;
       }
       else sum[0] += popdata[i][j];
@@ -331,7 +331,7 @@ void populationstats(double **popdata, int numobsv, int novarsv,
     sum[0] *= dinobs; 
     sum[1] = 0.0; sum[2] = 0.0; sum[3] = 0.0;
     for (i=1; i<=nobs; i++) {
-      if ( (popdata[i][j] < BIGNUMBER) && (popdata[i][j] > -1*BIGNUMBER) )
+      if ( (popdata[i][j] < DOUBLEMAX) && (popdata[i][j] > -1*DOUBLEMAX) )
 	{
 	  x1 = popdata[i][j] - sum[0];
 	  x2 = x1*x1;

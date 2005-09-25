@@ -5,14 +5,14 @@
   Walter R. Mebane, Jr.
   Cornell University
   http://macht.arts.cornell.edu/wrm1
-  wrm1@macht.arts.cornell.edu
+  <wrm1@macht.arts.cornell.edu>
 
   Jasjeet Singh Sekhon 
-  Harvard University
-  http://jsekhon.fas.harvard.edu/
-  jsekhon@fas.harvard.edu
+  UC Berkeley
+  http://sekhon.polisci.berkeley.edu
+  <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/print_format.cpp,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/print_format.cpp,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
 
 */
 
@@ -206,36 +206,54 @@ void print_matrix(int lr, int ur, int lc, int uc, MATRIX mat, FILE *output)
 /*                                                                              */
 /*           FUNCTION NAME     :   print_population()                           */
 /*                                                                              */
-/*           SYNOPSIS          :   void print_population(lr,ur,lc,uc,mat)       */
-/*                                                                              */
-/*           DESCRIPTION       :   This function prints the initial and final   */
-/*                                  population on to the standard output.       */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   None                                         */
-/*                                                                              */
-/*           CALLING FUNCITONS :   optimization()                               */
-/*                                                                              */
-/*                                                                              */
-/*                                                                              */
 /********************************************************************************/
 
-void print_population(int popsize, int nvars, int generation, double **foo, FILE *out)
+void print_population(long popsize, long nvars, long generation, long lexical, double **foo, FILE *out)
 {
-  int i,j;
+  long i,j;
 
-  fprintf(out,"Generation: %d \t Population Size: %d \t Variables: %d\n\n", 
-	  generation, popsize, nvars);
-  for(i = 1; i <= popsize; i++)
+  if (lexical < 2)
     {
-      fprintf(out,"%d \t %e \t",i, foo[i][0]);
-      for (j = 1; j <= nvars; j++)
-        {
-          fprintf(out,"%e \t ",foo[i][j]);
-        }
-      fprintf(out,"\n");
+      fprintf(out,"Generation: %d \t Population Size: %d \t Fit Values: 1 \t Variables: %d\n\n", 
+	      generation, popsize, nvars);
+      for(i = 1; i <= popsize; i++)
+	{
+	  fprintf(out,"%d \t %e \t",i, foo[i][0]);
+	  for (j = 1; j <= nvars; j++)
+	    {
+	      fprintf(out,"%e \t ",foo[i][j]);
+	    }
+	  fprintf(out,"\n");
+	}
+      fprintf(out,"\n\n");
     }
-  fprintf(out,"\n\n");
-}
+  else 
+    {
+      long lexical_end = lexical-1+nvars+2;
+
+      fprintf(out,"Generation: %d \t Population Size: %d \t Fit Values: %d \t Variables: %d\n\n", 
+	      generation, popsize, lexical, nvars);
+      for(i = 1; i <= popsize; i++)
+	{
+	  fprintf(out,"%d \t ", i);
+
+	  /* print lexical fit values */
+	  fprintf(out,"%e \t ",foo[i][0]);
+	  for(j=(nvars+2);j<lexical_end;j++)
+	    {
+	      fprintf(out,"%e \t ",foo[i][j]);
+	    }		      
+	  
+	  /* print variables */
+	  for (j = 1; j <= nvars; j++)
+	    {
+	      fprintf(out,"%e \t ",foo[i][j]);
+	    }
+	  fprintf(out,"\n");
+	}
+      fprintf(out,"\n\n");
+    }
+} /* end */
 
 
 /********************************************************************************/

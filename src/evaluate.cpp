@@ -5,23 +5,37 @@
   Walter R. Mebane, Jr.
   Cornell University
   http://macht.arts.cornell.edu/wrm1
-  wrm1@macht.arts.cornell.edu
+  <wrm1@macht.arts.cornell.edu>
 
   Jasjeet Singh Sekhon 
-  Harvard University
-  http://jsekhon.fas.harvard.edu/
-  jsekhon@fas.harvard.edu
+  UC Berkeley
+  http://sekhon.polisci.berkeley.edu
+  <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
 
 */
 
 #include "genoud.h"
 #include "gradient.h"
 
-#ifndef OPTIM
-extern double genoud_optim(double *X, int nvars);
-#endif
+extern "C" 
+{
+
+  double genoud_optim(SEXP fn_optim, SEXP rho, double *X, long parameters);
+
+  void RlexicalSort(SEXP fnLexicalSort, SEXP rho,
+			   double **population, 
+			   short int MinMax, long pop_size, long nvars, long lexical_end,
+			   short int type);
+
+  long RmemoryMatrixEvaluate(SEXP fnMemoryMatrixEvaluate, SEXP rho,
+				    double **Memory, double **population, 
+				    short int MinMax, long pop_size, long UniqueCount,
+				    long nvars, long lexical, long lexical_end);
+
+  void userGradientfn(SEXP fnGR, SEXP rho, double *parms, double *grad, long nvars);
+}
 
 long Gnvars[MAXINSTANCES];
 struct GND_IOstructure *ExternStructure;
@@ -108,22 +122,14 @@ int JaDoubleCMP(double **a, double **b)
 /*                                 oper6(),                                     */
 /*                                 print_population(),                          */
 /*                                 sort(),                                      */
-/*                                 Gvector() was vector().                                    */
+/*                                 Gvector() was vector().                      */
 /*                                                                              */
 /*           CALLING FUNCITONS :   main()                                       */
 /*                                                                              */
 /*                                                                              */
 /********************************************************************************/
 
-/*
-		    int nvars, int pop_size, int MaxGenerations, int WaitGenerations,
-		    int P1, int P2, int P3, int P4, int P5, int P6, int P7, int P8, 
-		    FILE *output, short int MinMax, short int GradientCheck, short int BoundaryEnforcement, 
-		    double SolutionTolerance, double *Results, double *Gradients,
-		    int *Status
-*/
-
-double optimization(struct GND_IOstructure *Structure, VECTOR X, 
+void optimization(struct GND_IOstructure *Structure, VECTOR X, 
 		    MATRIX domains, FILE *output)
 {
 
@@ -164,23 +170,18 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
     second_live=0,
     first_die,             /*Index of the two parents for crossover death*/
     second_die,
-    die_now,               /*index of agent to replace in current operation*/
-    i,
-    j,
-    s;
+    die_now;               /*index of agent to replace in current operation*/
+
+  long i,j, s, k;
   /* for oper 4 */
   int p2use;
 
 
-  double Q,                   /*Probability of the best agent*/
-         Teval=0,               /*Evaluation of the best agent*/
-         peak_val;
-
+  double Q;                /*Probability of the best agent*/
   FLAG  same;
   double **Jnew; 
 
-  int evaliter;
-  double bfgsfit, evalgtol;
+  double bfgsfit;
 
   double *grad, *evalX, *finalhessin, *bfgsoutX;
 
@@ -193,24 +194,21 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   short int BoundaryTrigger;
   long InstanceNumber;
 
-  /* Strucutre fixup! */
-  long nvars, MaxGenerations, WaitGenerations;
-  long *Status;
+  long nvars, MaxGenerations, WaitGenerations, count;
   long pop_size, P, P0, P1, P2, P3, P4, P5, P6, P7, P8;
-  short int MinMax, GradientCheck, BoundaryEnforcement, UseBFGS;
+  short int MinMax, GradientCheck, BoundaryEnforcement, UseBFGS, HardMaximumNumber=0;
   double SolutionTolerance, *Results, *Gradients;
   short PrintLevel, HardGenerationLimit;
 
   /* Old variables which may change when SetRunTimeParameters is run during a run! */
   long pop_size_old;
-  double **population_old;
 
   /* Summary Statistics (mean, variance etc) */
   /* double popmean, popvar, popwrk, popstat; */
 
   /* Population Print population*/
   FILE *popout;
-  long *tobs;
+  long *tobs, nnull;
   double *mean, *var, *skew, *kur;
 
   /* Stuff for the Unique Stuff (how's that for an informative comment! */
@@ -218,20 +216,12 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
      maximum memory is set in genoud.h */
   extern long Gnvars[MAXINSTANCES];
   double **Memory;
-  long MemorySize=0, UniqueCount, OldUniqueCount=0;
+  long MemorySize=0, UniqueCount=0, OldUniqueCount=0;
 
-  /* LVM calls */
-  long LVMreturn;
-
-  LVMreturn = 0;
   /* fine two unique parents count */
   long SameCount, UniquePairs;
 
-  // NetworkEvaluate() Stuff
-  long NetworkNumber; // number of individuals to be evaluated
-
   ExternStructure=Structure;
-  Status=&(Structure->Status);
 
   Results=Structure->oResults;
   Gradients=Structure->oGradients;
@@ -244,10 +234,33 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 		       &PrintLevel, &HardGenerationLimit, output);
 
   /*Space allocation for all the vectors and matrices involved*/
-  population    = JaMatrixAllocate(pop_size+2, nvars+2);
-  new_genera    = JaMatrixAllocate(pop_size+2, nvars+2);
+  long lexical_end = (Structure->Lexical-1)+nvars+2;
+  /* population[][0] = fitness value (first)
+     population[][1:nvars] = parameter values
+     population[][nvars+1] = flag for fitting
+     population[][(nvars+2):((Structure->Lexical-1)+nvars+2)] = other fitness for Lexical fitting
+  */
+  population    = JaMatrixAllocate(pop_size+2, lexical_end);
+  new_genera    = JaMatrixAllocate(pop_size+2, lexical_end);
 
-  /* new_genera = JaMatrixAllocate(pop_size+2, nvars+2); */
+  /* reset population to get rid of odd things being passed to R */
+  for(i=1; i<=pop_size; i++)
+    {
+      for(j=0; j<lexical_end; j++)
+	{
+	  population[i][j] = 0;
+	}
+    }
+
+  VECTOR LexicalReturn;
+  VECTOR oldfitvalueVEC;
+  short int LexicalFitsImproving;
+  if(Structure->Lexical > 1)
+    {
+      LexicalReturn = (double *)  malloc(Structure->Lexical*sizeof(double));  
+      oldfitvalueVEC = (double *)  malloc(Structure->Lexical*sizeof(double));  
+    }
+
   temp       = matrix(0,nvars+1,0,nvars);
   probab     = Gvector(1,pop_size);
   t_vec      = Gvector(1,nvars);
@@ -263,11 +276,11 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   if (Structure->MemoryUsage==1)
     {
       if (HardGenerationLimit==0)
-	MemorySize=(MaxGenerations+1)*pop_size+1+pop_size;
+	MemorySize=3*(MaxGenerations+1)*pop_size+1+pop_size;
       else
 	MemorySize=(MaxGenerations+1)*pop_size+1+pop_size;
       
-      Memory = JaMatrixAllocate(MemorySize, nvars+2);
+      Memory = JaMatrixAllocate(MemorySize, lexical_end);
     }
 
   grad = (double *) malloc((nvars)*sizeof(double));
@@ -288,30 +301,23 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 
   if(PrintLevel>0)
     {
-      fprintf(output,"\n\n");
-
       switch(MinMax) {
       case 0:
-	fprintf(output,"Minimization Problem.\n\n");  
+	fprintf(output,"Minimization Problem.\n");  
 	break;
       case 1:
-	fprintf(output,"Maximization Problem.\n\n");  
+	fprintf(output,"Maximization Problem.\n");  
 	break;
       }
     }
 
-  if (PrintLevel>2) {
+  /*
+    if (PrintLevel>2) {
     fprintf(output,"Parameter B (hardcoded): %d\n", B); 
     fprintf(output,"Parameter Q (hardcoded): %f\n", Q);
-  }
-
-  if(PrintLevel>0)
-    {
-      fprintf(output,"\n");
-      fflush(output);
     }
+  */
 
-  peak_val = 0;
   peak_cnt = 0;
 
   pop_size_old=0;
@@ -324,13 +330,15 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
       fprintf(output,"WARNING: Unable to open the old project file: %s\n", 
 	      Structure->ProjectPath);
       fprintf(output,"         Generating new population\n");
+      warning("Unable to open the old project file: %s", Structure->ProjectPath);
     }
     else {
       pop_size_old=ReadPopulation(population, pop_size, nvars, output, popout);
       fclose(popout);
       if (pop_size_old<2) {
 	fprintf(output,
-		"WARNING: The old population file appears to be from the run of a different model!\n");
+		"WARNING: The old population file appears to be from the run of a different model.\n");
+	warning("The old population file appears to be from the run of a different model.");
 	pop_size_old=0;
       }
     }
@@ -365,7 +373,13 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	free_ivector(live, 1);
 	free_ivector(parents, 1);
 
-	return(ERROR_CODE);
+	if(Structure->Lexical > 1)
+	  {
+	    free(LexicalReturn);
+	    free(oldfitvalueVEC);
+	  }
+
+	error("Fatal Error. See output for diagnostic information.");
       }
       fclose(popout);
     }
@@ -402,7 +416,13 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	free_ivector(live, 1);
 	free_ivector(parents, 1);
 
-	return(ERROR_CODE);
+	if(Structure->Lexical > 1)
+	  {
+	    free(LexicalReturn);
+	    free(oldfitvalueVEC);
+	  }
+
+	error("Fatal Error. See output for diagnostic information.");
       }
       fclose(popout);
     }
@@ -411,8 +431,6 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   /* The new initial value matrix: setting a new initial value for every individual */
   if (ExternStructure->nStartingValues > 0) 
     {
-      if(PrintLevel>0)
-	fprintf(output,"\nSTARTING VALUES\n\n");
       // seed the starting values until we run out of population or starting values!
       j = pop_size_old;
       for(s=0; s<ExternStructure->nStartingValues; s++) {
@@ -444,275 +462,177 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 
   if (Structure->MemoryUsage==1)
     {
-      /* BINARY SEARCH.  (Knuth 3:409). */
-      /* We have sorted Memory by the "key" */
-      OldUniqueCount=UniqueCount=0;
-      
-      /* BINARY SEARCH.  (Knuth 3:409). */
-      /* We have sorted Memory by the "key" */
-      /* JaIntegerSort(population, pop_size, nvars+2);  */
-      JaDoubleSort(population, pop_size, nvars+2); 
-      
       OldUniqueCount=UniqueCount;
 
-      JaDoubleMemoryMatrix_Gen0(Structure,
-				Memory, population, X,
-				&UniqueCount, OldUniqueCount, pop_size, nvars, 
-				output, Status);
+      if (UniqueCount==0)
+	UniqueCount = 1;
 
-      if (*Status < 0)
-	{
-	  fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
+      UniqueCount = RmemoryMatrixEvaluate(Structure->fnMemoryMatrixEvaluate, Structure->rho,
+					  Memory, population,
+					  MinMax, pop_size, UniqueCount,
+					  nvars, Structure->Lexical, lexical_end);
 
-	  /* free memory */
-	  if (Structure->MemoryUsage==1)
-	    JaMatrixFree(Memory, MemorySize);
-	      
-	      /* free populationstats stuff */
-	  free(mean);
-	  free(var);
-	  free(skew);
-	  free(kur);
-	  free(tobs);
-	      
-	  free(bfgsoutX);
-	  free(finalhessin);
-	  free(evalX);
-	  free(grad);
-	      
-	  /* free numeric.c allocations */
-	  JaMatrixFree(population, pop_size+2);
-	  JaMatrixFree(new_genera, pop_size+2);
-	      
-	  free_matrix(temp, 0, nvars+1, 0);
-	  free_vector(probab, 1);
-	  free_vector(t_vec, 1);
-	  free_vector(cum_probab, 1);
-	  free_ivector(live, 1);
-	  free_ivector(parents, 1);
-	      
-	  return(ERROR_CODE);
-	}
       if ( (UniqueCount+pop_size) >= MemorySize )
 	{
 	  Structure->MemoryUsage=0;
 	  fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
+	  warning("Turned Off MemoryMatrix because memory usage was too great.");
 	} /* end of if */
     } // end of Memory based evaluation
   else
     {
-      NetworkNumber=0;
       for (i=1; i<=pop_size; i++) 
 	{
-	  if (Structure->DynamicPopulation==2)
-	    {
-	      JaDynamicPopulationCheck(Structure, population, i, pop_size, nvars, output, Status);
-	      if (*Status < 0) {
-		fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-		
-		/* free memory */
-		
-		/* free populationstats stuff */
-		free(mean);
-		free(var);
-		free(skew);
-		free(kur);
-		free(tobs);
-		
-		free(bfgsoutX);
-		free(finalhessin);
-		free(evalX);
-		free(grad);
-		
-		/* free numeric.c allocations */
-		JaMatrixFree(population, pop_size+2);
-		JaMatrixFree(new_genera, pop_size+2);
-		
-		free_matrix(temp, 0, nvars+1, 0);
-		free_vector(probab, 1);
-		free_vector(t_vec, 1);
-		free_vector(cum_probab, 1);
-		free_ivector(live, 1);
-		free_ivector(parents, 1);
-		
-		return(ERROR_CODE);		
-	      } // end of Status < 0
-	    } // end of DynamicPopulation==2
-
 	  if (population[i][nvars+1]==-1.0 || population[i][nvars+1]==11.0)
 	    {
+	      for(j=1; j<=nvars; j++)
+		X[j] = population[i][j];
 	      
-	      if (Structure->Network==1)
+	      if (Structure->Lexical < 2)
 		{
-		  NetworkNumber++;
-		  population[i][0] = EVALUATE;
-		}
-	      else
+		  population[i][0] = evaluate(Structure->fn, Structure->rho, X, nvars, MinMax);
+		} 
+	      else 
 		{
-		  for(j=1; j<=nvars; j++)
-		    X[j] = population[i][j];
+		  EvaluateLexical(Structure->fn, Structure->rho, 
+				  X, nvars, Structure->Lexical, MinMax, LexicalReturn);
 		  
-		  population[i][0] = evaluate(Structure->AgentFit, X, nvars, Status);
-		  
-		  if (*Status < 0) {
-		    fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-		    
-		    /* free memory */
-		    
-		    /* free populationstats stuff */
-		    free(mean);
-		    free(var);
-		    free(skew);
-		    free(kur);
-		    free(tobs);
-		    
-		    free(bfgsoutX);
-		    free(finalhessin);
-		    free(evalX);
-		    free(grad);
-		    
-		    /* free numeric.c allocations */
-		    JaMatrixFree(population, pop_size+2);
-		    JaMatrixFree(new_genera, pop_size+2);
-		    
-		    free_matrix(temp, 0, nvars+1, 0);
-		    free_vector(probab, 1);
-		    free_vector(t_vec, 1);
-		    free_vector(cum_probab, 1);
-		    free_ivector(live, 1);
-		    free_ivector(parents, 1);
-		    
-		    return(ERROR_CODE);
-		  }
+		  population[i][0] = LexicalReturn[0];
+		  count = 0;
+		  for(j=(nvars+2);j<lexical_end;j++)
+		    {
+		      count++;
+		      population[i][j] = LexicalReturn[count];
+		    }		      
 		} // else
 	    }
 	} //end of i loop
-      if (Structure->Network==1)
-	{
-	  NetworkEvaluate(Structure->AgentFit, Structure->DBname, Structure->AgentName, 
-			  population, pop_size, nvars, NetworkNumber, Status, 10);
-	  
-	  if (*Status < 0) {
-	    fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-	    
-	    /* free memory */
-	    
-	    /* free populationstats stuff */
-	    free(mean);
-	    free(var);
-	    free(skew);
-	    free(kur);
-	    free(tobs);
-	    
-	    free(bfgsoutX);
-	    free(finalhessin);
-	    free(evalX);
-	    free(grad);
-	    
-	    /* free numeric.c allocations */
-	    JaMatrixFree(population, pop_size+2);
-	    JaMatrixFree(new_genera, pop_size+2);
-	    
-	    free_matrix(temp, 0, nvars+1, 0);
-	    free_vector(probab, 1);
-	    free_vector(t_vec, 1);
-	    free_vector(cum_probab, 1);
-	    free_ivector(live, 1);
-	    free_ivector(parents, 1);
-	    
-	    return(ERROR_CODE);
-	  }	      
-	} 
     } // end of default evaluation
 
+  if(Structure->MemoryUsage!=1)
+    {
+      /*Sort the initial individuals based on their evaluation function*/
+      if (Structure->Lexical < 2)
+	{
+	  sort(MinMax,population,pop_size,0);
+	}
+      else
+	{
+	  /* in eval.cpp because it is like the EvaluateLexical() function */
+	  RlexicalSort(Structure->fnLexicalSort, Structure->rho,
+		       population,
+		       MinMax, pop_size, nvars, lexical_end, 1);
+	}
+    }
 
-  /*Sort the initial inidivduals based on their evaluation function*/
-  sort(MinMax,population,pop_size,0);
+  peak_cnt = count_gener;
 
-  switch(MinMax) {
-  case 0:
-    Teval = population[1][0];
-    peak_cnt = count_gener;
-    peak_val = population[1][0];
-    break;
-  case 1:
-    Teval = population[1][0];
-    peak_cnt = count_gener;
-    peak_val = population[1][0];
-    break;
-  }
-
+  /*
   if(PrintLevel>0)
     {
-      fprintf(output,"\nThe 2 best initial individuals are\n");
-      for(i=1; i<3; i++) {
-	print_vector(population[i],1,nvars,output);
-	fprintf(output,"\nfitness = %e", population[i][0]);
-	fprintf(output,"\n\n");
+      fprintf(output,"\nThe best initial individual is:\n");
+      print_vector(population[1],1,nvars,output);
+
+      if (Structure->Lexical > 1)
+	{
+	  fprintf(output,"\nbest (lexical) fitness:\n");
+	  fprintf(output,"%e  ", population[1][0]);
+	  for(j=(nvars+2);j<lexical_end;j++)
+	    {
+	      fprintf(output,"%e  ", population[1][j]);
+	    }		      
+	  fprintf(output,"\n");
+	} else {
+	fprintf(output,"\nbest fitness: %e\n", population[1][0]);
       }
-      
-      fprintf(output,"\nThe worst fit of the population is: %e\n", 
-	      population[pop_size][0]);
-      fprintf(output,"\n\n");
+      fprintf(output,"\n");
+
+      if (Structure->Lexical > 1)
+	{      
+	  fprintf(output,"The worst (lexical) fitness is:\n");
+	  fprintf(output,"%e  ", population[pop_size][0]);
+	  for(j=(nvars+2);j<lexical_end;j++)
+	    {
+	      fprintf(output,"%e  ", population[pop_size][j]);
+	    }		   
+	  fprintf(output,"\n");   	  
+	} else {
+	fprintf(output,"The worst fit is: %e\n", 
+		population[pop_size][0]);
+      }
+      fprintf(output,"\n");
     }
+  */
 
   if(PrintLevel==1)
     {
-      fprintf(output,"\n\nGeneration#\t    Solution Value\n");
-      fprintf(output,"\n%7d \t%e\n", 0, population[1][0]);
+      if (Structure->Lexical > 1)
+	{
+	fprintf(output,"\n\nGeneration#\t    Solution Values (lexical)\n");	  
+	fprintf(output,"\n%7d \t%e  ", 0, population[1][0]);
+	for(j=(nvars+2);j<lexical_end;j++)
+	  {
+	    fprintf(output,"%e  ", population[1][j]);
+	  }		      
+	fprintf(output,"\n");	
+	} else {
+	fprintf(output,"\n\nGeneration#\t    Solution Value\n");
+	fprintf(output,"\n%7d \t%e\n", 0, population[1][0]);
+      }
     }
-
 
   /* compute and print mean and variance of population */
   if (PrintLevel>1) {
-      fprintf(output,"GENERATION: 0 (initializing the population)\n");
-      populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
-      for (i=0; i<=nvars; i++) {
-	  if (i==0) {
-	      fprintf(output, "Fitness Value... %e\n", population[1][i]);
-	      fprintf(output, "mean............ %e\n", mean[i]);
-	      fprintf(output, "var............. %e\n", var[i]);
-	      fprintf(output, "skewness........ %e\n", skew[i]);
-	      fprintf(output, "kurtosis........ %e\n", kur[i]);
-	      fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-	      if(Structure->MemoryUsage==1)
-		fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
-			UniqueCount-OldUniqueCount, UniqueCount);
-	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
-	  }
-	  else {
-	      fprintf(output, "var %d:\n", i);
-	      fprintf(output, "best............ %e\n", population[1][i]);
-	      fprintf(output, "mean............ %e\n", mean[i]);
-	      fprintf(output, "var............. %e\n", var[i]);
-	      fprintf(output, "skewness........ %e\n", skew[i]);
-	      fprintf(output, "kurtosis........ %e\n", kur[i]);
-	      fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
-	  }
+    fprintf(output,"GENERATION: 0 (initializing the population)\n");
+    populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
+    
+    if(Structure->Lexical > 1)
+      {
+	fprintf(output, "Lexical Fit..... %e  ", population[1][0]);
+	for(j=(nvars+2);j<lexical_end;j++)
+	  {
+	    fprintf(output,"%e  ", population[1][j]);
+	  }		      
+	fprintf(output,"\n");	    
       }
+    else
+      {
+	fprintf(output, "Fitness value... %e\n", population[1][0]);
+	fprintf(output, "mean............ %e\n", mean[0]);
+	fprintf(output, "variance........ %e\n", var[0]);
+	/*
+	  fprintf(output, "skewness........ %e\n", skew[i]);
+	  fprintf(output, "kurtosis........ %e\n", kur[i]);
+	*/
+      }
+
+    nnull = pop_size-tobs[0];
+    if(nnull > 0)
+      fprintf(output, "#null........... %d\n", nnull);
+    if(Structure->MemoryUsage==1)
+      fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
+	      UniqueCount-OldUniqueCount, UniqueCount);
+    /* fprintf(output, "tobs............ %d\n", tobs[i]); */
+    
+    for (i=1; i<=nvars; i++) {
+      fprintf(output, "var %d:\n", i);
+      fprintf(output, "best............ %e\n", population[1][i]);
+      fprintf(output, "mean............ %e\n", mean[i]);
+      fprintf(output, "variance........ %e\n", var[i]);
+      /*
+	fprintf(output, "skewness........ %e\n", skew[i]);
+	fprintf(output, "kurtosis........ %e\n", kur[i]);
+      */
+      nnull = pop_size-tobs[i];
+      if(nnull > 0)
+	fprintf(output, "#null........... %d\n", nnull);
+      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
+    }
   } /* end of printlevel if */
-
-  /*
-  if (PrintLevel==1) {
-    popmean = popvar = 0.0 ;
-    popwrk = 1.0 / pop_size ;
-    for(i=1; i<=pop_size; i++) {
-      popmean += population[i][0] ;
-    }
-    popmean *= popwrk ; 
-    for(i=1; i<=pop_size; i++) {
-      popstat =  population[i][0] - popmean ;
-      popvar += (popstat*popstat) ;
-    }
-    popvar *= popwrk ;
-    fprintf(output, "   mean = %e, variance = %e\n\n", popmean, popvar);
-  }
-  */
-
+  
   if(PrintLevel>0)
     fflush(output);
-
+      
   /* Print the population file */
   if ( PrintLevel == 1 ) {
     if((popout = fopen(Structure->ProjectPath, "w")) == NULL) {
@@ -744,10 +664,16 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
       free_vector(cum_probab, 1);
       free_ivector(live, 1);
       free_ivector(parents, 1);
+
+      if(Structure->Lexical > 1)
+	{
+	  free(LexicalReturn);
+	  free(oldfitvalueVEC);
+	}
 			  
-      return(ERROR_CODE);
+	error("Fatal Error. See output for diagnostic information.");
     }
-    print_population(pop_size, nvars, 0, population, popout);
+    print_population(pop_size, nvars, 0, Structure->Lexical, population, popout);
     fclose(popout);
   } /* end of PrintLevel if */
   if ( PrintLevel>1 ) {
@@ -781,9 +707,15 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
       free_ivector(live, 1);
       free_ivector(parents, 1);
 
-      return(ERROR_CODE);
+      if(Structure->Lexical > 1)
+	{
+	  free(LexicalReturn);
+	  free(oldfitvalueVEC);
+	}
+
+	error("Fatal Error. See output for diagnostic information.");
     }
-    print_population(pop_size, nvars, 0, population, popout);
+    print_population(pop_size, nvars, 0, Structure->Lexical, population, popout);
     fflush(popout);
     fclose(popout);
   }
@@ -803,8 +735,9 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
       for(j=1; j<=pop_size; j++)
         {
           live[j] = 0;
-          for(i=0; i<=nvars; i++)
+          for(i=0; i<lexical_end; i++)
             new_genera[j][i] = population[j][i];
+	  new_genera[j][nvars+1]=0;
         }
 
       /*Finding the agents that will die and the agents that will reproduce*/
@@ -1102,41 +1035,9 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
                         new_genera[die_now][nvars+1] = 8.0;
                         for(i=1; i<=nvars; i++)
                           t_vec[i] = population[first_live][i];
-                        oper8(Structure->AgentFit, t_vec, domains, SolutionTolerance, 
-			      Structure->Optim, nvars, 
-			      BoundaryEnforcement, MinMax, InstanceNumber, output, 
-			      Status, PrintLevel);
-			if (*Status < 0) {
-			  fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-			  
-			  /* free populationstats stuff */
-			  free(mean);
-			  free(var);
-			  free(skew);
-			  free(kur);
-			  free(tobs);
+                        oper8(Structure->fn, Structure->rho, t_vec, domains, SolutionTolerance, 
+			      nvars, BoundaryEnforcement, MinMax, output, PrintLevel);
 
-			  free(bfgsoutX);
-			  free(finalhessin);
-			  free(evalX);
-			  free(grad);
-			  
-				/* free numeric.c allocations */
-			  if (Structure->MemoryUsage==1)
-			    JaMatrixFree(Memory, MemorySize);
-
-			  JaMatrixFree(population, pop_size+2);
-			  JaMatrixFree(new_genera, pop_size+2);
-
-			  free_matrix(temp, 0, nvars+1, 0);
-			  free_vector(probab, 1);
-			  free_vector(t_vec, 1);
-			  free_vector(cum_probab, 1);
-			  free_ivector(live, 1);
-			  free_ivector(parents, 1);
-			  
-			  return(ERROR_CODE);
-			}
 			for(i=1; i<=nvars; i++)
 			  new_genera[die_now][i] = t_vec[i];
 			die_now--;
@@ -1145,248 +1046,73 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
                     break;
             }
         }
-      
+
       /*Replace the population with the new generation */
       Jnew = new_genera;
       new_genera = population;
       population = Jnew;
 
-      if (Structure->DynamicPopulation==1 || Structure->DynamicPopulation==2)
-	{
-	  FILE *DynamicInput;
-	  double tmp;
-
-	  if((DynamicInput = fopen(Structure->DynamicPopulationPath, "r")) == NULL) {
-	    fprintf(output,"WARNING: Unable to open the DynamicPopulationPath: %s\n", 
-		    Structure->DynamicPopulationPath);
-	    fprintf(output,"         Continuing the process.\n");
-
-	    Structure->DynamicPopulation=0;
-	    break;
-	  }
-
-	  if(PrintLevel>0)	  
-	    fprintf(output,"\nDynamically Reading in Individuals from: %s\n", Structure->DynamicPopulationPath);
-
-	  j = pop_size;
-	  i=0;
-	  while (fscanf(DynamicInput,"%lf", &tmp)==1)
-	    {
-	      i++;
-	      if (i>nvars)
-		{
-		  j--;
-		  if (j<2)
-		    {
-		      fprintf(output,
-			      "\nWARNING: Dynamic Population input includes more individuals than the population size.\n");
-		      fprintf(output,
-			      "         Keeping the current best individual and discarding extra individuals.\n");
-		      fprintf(output,
-			      "         See file: %s\n\n", Structure->DynamicPopulationPath);
-		      break;
-		    }
-		  i = 1;
-		} // end of if
-
-	      population[j][i] = tmp;
-	      population[j][nvars+1] = 10.0;
-
-	      if (Structure->Debug==1)
-		{
-		  printf("\nDEBUG: WE READ IN THE FOLLOWING INDIVIDUALS:\n");
-		  printf("population[%d][%d]: %e\n", j, i, population[j][i]);
-		}
-
-	    } // end of while loop
-	  fclose(DynamicInput);
-
-	  fprintf(output,"   Read in %d Individuals\n\n", pop_size-j+1);
-	  
-	  Structure->DynamicPopulation=0;
-	} // end of DynamicPopulation
-
-
       if (Structure->MemoryUsage==1)
 	{
-	  /* BINARY SEARCH.  (Knuth 3:409). */
-	  /* We have sorted Memory by the "key" */
-	  /* JaIntegerSort(population, pop_size, nvars+2);  */
-	  JaDoubleSort(population, pop_size, nvars+2); 
-	  JaDoubleSort(Memory, UniqueCount, nvars+2);
-	  
 	  OldUniqueCount=UniqueCount;
 
-	  JaDoubleMemoryMatrix(Structure,
-			       Memory, population, X,
-			       &UniqueCount, OldUniqueCount,
-			       pop_size, nvars, output, Status);
+	  UniqueCount = RmemoryMatrixEvaluate(Structure->fnMemoryMatrixEvaluate, Structure->rho,
+					      Memory, population,
+					      MinMax, pop_size, UniqueCount,
+					      nvars, Structure->Lexical, lexical_end);	  
 
-	  if (*Status < 0) {
-	    fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-		
-	    /* free memory */
-	    if (Structure->MemoryUsage==1)
-	      JaMatrixFree(Memory, MemorySize);
-		
-	    /* free populationstats stuff */
-	    free(mean);
-	    free(var);
-	    free(skew);
-	    free(kur);
-	    free(tobs);
-		
-	    free(bfgsoutX);
-	    free(finalhessin);
-	    free(evalX);
-	    free(grad);
-		
-	    /* free numeric.c allocations */
-	    JaMatrixFree(population, pop_size+2);
-	    JaMatrixFree(new_genera, pop_size+2);
-		
-	    free_matrix(temp, 0, nvars+1, 0);
-	    free_vector(probab, 1);
-	    free_vector(t_vec, 1);
-	    free_vector(cum_probab, 1);
-	    free_ivector(live, 1);
-	    free_ivector(parents, 1);
-		
-	    return(ERROR_CODE);
-	  }	  
 	  if ( (UniqueCount+pop_size) >= MemorySize )
 	    {
 	      Structure->MemoryUsage=0;
 	      fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
+	      warning("Turned Off MemoryMatrix because memory usage was too great.");
 	    } /* end of if */
 	} // end of MemoryUsage==1
       else
 	{
-	  NetworkNumber=0;
 	  for (i=1; i<=pop_size; i++) 
 	    {
-	      if (i > 1 && Structure->DynamicPopulation==2)
-		{
-		  JaDynamicPopulationCheck(Structure, population, i, pop_size, nvars, output, Status);
-		  if (*Status < 0) {
-		    fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-		
-		    /* free memory */
-		
-		    /* free populationstats stuff */
-		    free(mean);
-		    free(var);
-		    free(skew);
-		    free(kur);
-		    free(tobs);
-		
-		    free(bfgsoutX);
-		    free(finalhessin);
-		    free(evalX);
-		    free(grad);
-		
-		    /* free numeric.c allocations */
-		    JaMatrixFree(population, pop_size+2);
-		    JaMatrixFree(new_genera, pop_size+2);
-		
-		    free_matrix(temp, 0, nvars+1, 0);
-		    free_vector(probab, 1);
-		    free_vector(t_vec, 1);
-		    free_vector(cum_probab, 1);
-		    free_ivector(live, 1);
-		    free_ivector(parents, 1);
-		
-		    return(ERROR_CODE);		
-		  } // end of Status < 0
-		} // end of DynamicPopulation==2
-	      
 	      if (population[i][nvars+1]!=0)
 		{
-		  if (Structure->Network==1)
+		  for(j=1; j<=nvars; j++)
+		    X[j] = population[i][j];
+		  
+		  if (Structure->Lexical < 2)
 		    {
-		      NetworkNumber++;
-		      population[i][0] = EVALUATE;
-		    }
-		  else
+		      population[i][0] = evaluate(Structure->fn, Structure->rho, X, nvars, MinMax);
+		    } 
+		  else 
 		    {
-		      for(j=1; j<=nvars; j++)
-			X[j] = population[i][j];
-		      
-		      population[i][0] = evaluate(Structure->AgentFit, X, nvars, Status);
-		      
-		      if (*Status < 0) {
-			fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-			
-			/* free memory */
-			
-			/* free populationstats stuff */
-			free(mean);
-			free(var);
-			free(skew);
-			free(kur);
-			free(tobs);
-			
-			free(bfgsoutX);
-			free(finalhessin);
-			free(evalX);
-			free(grad);
-			
-			/* free numeric.c allocations */
-			JaMatrixFree(population, pop_size+2);
-			JaMatrixFree(new_genera, pop_size+2);
-			
-			free_matrix(temp, 0, nvars+1, 0);
-			free_vector(probab, 1);
-			free_vector(t_vec, 1);
-			free_vector(cum_probab, 1);
-			free_ivector(live, 1);
-			free_ivector(parents, 1);
-			
-			return(ERROR_CODE);
-		      }
+		      EvaluateLexical(Structure->fn, Structure->rho, 
+				      X, nvars, Structure->Lexical, MinMax, LexicalReturn);
+
+		      population[i][0] = LexicalReturn[0];
+		      count = 0;
+		      for(j=(nvars+2);j<lexical_end;j++)
+			{
+			  count++;
+			  population[i][j] = LexicalReturn[count];
+			}		      			  
 		    }
 		}
 	    } //end of i loop	  
-	  if (Structure->Network==1)
-	    {
-	      NetworkEvaluate(Structure->AgentFit, Structure->DBname, Structure->AgentName, 
-			      population, pop_size, nvars, NetworkNumber, Status, 10);
-	      
-	      if (*Status < 0) {
-		fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-		
-		/* free memory */
-		
-		/* free populationstats stuff */
-		free(mean);
-		free(var);
-		free(skew);
-		free(kur);
-		free(tobs);
-		
-		free(bfgsoutX);
-		free(finalhessin);
-		free(evalX);
-		free(grad);
-		
-		/* free numeric.c allocations */
-		JaMatrixFree(population, pop_size+2);
-		JaMatrixFree(new_genera, pop_size+2);
-		
-		free_matrix(temp, 0, nvars+1, 0);
-		free_vector(probab, 1);
-		free_vector(t_vec, 1);
-		free_vector(cum_probab, 1);
-		free_ivector(live, 1);
-		free_ivector(parents, 1);
-		
-		return(ERROR_CODE);
-	      }	    
-	    }  
 	} //end of default evaluation scheme
 
-      /*Sort the new population based on their evaluation function*/
-      sort(MinMax,population,pop_size,0);
+      if(Structure->MemoryUsage!=1)
+	{
+	  /*Sort the new population based on their evaluation function*/
+	  if (Structure->Lexical < 2)
+	    {
+	      sort(MinMax,population,pop_size,0);
+	    }
+	  else
+	    {
+	      /* in eval.cpp because it is like the EvaluateLexical() function */
+	      RlexicalSort(Structure->fnLexicalSort, Structure->rho,
+			   population,
+			   MinMax, pop_size, nvars, lexical_end, 1);
+	    }
+	}
 
       /* apply the bfgs to the best individual */
       if (UseBFGS != 0) {
@@ -1395,52 +1121,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    bfgsoutX[i-1]=population[1][i];
 	  }
 
-	if (Structure->Optim==0)
-	  {
-	    evalgtol=SolutionTolerance;
-
-	    dfgsmin(Structure->AgentFit, bfgsoutX, nvars, evalgtol, &evaliter, &bfgsfit, 
-		    finalhessin, MinMax, BoundaryEnforcement, InstanceNumber, domains, 
-		    Status, PrintLevel, output);
-
-	    if (*Status < 0) {
-	      /* Free Memory */
-	    
-	      /* free populationstats stuff */
-	      free(mean);
-	      free(var);
-	      free(skew);
-	      free(kur);
-	      free(tobs);
-	    
-	      free(bfgsoutX);
-	      free(finalhessin);
-	      free(evalX);
-	      free(grad);
-	    
-	      /* free numeric.c allocations */
-	      if (Structure->MemoryUsage==1)
-		JaMatrixFree(Memory, MemorySize);
-
-	      JaMatrixFree(population, pop_size+2);
-	      JaMatrixFree(new_genera, pop_size+2);
-	    
-	      free_matrix(temp, 0, nvars+1, 0);
-	      free_vector(probab, 1);
-	      free_vector(t_vec, 1);
-	      free_vector(cum_probab, 1);
-	      free_ivector(live, 1);
-	      free_ivector(parents, 1);
-	    
-	      return(ERROR_CODE);
-	    }
-	
-	    if (MinMax==1) bfgsfit=-1*bfgsfit;
-	  } // Optim==0
-	else
-	  {
-	    bfgsfit = genoud_optim(bfgsoutX, nvars);
-	  }
+	bfgsfit = genoud_optim(Structure->fn, Structure->rho, bfgsoutX, nvars);
 	
 	switch(MinMax) {
 	case 0:
@@ -1457,6 +1138,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 		  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
 			  count_gener, i+1, bfgsoutX[i]);
 		  fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
+		  warning("BFGS hit on best individual produced Out of Boundary individual.");
 		}
 		if (bfgsoutX[i] > domains[j][3]) {
 		  BoundaryTrigger=1;
@@ -1465,6 +1147,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 		  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n", 
 			  count_gener, i+1, bfgsoutX[i]);
 		  fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
+		  warning("BFGS hit on best individual produced Out of Boundary individual.");
 		}
 	      } /* end for loop */
 	      
@@ -1498,6 +1181,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 			  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
 		  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
 			  count_gener, i+1, bfgsoutX[i]);
+		  warning("BFGS hit on best individual produced Out of Boundary individual.");
 		}
 		if (bfgsoutX[i] > domains[j][3]) {
 		  BoundaryTrigger=1;
@@ -1505,6 +1189,7 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 			  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
 		  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
 			  count_gener, i+1, bfgsoutX[i]);
+		  warning("BFGS hit on best individual produced Out of Boundary individual.");
 		}
 	      } /* end for loop */
 	      
@@ -1529,110 +1214,188 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	/* end of bfgs stuff */
       } /* end of UseBFGS */  
 
-      switch(MinMax)
-        {
-	case 0:
-	  if(Teval > population[1][0])
+      if (count_gener == 1) {
+	oldfitvalue=population[1][0];
+
+	if(Structure->Lexical  > 1)
+	  {
+	    oldfitvalueVEC[0]=population[1][0];
+	    k = 1;
+	    for (i=(nvars+2);i<lexical_end;i++)  {
+	      oldfitvalueVEC[k]=population[1][i];
+	      k++;  
+	    } /* for (i=(nvars+2);i<lexical_end;i++) */
+	  }
+      }
+
+      /* check to see if fit is improving */
+      if(Structure->Lexical < 2)
+	{
+	  switch(MinMax)
 	    {
-	      Teval = population[1][0];
-	      if(PrintLevel==1)	  
+	    case 0:
+	      if ( (oldfitvalue - SolutionTolerance) > population[1][0]) {
+		nochange_gen=0;
+		oldfitvalue=population[1][0];
+		peak_cnt = count_gener;
+	      }
+	      else nochange_gen++;
+	      break;
+	    case 1:
+	      if ( (oldfitvalue + SolutionTolerance) < population[1][0]) {
+		nochange_gen=0;
+		oldfitvalue=population[1][0];
+		peak_cnt = count_gener;
+	      }
+	      else nochange_gen++;	      
+	      break;
+	    }
+	} /*       if(Structure->Lexical < 2) */
+      else
+	{
+	  switch(MinMax)
+	    {
+	    case 0:
+	      LexicalFitsImproving = 0;
+	      if ( (oldfitvalue - SolutionTolerance) > population[1][0]) 
 		{
-		  fprintf(output,"%7lu \t%e\n",
+		  LexicalFitsImproving = 1;
+		} 
+	      else
+		{
+		  k=1;
+		  for (i=(nvars+2);i<lexical_end;i++)  {
+		    if ( (oldfitvalueVEC[k] - SolutionTolerance) > population[1][i] ) {
+		      LexicalFitsImproving = 1;
+		      break;
+		    } /* (oldfitvalueVEC[k] - SolutionTolerance) > population[1][i] ) */
+		    k++;  
+		  } /* for (i=(nvars+2);i<lexical_end;i++) */
+		} /* else if ( (oldfitvalue - SolutionTolerance) > population[1][0])  */
+	      if (LexicalFitsImproving)
+		{
+		  nochange_gen = 0;
+		  peak_cnt = count_gener;
+		  oldfitvalue=population[1][0];
+		  oldfitvalueVEC[0]=population[1][0];
+		  k = 1;
+		  for (i=(nvars+2);i<lexical_end;i++)  {
+		    oldfitvalueVEC[k]=population[1][i];
+		    k++;  
+		  } /* for (i=(nvars+2);i<lexical_end;i++) */
+		}
+	      else
+		nochange_gen++;
+	      break;
+	    case 1:
+	      LexicalFitsImproving = 0;
+	      if ( (oldfitvalue + SolutionTolerance) < population[1][0]) 
+		{
+		  LexicalFitsImproving = 1;
+		} 
+	      else
+		{
+		  k=1;
+		  for (i=(nvars+2);i<lexical_end;i++)  {
+		    if ( (oldfitvalueVEC[k] + SolutionTolerance) < population[1][i] ) {
+		      LexicalFitsImproving = 1;
+		      break;
+		    } /* (oldfitvalueVEC[k] - SolutionTolerance) > population[1][i] ) */
+		    k++;  
+		  } /* for (i=(nvars+2);i<lexical_end;i++) */
+		} /* else if ( (oldfitvalue - SolutionTolerance) > population[1][0])  */
+	      if (LexicalFitsImproving)
+		{
+		  nochange_gen = 0;
+		  peak_cnt = count_gener;
+		  oldfitvalue=population[1][0];
+		  oldfitvalueVEC[0]=population[1][0];
+		  k = 1;
+		  for (i=(nvars+2);i<lexical_end;i++)  {
+		    oldfitvalueVEC[k]=population[1][i];
+		    k++;  
+		  } /* for (i=(nvars+2);i<lexical_end;i++) */
+		}
+	      else
+		nochange_gen++;
+	      break;	      
+	    } /* switch(MinMax) */
+	} /* else (Structure->Lexical > 2) */
+
+      if(PrintLevel==1)
+	{
+	  if( nochange_gen==0 )
+	    {
+	      if(Structure->Lexical > 1)
+		{
+		  fprintf(output,"\n%7d \t%e  ", 0, population[1][0]);
+		  for(j=(nvars+2);j<lexical_end;j++)
+		    {
+		      fprintf(output,"%e  ", population[1][j]);
+		    }		      
+		  fprintf(output,"\n");	
+		}
+	      else
+		{
+		  fprintf(output,"%7d \t%e\n",
 			  count_gener,population[1][0]); 
 		  fflush(output);
 		}
-	      peak_cnt = count_gener;
-	      peak_val = population[1][0];
-	    }
-	  break;
-	case 1:
-	  if(Teval < population[1][0])
-	    {
-	      Teval = population[1][0];
-	      if(PrintLevel==1)	  
-		{
-		  fprintf(output,"%7lu \t%e\n",
-			  count_gener,population[1][0]);
-		  fflush(output);
-		}
-	      peak_cnt = count_gener;
-	      peak_val = population[1][0];
-	    }
-	  break;
-        }
-      
+	    } 
+	}
+
       /* compute and print mean and variance of population */
       if (PrintLevel>1) {
 	fprintf(output,"\nGENERATION: %d\n", count_gener);
 	populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
-	for (i=0; i<=nvars; i++) {
-	  if (i==0) {
-	      fprintf(output, "Fitness Value... %e\n", population[1][i]);
-	      fprintf(output, "mean............ %e\n", mean[i]);
-	      fprintf(output, "var............. %e\n", var[i]);
+
+	if(Structure->Lexical > 1)
+	  {
+	    fprintf(output, "Lexical Fit..... %e  ", population[1][0]);
+	    for(j=(nvars+2);j<lexical_end;j++)
+	      {
+		fprintf(output,"%e  ", population[1][j]);
+	      }		      
+	    fprintf(output,"\n");	    
+	  }
+	else
+	  {
+	    fprintf(output, "Fitness value... %e\n", population[1][0]);
+	    fprintf(output, "mean............ %e\n", mean[0]);
+	    fprintf(output, "variance........ %e\n", var[0]);
+	    /*
 	      fprintf(output, "skewness........ %e\n", skew[i]);
 	      fprintf(output, "kurtosis........ %e\n", kur[i]);
-	      fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-	      if(Structure->MemoryUsage==1)
-		fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
-			UniqueCount-OldUniqueCount, UniqueCount);
-	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
+	    */
 	  }
-	  else {
-	      fprintf(output, "var %d:\n", i);
-	      fprintf(output, "best............ %e\n", population[1][i]);
-	      fprintf(output, "mean............ %e\n", mean[i]);
-	      fprintf(output, "var............. %e\n", var[i]);
-	      fprintf(output, "skewness........ %e\n", skew[i]);
-	      fprintf(output, "kurtosis........ %e\n", kur[i]);
-	      fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
-	  }
+
+	nnull = pop_size-tobs[0];
+	if(nnull > 0)
+	  fprintf(output, "#null........... %d\n", nnull);
+	if(Structure->MemoryUsage==1)
+	  fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
+		  UniqueCount-OldUniqueCount, UniqueCount);
+	/* fprintf(output, "tobs............ %d\n", tobs[i]); */
+
+	for (i=1; i<=nvars; i++) {
+	  fprintf(output, "var %d:\n", i);
+	  fprintf(output, "best............ %e\n", population[1][i]);
+	  fprintf(output, "mean............ %e\n", mean[i]);
+	  fprintf(output, "variance........ %e\n", var[i]);
+	  /*
+	    fprintf(output, "skewness........ %e\n", skew[i]);
+	    fprintf(output, "kurtosis........ %e\n", kur[i]);
+	  */
+	  nnull = pop_size-tobs[i];
+	  if(nnull > 0)
+	    fprintf(output, "#null........... %d\n", nnull);
+	  /* fprintf(output, "tobs............ %d\n", tobs[i]); */
 	}
       } /* end of printlevel if */
-
-      /*
-      if (PrintLevel==1) {
-	popmean = popvar = 0.0 ;
-	popwrk = 1.0 / pop_size ;
-	for(i=1; i<=pop_size; i++) {
-	  popmean += population[i][0] ;
-	}
-	popmean *= popwrk ;
-	for(i=1; i<=pop_size; i++) {
-	  popstat =  population[i][0] - popmean ;
-	  popvar += (popstat*popstat) ;
-	}
-	popvar *= popwrk ;
-	fprintf(output, "   mean = %e, variance = %e\n\n", popmean, popvar);
-      }
-      */
-
+      
       if (PrintLevel>0)
 	fflush(output);
 
-      /*
-#ifdef MS_WINDOWS
-      sort(MinMax,population,pop_size,1);
-      // Let's graph the current population! 
-      for (i=1; i<=pop_size; i++) 
-	{
-	  // x1 
-	  Structure->pvm->vmArgs[2*(i-1)].value = population[i][1];
-	  Structure->pvm->vmArgs[2*(i-1)].type  = 0;
-
-	  // fit 
-	  Structure->pvm->vmArgs[2*(i-1)+1].value = population[i][0];
-	  Structure->pvm->vmArgs[2*(i-1)+1].type  = 0;
-	} // end of i loop 
-
-      LVMreturn = LVM_EvalSubScript(Structure->pvm, "GenoudChart", "AllArgs Genoud.Graph1 end", pop_size*2);
-	  fprintf(output,"Done LVM_EvalSub\n");
-	  fprintf(output,"LVMreturn: %d\n", LVMreturn);	
-      sort(MinMax,population,pop_size,0);
-#endif
-      */
-	
       /* Print the population file */
       if ( PrintLevel == 1 ) {
 	if((popout = fopen(Structure->ProjectPath, "w")) == NULL) {
@@ -1665,9 +1428,15 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free_ivector(live, 1);
 	  free_ivector(parents, 1);
 
-	  return(ERROR_CODE);
+	  if(Structure->Lexical > 1)
+	    {
+	      free(LexicalReturn);
+	      free(oldfitvalueVEC);
+	    }
+
+	  error("Fatal Error. See output for diagnostic information.");
 	}
-	print_population(pop_size, nvars, count_gener, population, popout);
+	print_population(pop_size, nvars, count_gener, Structure->Lexical, population, popout);
 	fclose(popout);
       } /* end of PrintLevel if */
       if ( PrintLevel>1) {
@@ -1701,118 +1470,79 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free_ivector(live, 1);
 	  free_ivector(parents, 1);
 
-	  return(ERROR_CODE);
+	  if(Structure->Lexical > 1)
+	    {
+	      free(LexicalReturn);
+	      free(oldfitvalueVEC);
+	    }
+
+	  error("Fatal Error. See output for diagnostic information.");
 	}
-	print_population(pop_size, nvars, count_gener, population, popout);
+	print_population(pop_size, nvars, count_gener, Structure->Lexical, population, popout);
 	fflush(popout);
 	fclose(popout);
       }
-      
-      if (count_gener == 1) {
-	oldfitvalue=population[1][0];
-      }
-      
-      switch(MinMax)
-	{
-	case 0:
-	  if (oldfitvalue - SolutionTolerance > population[1][0]) {
-	    nochange_gen=0;
-	    oldfitvalue=population[1][0];
-	  }
-	  else nochange_gen++;
-	  break;
-	case 1:
-	  if (oldfitvalue + SolutionTolerance < population[1][0]) {
-	    nochange_gen=0;
-	    oldfitvalue=population[1][0];
-	  }
-	  else nochange_gen++;	      
-	  break;
-	}
-      
+
       if (nochange_gen > (WaitGenerations)) {
 	/* increase the number of WaitGenerations if the gradients are NOT zero! */	  
 	if (GradientCheck==0) {
 	  if(PrintLevel>0)	  
 	    {
-	      fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
-	      fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
+	      fprintf(output,"\n'wait.generations' limit reached.\n");
+	      fprintf(output,"No significant improvement in %d generations.\n", nochange_gen-1);
 	      fflush(output);
 	    }
 	  MaxGenerations = 0;
 	  nochange_gen=0;
 	}
-	else  {
-	  for (i=1; i<=nvars; i++)
-	    {
-		  bfgsoutX[i-1]=population[1][i];
-	    }
-	  gradient(Structure->AgentFit, bfgsoutX, grad, nvars, MinMax, BoundaryEnforcement, InstanceNumber, 
-		   domains, Status);
-	  if (*Status < 0) {
-	    /* Free Memory */
-	      
-	      /* free populationstats stuff */
-	      free(mean);
-	      free(var);
-	      free(skew);
-	      free(kur);
-	      free(tobs);
-	      
-	      free(bfgsoutX);
-	      free(finalhessin);
-	      free(evalX);
-	      free(grad);
-	      
-	      /* free numeric.c allocations */
-	      if (Structure->MemoryUsage==1)
-		JaMatrixFree(Memory, MemorySize);
-
-	      JaMatrixFree(population, pop_size+2);
-	      JaMatrixFree(new_genera, pop_size+2);
-	      
-	      free_matrix(temp, 0, nvars+1, 0);
-	      free_vector(probab, 1);
-	      free_vector(t_vec, 1);
-	      free_vector(cum_probab, 1);
-	      free_ivector(live, 1);
-	      free_ivector(parents, 1);
-	      
-	      return(ERROR_CODE);
-	  }
-	  GradientTrigger = 0;
-	  for (i=0; i<nvars; i++) {
-	    if (fabs(grad[i]) > SolutionTolerance) {
-	      GradientTrigger = 1;
-	      break;
+	else  
+	  {
+	    for (i=1; i<=nvars; i++)
+	      {
+		bfgsoutX[i-1]=population[1][i];
+	      }
+	    if(Structure->UserGradient==0)
+	      {	    
+		gradient(Structure->fn, Structure->rho,
+			 bfgsoutX, grad, nvars, MinMax, BoundaryEnforcement, domains);
+	      } 
+	    else 
+	      {
+		userGradientfn(Structure->fnGR, Structure->rho, bfgsoutX, grad, nvars);
+	      }
+	    GradientTrigger = 0;
+	    for (i=0; i<nvars; i++) {
+	      if (fabs(grad[i]) > SolutionTolerance) {
+		GradientTrigger = 1;
+		break;
+	      }
+	    } /* end for loop */
+	    if (GradientTrigger==1) {
+	      IncreaseGenerations = WaitGenerations;
+	      WaitGenerations += IncreaseGenerations;
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,
+			  "\nDoubling 'wait.generations' limit to %d (from %d) ", 
+			  WaitGenerations, IncreaseGenerations);
+		  fprintf(output,"because at least one gradient is too large.\n");
+		  fprintf(output,"G[%d]: %e\t Solution Tolerance: %e\n\n", 
+			  i+1, grad[i], SolutionTolerance);
 		}
-	  } /* end for loop */
-	  if (GradientTrigger==1) {
-	    IncreaseGenerations = WaitGenerations;
-	    WaitGenerations += IncreaseGenerations;
-	    if(PrintLevel>0)	  
-	      {
-		fprintf(output,
-			"\nDoubling Soft Maximum Wait Generation Limit to %d (from %d).\n", 
-			WaitGenerations, IncreaseGenerations);
-		fprintf(output,"I'm doing this because at least one gradient is too large.\n");
-		fprintf(output,"G[%d]: %e\t Solution Tolerance: %e\n\n", 
-			i+1, grad[i], SolutionTolerance);
-	      }
-	  }
-	  else {
-	    if(PrintLevel>0)	  
-	      {
-		fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
-		fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
-		fflush(output);
-	      }
-	    MaxGenerations = 0;
-	    nochange_gen=0;
-	  }
-	}/* end if loop */
-      }
-      
+	    }
+	    else {
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,"\n'wait.generations' limit reached.\n");
+		  fprintf(output,"No significant improvement in %d generations.\n", nochange_gen-1);
+		  fflush(output);
+		}
+	      MaxGenerations = 0;
+	      nochange_gen=0;
+	    }
+	  }/* end else loop */
+      } /* end of if (nochange_gen > (WaitGenerations)) { */
+
       if ( (count_gener == MaxGenerations) && (GradientTrigger==1) ) 
 	{
 	  if (HardGenerationLimit==0)
@@ -1822,17 +1552,19 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      if(PrintLevel>0)	  
 		{
 		  fprintf(output,
-			  "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
+			  "\nIncreasing 'max.generations' limit by %d generations to %d ", 
 			  IncreaseGenerations, MaxGenerations);
-		  fprintf(output,"I'm doing this because at least one gradient is too large.\n\n");
+		  fprintf(output,"because at least one gradient is too large.\n\n");
 		}
 	    } // if (Structure->HardGenerationLimit==0)
 	  else
 	    {
+	      HardMaximumNumber = 1;
+	      warning("Stopped because hard maximum generation limit was hit.\nAt least one gradient is too large.");
 	      if(PrintLevel>0)	  
 		{
-		  fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
-		  fprintf(output,"          At least one gradient is still too large\n");
+		  fprintf(output,"\nWARNING: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		  fprintf(output,"         At least one gradient is too large\n");
 		}
 	    } // else
 	} // if ( (count_gener == MaxGenerations) && (GradientTrigger==1) ) 
@@ -1848,9 +1580,9 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      if(PrintLevel>0)	  
 		{
 		  fprintf(output,
-			  "\nIncreasing Soft Maximum Generation Limit by %d (WaitGenerations) to %d\n", 
+			  "\nIncreasing 'max.generations' limit by %d generations to %d ", 
 			  IncreaseGenerations, MaxGenerations);
-		  fprintf(output,"I'm doing this because the fitness is still impoving.\n\n");
+		  fprintf(output,"because the fitness is still impoving.\n\n");
 		}
 	    }
 	    else {
@@ -1859,79 +1591,27 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      if(PrintLevel>0)	  
 		{
 		  fprintf(output,
-			  "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
+			  "\nIncreasing 'max.generations' limit by %d generations to %d ", 
 			  IncreaseGenerations, MaxGenerations);
-		  fprintf(output,"I'm doing this because the fitness is still improving.\n\n");
+		  fprintf(output,"because the fitness is still improving.\n\n");
 		}
 	    }
 	  } // if (Structure->HardGenerationLimit==0)
 	else
 	  {
-	    if(PrintLevel>0)	  
+	    if (HardMaximumNumber==0)
 	      {
-		fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
-		fprintf(output,"          But fitness is still improving\n");
-	      }
+		warning("Stopped because hard maximum generation limit was hit.");
+		if(PrintLevel>0)	  
+		  {
+		    fprintf(output,"\nWARNING: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		  }
+	      } /* end of if HardMax */
 	  }
       } // if ( (count_gener == MaxGenerations) &&  (nochange_gen < WaitGenerations) )
       
       if(PrintLevel>0)	  
 	fflush(output);
-
-      /* Should we recheck the main data structure for changes to the operator set? If so, let's
-       do it now */
-      if (Structure->AllowDynamicUpdating==1) {
-	pop_size_old = pop_size;
-	if(PrintLevel>0)	  
-	  fprintf(output,"\nUpdating Main Data Structure:\n");
-	SetRunTimeParameters(Structure, 0,
-			     &pop_size, &nvars, &MaxGenerations, &WaitGenerations,
-			     &MinMax, &GradientCheck, &BoundaryEnforcement, &UseBFGS, &SolutionTolerance,
-			     &InstanceNumber, &P, &P0, &P1, &P2, &P3, &P4, &P5, &P6, &P7, &P8, 
-			     &PrintLevel, &HardGenerationLimit, output);
-	if (pop_size > pop_size_old) {
-	  population_old = JaMatrixAllocate(pop_size_old+2, nvars+2);
-	  
-	  for (i=1; i<=pop_size_old;i++) {
-	    for (j=0; j<=nvars+1; j++) {
-	      population_old[i][j] = population[i][j];
-	    }
-	  }
-	  JaMatrixFree(population, pop_size_old+2);
-	  population    = JaMatrixAllocate(pop_size+2, nvars+2);
-
-	  for (i=1; i<=pop_size_old;i++) {
-	    for (j=0; j<=nvars+1; j++) {
-	      population[i][j] = population_old[i][j];
-	    }
-	  }	  
-	  JaMatrixFree(population_old, pop_size_old+2);
-
-	  /* we need to add individuals to population! */
-	  for (j=(pop_size_old+1); j<=pop_size; j++) {
-	    for (i=1; i<=nvars; i++) {
-	      population[j][i] = frange_ran(domains[i][1], domains[i][3]); 
-	      population[j][nvars+1] = 100.0; /* 100.0=new! */
-	    }
-	  }
-	} /* end of if popsize > pop_size_old */
-
-	JaMatrixFree(new_genera, pop_size_old+2);	
-	free_vector(probab, 1);
-	free_vector(cum_probab, 1);
-	free_ivector(live, 1);
-	free_ivector(parents, 1);
-
-	new_genera    = JaMatrixAllocate(pop_size+2, nvars+2);
-	temp       = matrix(1,2,0,nvars);
-	probab     = Gvector(1,pop_size);
-	t_vec      = Gvector(1,nvars);
-	cum_probab = Gvector(1,pop_size);
-	live       = ivector(1,pop_size);
-	parents    = ivector(1,nvars);
-
-	Structure->AllowDynamicUpdating=0;
-      } // end of if AllowDynamicUpdating==1
       
     } /* end of do loop */
   /*Increment iteration count and test whether all generations are done*/
@@ -1939,8 +1619,24 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
 
   if(PrintLevel>0)	    
     {
-      fprintf(output,"\nBest Fit Found at Generation %lu\nFit Value = %e\n",peak_cnt,peak_val);
-      fprintf(output,"\n\nParameters at the Solution (value, gradient):\n\n");
+      if(Structure->Lexical > 1)
+	{
+	  fprintf(output,"\nSolution Lexical Fitness Value:\n");
+	  fprintf(output,"%e  ", population[1][0]);
+	  for(j=(nvars+2);j<lexical_end;j++)
+	    {
+	      fprintf(output,"%e  ", population[1][j]);
+	    }		      
+	  fprintf(output,"\n");
+	}
+      else
+	{
+	  fprintf(output,"\nSolution Fitness Value: %e\n", population[1][0]);
+	}
+      if (GradientCheck==0 && UseBFGS==0)
+	fprintf(output,"\nParameters at the Solution:\n\n");
+      else
+	fprintf(output,"\nParameters at the Solution (parameter, gradient):\n\n");
     }
 
   /* output data structure */
@@ -1948,60 +1644,54 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   Structure->oGenerations=count_gener-1;
 
   /* obtain gradients */
-  if (GradientCheck==0 && UseBFGS==0) {
-    if(PrintLevel>0)	  
-      fprintf(output,"\nNot Obtaining Gradient Information\n");
-    for (i=0; i< nvars; i++) {
-      grad[i]=-1.0;
-    }
-  }
-  else {
-    for (i=1; i<=nvars; i++)
-      {
-	bfgsoutX[i-1]=population[1][i];
-      }
-    gradient(Structure->AgentFit, bfgsoutX, grad, nvars, MinMax, BoundaryEnforcement, 
-	     InstanceNumber, domains, Status);
-    if (*Status < 0) {
-	/* Free Memory */
-	
-	/* free populationstats stuff */
-	free(mean);
-	free(var);
-	free(skew);
-	free(kur);
-	free(tobs);
-	
-	free(bfgsoutX);
-	free(finalhessin);
-	free(evalX);
-	free(grad);
-	
-	/* free numeric.c allocations */
-	free_matrix(population, 1, pop_size,0);
-	free_matrix(new_genera, 1, pop_size, 0);
-	free_matrix(temp, 0, nvars+1, 0);
-	free_vector(probab, 1);
-	free_vector(t_vec, 1);
-	free_vector(cum_probab, 1);
-	free_ivector(live, 1);
-	free_ivector(parents, 1);
-	
-	return(ERROR_CODE);
-    }
-  }
-  
   /* print best solution */
-  for(j = 1; j <= nvars; j++) {
-    i = j-1;
-    if(PrintLevel>0)	  
-      fprintf(output," X[%2d] :\t%e\tG[%2d] :\t%e\n",j,population[1][j],j,grad[i]);
-    Results[i] = population[1][j];
-    Gradients[i] = grad[i];
-  }
-  
-  /* free memory */
+  if (GradientCheck==0 && UseBFGS==0)
+    {
+      for(j = 1; j <= nvars; j++) {
+	i = j-1;
+	if(PrintLevel>0)	  
+	  fprintf(output," X[%2d] :\t%e\n",j,population[1][j]);
+	grad[i] = -1.0;
+	Results[i] = population[1][j];
+	Gradients[i] = grad[i];
+      }
+    } /* end of if (GradientCheck==0 && UseBFGS==0) */
+  else 
+    {
+      for (i=1; i<=nvars; i++)
+	{
+	  bfgsoutX[i-1]=population[1][i];
+	}
+      if(Structure->UserGradient==0)
+	{
+	  gradient(Structure->fn, Structure->rho,
+		   bfgsoutX, grad, nvars, MinMax, BoundaryEnforcement, domains);
+	} 
+      else 
+	{
+	  userGradientfn(Structure->fnGR, Structure->rho, bfgsoutX, grad, nvars);
+	}
 
+      for(j = 1; j <= nvars; j++) {
+	i = j-1;
+	if(PrintLevel>0)	  
+	  fprintf(output," X[%2d] :\t%e\tG[%2d] :\t%e\n",j,population[1][j],j,grad[i]);
+	Results[i] = population[1][j];
+	Gradients[i] = grad[i];
+      }
+    } /* end of  else (GradientCheck==0 && UseBFGS==0) */
+
+  Structure->oFitValues[0]=population[1][0];
+  if (Structure->Lexical > 1)
+    {
+      k = 1;
+      for (i=(nvars+2);i<lexical_end;i++)  {
+	Structure->oFitValues[k]=population[1][i];
+	k++;  	  
+      }
+    } 
+
+  /* free memory */
   /* free populationstats stuff */
   free(mean);
   free(var);
@@ -2014,7 +1704,6 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   free(evalX);
   free(grad);
 
-  /* free numeric.c allocations */
   if (Structure->MemoryUsage==1)
     JaMatrixFree(Memory, MemorySize);
 
@@ -2028,9 +1717,13 @@ double optimization(struct GND_IOstructure *Structure, VECTOR X,
   free_ivector(live, 1);
   free_ivector(parents, 1);
 
-  return(peak_val);
+  if(Structure->Lexical > 1)
+    {
+      free(LexicalReturn);
+      free(oldfitvalueVEC);
+    }
+} /* end optimiztion function */
 
-}
 
 /********************************************************************************/
 /*                                                                              */
@@ -2401,51 +2094,56 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 
   /* Check to make sure that all operators are positve numbers! */
   if (Structure->P[0] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 0 (Cloning) was Assigned an Illegal Value: %d\n", 
-	    Structure->P[1]);
-    fprintf(output,"WARNING: I'm Assigning Zero Operators of Type 0.\n");
+    fprintf(output,"\n\nWARNING: Operator 1 (Cloning) was Assigned an Illegal Value: %d\n", 
+	    Structure->P[0]);
+    warning("Operator 1 (Cloning) was Assigned an Illegal Value: %d.", Structure->P[0]);
     Structure->P[0]=0.0;
   }
   if (Structure->P[1] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 1 (Uniform Mutation) was Assigned an Illegal Value: %d\n", 
+    fprintf(output,"\n\nWARNING: Operator 2 (Uniform Mutation) was Assigned an Illegal Value: %d\n", 
 	    Structure->P[1]);
-    fprintf(output,"WARNING: I'm Assigning Zero Operators of Type 1.\n");
+    warning("Operator 1 (Uniform Mutation) was Assigned an Illegal Value: %d.", Structure->P[1]);
     Structure->P[1]=0.0;
   }
   if (Structure->P[2] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 2 (Boundary Mutation) was Assigned an Illegal Value: %d\n", 
+    fprintf(output,"\n\nWARNING: Operator 3 (Boundary Mutation) was Assigned an Illegal Value: %d\n", 
 	    Structure->P[2]);
-    fprintf(output,"WARNING: I'm Assigning Zero Operators of Type 2.\n");
+    warning("Operator 3 (Boundary Mutation) was Assigned an Illegal Value: %d.", Structure->P[2]);
     Structure->P[2]=0;
   }
   if (Structure->P[3] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 3 (Non-Uniform Mutation) was Assigned an Illegal Value: %d\n", 
+    fprintf(output,"\n\nWARNING: Operator 4 (Non-Uniform Mutation) was Assigned an Illegal Value: %d\n", 
 	    Structure->P[3]);
-    fprintf(output,"WARNING: I'm Assigning Zero Operators of Type 3.\n");
+    warning("Operator 4 (Non-Uniform Mutation) was Assigned an Illegal Value: %d.", 
+	    Structure->P[3]);
     Structure->P[3]=0;
   }
   if (Structure->P[4] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 4 (Polytope Crossover) was Assigned an Illegal Value: %d\n", 
+    fprintf(output,"\n\nWARNING: Operator 5 (Polytope Crossover) was Assigned an Illegal Value: %d\n", 
 	    Structure->P[4]);
-    fprintf(output,"WARNING: I'm Assigning Zero Operators of Type 4.\n");
+    warning("Operator 5 (Polytope Crossover) was Assigned an Illegal Value: %d.", 
+	    Structure->P[4]);
     Structure->P[4]=0;
   }
   if (Structure->P[5] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 5 (Multiple Point Simple Crossover) was Assigned an Illegal Value: %d\n", 
+    fprintf(output,"\n\nWARNING: Operator 6 (Multiple Point Simple Crossover) was Assigned an Illegal Value: %d\n", 
 	    Structure->P[5]);
-    fprintf(output,"WARNING: I'm Assigning Zero Operators of Type 5.\n");
+    warning("Operator 6 (Multiple Point Simple Crossover) was Assigned an Illegal Value: %d.", 
+	    Structure->P[5]);
     Structure->P[5]=0;
   }
   if (Structure->P[6] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 6 (Whole Non-Uniform Mutation) was Assigned an Illegal Value: %d\n", 
+    fprintf(output,"\n\nWARNING: Operator 7 (Whole Non-Uniform Mutation) was Assigned an Illegal Value: %d\n", 
 	    Structure->P[6]);
-    fprintf(output,"WARNING: I'm Assigning Zero Operators of Type 6.\n");
+    warning("Operator 7 (Whole Non-Uniform Mutation) was Assigned an Illegal Value: %d.", 
+	    Structure->P[6]);
     Structure->P[6]=0;
   }
   if (Structure->P[7] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 7 (Heuristic Crossover) was Assigned an Illegal Value: %d\n", 
+    fprintf(output,"\n\nWARNING: Operator 8 (Heuristic Crossover) was Assigned an Illegal Value: %d\n", 
 	    Structure->P[7]);
-    fprintf(output,"WARNING: I'm Assigning Zero Operators of Type 7.\n");
+    warning("Operator 8 (Heuristic Crossover) was Assigned an Illegal Value: %d.", 
+	    Structure->P[7]);
     Structure->P[7]=0;
   }
 
@@ -2455,17 +2153,19 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
     *GradientCheck=0;
 
     if (Structure->P[8] > 0) {
-      fprintf(output,"\n\nWARNING: Operator 8 (Local-Minimum Crossover) was Assigned an Illegal Value: %d\nThis is an illegal value because we are working with integer data", 
+      fprintf(output,"\n\nWARNING: Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %d\nThis is an illegal value because we are working with integer data\n", 
 	      Structure->P[8]);
-      fprintf(output,"WARNING: I'm Assigning Zero Operators of Type 8.\n");
+      warning("Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %d\nThis is an illegal value because we are working with integer data.", 
+	      Structure->P[8]);
       Structure->P[8]=0;
     } /* end of if */
   }
   else {
     if (Structure->P[8] < 0 ) {
-      fprintf(output,"\n\nWARNING: Operator 8 (Local-Minimum Crossover) was Assigned an Illegal Value: %d\n", 
+      fprintf(output,"\n\nWARNING: Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %d\n", 
 	      Structure->P[8]);
-      fprintf(output,"WARNING: I'm Assigning Zero Operators of Type 8.\n");
+      warning("Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %d.", 
+	      Structure->P[8]);
       Structure->P[8]=0;
     }
   } /* end of else */
@@ -2566,8 +2266,8 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
   if (fmod(*PopSize,2) > 0.0) {
     if(Structure->PrintLevel>0)
       {
-	fprintf(output,"WARNING: population size is not an even number.\n");
-	fprintf(output,"WARNING: Increasing population size by 1\n");
+	fprintf(output,"NOTE: population size is not an even number\n");
+	fprintf(output,"      increasing population size by 1\n");
       }
     *PopSize=*PopSize+1;
   }
@@ -2619,9 +2319,9 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 		"Not Using the BFGS Derivative Based Optimizer on the Best Individual Each Generation.\n");
       }
       if (*GradientCheck==0)
-	fprintf(output,"Not Checking Gradients before Stopping\n");
+	fprintf(output,"Not Checking Gradients before Stopping.\n");
       else 
-	fprintf(output,"Checking Gradients before Stopping\n");
+	fprintf(output,"Checking Gradients before Stopping.\n");
       
       if (*BoundaryEnforcement==0) 
 	fprintf(output,"Using Out of Bounds Individuals.\n\n");
@@ -2629,15 +2329,6 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 	fprintf(output,"Not Using Out of Bounds Individuals But Allowing Trespassing.\n\n");
       else if (*BoundaryEnforcement==2) 
 	fprintf(output,"Not Using Out of Bounds Individuals and Not Allowing Trespassing.\n\n");
-    }
-  // some more consistency checks
-  if (Structure->Network==1 && Structure->MemoryUsage==1)
-    {
-      if(Structure->PrintLevel>0)
-	{
-	  fprintf(output,"Turning Memory Usage off because Network GENOUD has been requested\n"); 
-	}
-      Structure->MemoryUsage=0;
     }
     
   if(Structure->PrintLevel>0)
@@ -2655,7 +2346,7 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 /*                                                                              */
 /********************************************************************************/
 
-double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X, 
+void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X, 
 			     MATRIX domains, FILE *output)
 {
   extern struct GND_IOstructure *ExternStructure;
@@ -2693,18 +2384,15 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     second_live=0,
     first_die,             /*Index of the two parents for crossover death*/
     second_die,
-    die_now,               /*index of agent to replace in current operation*/
-    i,
-    j,
-    s;
+    die_now;               /*index of agent to replace in current operation*/
+
+  long i,j, s, k;
+
   /* for oper 4 */
   int p2use;
 
 
-  double Q,                   /*Probability of the best agent*/
-         Teval=0,             /*Evaluation of the best agent*/
-         peak_val;
-
+  double Q;                   /*Probability of the best agent*/
   FLAG  same;
   double **Jnew;
 
@@ -2718,24 +2406,22 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   short int GradientTrigger=0;
   long InstanceNumber;
 
-  /* Strucutre fixup! */
-  long nvars, MaxGenerations, WaitGenerations;
-  long *Status;
+  long nvars, MaxGenerations, WaitGenerations, count;
   long pop_size, P, P0, P1, P2, P3, P4, P5, P6, P7, P8;
-  short int MinMax, GradientCheck, BoundaryEnforcement, UseBFGS;
+  short int MinMax, GradientCheck, BoundaryEnforcement, UseBFGS, HardMaximumNumber=0;
   double SolutionTolerance, *Results, *Gradients;
   short PrintLevel, HardGenerationLimit;
 
   /* Old variables which may change when SetRunTimeParameters is run during a run! */
   long pop_size_old;
-  double **population_old, **PopulationTmp;
+  double **population_old;
 
   /* Summary Statistics (mean, variance etc) */
   /* double popmean, popvar, popwrk, popstat; */
 
   /* Population Print population*/
   FILE *popout;
-  long *tobs;
+  long *tobs, nnull;
   double *mean, *var, *skew, *kur;
 
   /* Stuff for the Unique Stuff (how's that for an informative comment! */
@@ -2743,21 +2429,12 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
      maximum memory is set in genoud.h */
   extern long Gnvars[MAXINSTANCES];
   double **Memory;
-  long UniqueCount, OldUniqueCount=0, MemorySize=0;
-  // FLAG UniqueFlag, Redundant;
-  // long upper, lower, midpoint;
-
-  /* LVM calls */
-  // long LVMreturn;
+  long MemorySize=0, UniqueCount=0, OldUniqueCount=0;
 
   /* fine two unique parents count */
   long SameCount, UniquePairs;
 
-  // NetworkEvaluate() Stuff
-  long NetworkNumber; // number of individuals to be evaluated
-
   ExternStructure=Structure;
-  Status=&(Structure->Status);
 
   Results=Structure->oResults;
   Gradients=Structure->oGradients;
@@ -2769,11 +2446,33 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		       &InstanceNumber, &P, &P0, &P1, &P2, &P3, &P4, &P5, &P6, &P7, &P8, 
 		       &PrintLevel, &HardGenerationLimit, output);
 
-  /* The population matrix is used from 0 to popsize (inclusive) and o to nvars+1 (inclusive) */
-  /* population           = matrix(0,pop_size+2,0,nvars+1); */
-  population    = JaMatrixAllocate(pop_size+2, nvars+2);
-  PopulationTmp = JaMatrixAllocate(pop_size+1, nvars+2);
-  new_genera    = JaMatrixAllocate(pop_size+2, nvars+2);
+  /*Space allocation for all the vectors and matrices involved*/
+  long lexical_end = (Structure->Lexical-1)+nvars+2;
+  /* population[][0] = fitness value (first)
+     population[][1:nvars] = parameter values
+     population[][nvars+1] = flag for fitting
+     population[][(nvars+2):((Structure->Lexical-1)+nvars+2)] = other fitness for Lexical fitting
+  */
+  population    = JaMatrixAllocate(pop_size+2, lexical_end);
+  new_genera    = JaMatrixAllocate(pop_size+2, lexical_end);
+
+  /* reset population to get rid of odd things being passed to R */
+  for(i=1; i<=pop_size; i++)
+    {
+      for(j=0; j<lexical_end; j++)
+	{
+	  population[i][j] = 0;
+	}
+    }
+
+  VECTOR LexicalReturn;
+  VECTOR oldfitvalueVEC;
+  short int LexicalFitsImproving;
+  if(Structure->Lexical > 1)
+    {
+      LexicalReturn = (double *)  malloc(Structure->Lexical*sizeof(double));  
+      oldfitvalueVEC = (double *)  malloc(Structure->Lexical*sizeof(double));  
+    }
 
   temp       = matrix(0,nvars+1,0,nvars);
   probab     = Gvector(1,pop_size);
@@ -2790,11 +2489,11 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   if (Structure->MemoryUsage==1)
     {
       if (HardGenerationLimit==0)
-	MemorySize=(MaxGenerations+1)*pop_size+1+pop_size;
+	MemorySize=3*(MaxGenerations+1)*pop_size+1+pop_size;
       else
 	MemorySize=(MaxGenerations+1)*pop_size+1+pop_size;
       
-      Memory = JaMatrixAllocate(MemorySize, nvars+2);
+      Memory = JaMatrixAllocate(MemorySize, lexical_end);
     }
 
   grad = (double *) malloc((nvars)*sizeof(double));
@@ -2809,39 +2508,30 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   kur = (double *) malloc((nvars+1)*sizeof(double));
   tobs = (long *) malloc((nvars+1)*sizeof(long));
 
-  Q=0.2;
+  /* JS: Integer Q was different, why? Q=0.2; */
+  Q=0.5;
   B=6;
   STEP=10;
 
-  /* Read the Population File if we are told to.  For the moment we
-     shall assume that we are supposed to read the file */
-
   if(PrintLevel>0)
     {
-      fprintf(output,"\n\n");
-      
       switch(MinMax) {
       case 0:
-	fprintf(output,"Minimization Problem.\n\n");  
+	fprintf(output,"Minimization Problem.\n");  
 	break;
       case 1:
-	fprintf(output,"Maximization Problem.\n\n");  
+	fprintf(output,"Maximization Problem.\n");  
 	break;
       }
     }
 
-  if (PrintLevel>2) {
+  /*
+    if (PrintLevel>2) {
     fprintf(output,"Parameter B (hardcoded): %d\n", B); 
     fprintf(output,"Parameter Q (hardcoded): %f\n", Q);
-  }
-
-  if(PrintLevel>0)
-    {
-      fprintf(output,"\n");
-      fflush(output);
     }
+  */
 
-  peak_val = 0;
   peak_cnt = 0;
 
   pop_size_old=0;
@@ -2854,6 +2544,7 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       fprintf(output,"WARNING: Unable to open the old project file: %s\n", 
 	      Structure->ProjectPath);
       fprintf(output,"         Generating new population\n");
+      warning("Unable to open the old project file: %s", Structure->ProjectPath);
     }
     else {
       pop_size_old=ReadPopulation(population, pop_size, nvars, output, popout);
@@ -2867,7 +2558,8 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 
       if (pop_size_old<2) {
 	fprintf(output,
-		"WARNING: The old population file appears to be from the run of a different model!\n");
+		"WARNING: The old population file appears to be from the run of a different model.\n");
+	warning("The old population file appears to be from the run of a different model.");
 	pop_size_old=0;
       }
     }
@@ -2901,7 +2593,13 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	free_ivector(live, 1);
 	free_ivector(parents, 1);
 
-	return(ERROR_CODE);
+	if(Structure->Lexical > 1)
+	  {
+	    free(LexicalReturn);
+	    free(oldfitvalueVEC);
+	  }
+
+	error("Fatal Error. See output for diagnostic information.");
       }
       fclose(popout);
     }
@@ -2936,8 +2634,14 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	free_vector(cum_probab, 1);
 	free_ivector(live, 1);
 	free_ivector(parents, 1);
+
+	if(Structure->Lexical > 1)
+	  {
+	    free(LexicalReturn);
+	    free(oldfitvalueVEC);
+	  }
 	
-	return(ERROR_CODE);
+	error("Fatal Error. See output for diagnostic information.");
       }
       fclose(popout);
     }
@@ -2978,267 +2682,173 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 
   if (Structure->MemoryUsage==1)
     {
-      /* BINARY SEARCH.  (Knuth 3:409). */
-      OldUniqueCount=UniqueCount=0;
-      
-      /* BINARY SEARCH.  (Knuth 3:409). */
-      /* We have sorted Memory by the "key" */
-      /* JaIntegerSort(population, pop_size, nvars+2);  */
-      JaIntegerSort(population, pop_size, nvars+2); 
-      
       OldUniqueCount=UniqueCount;
 
-      JaIntMemoryMatrix_Gen0(Structure,
-				Memory, population, X,
-				&UniqueCount, OldUniqueCount, pop_size, nvars, output, Status);
-      if (*Status < 0) {
-	fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-	  
-	  /* free memory */
-	if (Structure->MemoryUsage==1)
-	  JaMatrixFree(Memory, MemorySize);
+      if (UniqueCount==0)
+	UniqueCount = 1;
 
-	  /* free populationstats stuff */
-	free(mean);
-	free(var);
-	free(skew);
-	free(kur);
-	free(tobs);
-
-	free(bfgsoutX);
-	free(finalhessin);
-	free(evalX);
-	free(grad);
-	  
-	/* free numeric.c allocations */
-	JaMatrixFree(population, pop_size+2);
-	JaMatrixFree(new_genera, pop_size+2);
-	  
-	free_matrix(temp, 0, nvars+1, 0);
-	free_vector(probab, 1);
-	free_vector(t_vec, 1);
-	free_vector(cum_probab, 1);
-	free_ivector(live, 1);
-	free_ivector(parents, 1);
-	  
-	return(ERROR_CODE);
-      }      
+      UniqueCount = RmemoryMatrixEvaluate(Structure->fnMemoryMatrixEvaluate, Structure->rho,
+					  Memory, population,
+					  MinMax, pop_size, UniqueCount,
+					  nvars, Structure->Lexical, lexical_end);
+      
       if ( (UniqueCount+pop_size) >= MemorySize )
 	{
 	  Structure->MemoryUsage=0;
 	  fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
+	  warning("Turned Off MemoryMatrix because memory usage was too great.");
 	} /* end of if */
     } // end of Memory based evaluation
   else
     {
-      NetworkNumber=0;
       for (i=1; i<=pop_size; i++) 
 	{
-
-	  if (Structure->DynamicPopulation==2)
-	    {
-	      JaDynamicPopulationCheck(Structure, population, i, pop_size, nvars, output, Status);
-	      if (*Status < 0) {
-		fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-		
-		/* free memory */
-		
-		/* free populationstats stuff */
-		free(mean);
-		free(var);
-		free(skew);
-		free(kur);
-		free(tobs);
-		
-		free(bfgsoutX);
-		free(finalhessin);
-		free(evalX);
-		free(grad);
-		
-		/* free numeric.c allocations */
-		JaMatrixFree(population, pop_size+2);
-		JaMatrixFree(new_genera, pop_size+2);
-		
-		free_matrix(temp, 0, nvars+1, 0);
-		free_vector(probab, 1);
-		free_vector(t_vec, 1);
-		free_vector(cum_probab, 1);
-		free_ivector(live, 1);
-		free_ivector(parents, 1);
-		
-		return(ERROR_CODE);
-	      } // end of Status < 0
-	    } // end of DynamicPopulation==2
-	  
 	  if (population[i][nvars+1]==-1.0 || population[i][nvars+1]==11.0)
 	    {
-	      if (Structure->Network==1)
+	      for(j=1; j<=nvars; j++)
+		X[j] = population[i][j];
+	      
+	      if (Structure->Lexical < 2)
 		{
-		  NetworkNumber++;
-		  population[i][0] = EVALUATE;
-		}
-	      else
+		  population[i][0] = evaluate(Structure->fn, Structure->rho, X, nvars, MinMax);
+		} 
+	      else 
 		{
-		  for(j=1; j<=nvars; j++)
-		    X[j] = population[i][j];
+		  EvaluateLexical(Structure->fn, Structure->rho, 
+				  X, nvars, Structure->Lexical, MinMax, LexicalReturn);
 		  
-		  population[i][0] = evaluate(Structure->AgentFit, X, nvars, Status);
-
-		  if (*Status < 0) {
-		    fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-		    
-		    /* free memory */
-		    
-		    /* free populationstats stuff */
-		    free(mean);
-		    free(var);
-		    free(skew);
-		    free(kur);
-		    free(tobs);
-		    
-		    free(bfgsoutX);
-		    free(finalhessin);
-		    free(evalX);
-		    free(grad);
-		    
-		    /* free numeric.c allocations */
-		    JaMatrixFree(population, pop_size+2);
-		    JaMatrixFree(new_genera, pop_size+2);
-		    
-		    free_matrix(temp, 0, nvars+1, 0);
-		    free_vector(probab, 1);
-		    free_vector(t_vec, 1);
-		    free_vector(cum_probab, 1);
-		    free_ivector(live, 1);
-		    free_ivector(parents, 1);
-		    
-		    return(ERROR_CODE);
-		  }
-		}
+		  population[i][0] = LexicalReturn[0];
+		  count = 0;
+		  for(j=(nvars+2);j<lexical_end;j++)
+		    {
+		      count++;
+		      population[i][j] = LexicalReturn[count];
+		    }		      
+		} // else
 	    }
 	} //end of i loop
-      if (Structure->Network==1)
-	{
-	  NetworkEvaluate(Structure->AgentFit, Structure->DBname, Structure->AgentName, 
-			  population, pop_size, nvars, NetworkNumber, Status, 10);
-	  
-	  if (*Status < 0) {
-	    fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-	    
-	    /* free memory */
-	    
-	    /* free populationstats stuff */
-	    free(mean);
-	    free(var);
-	    free(skew);
-	    free(kur);
-	    free(tobs);
-	    
-	    free(bfgsoutX);
-	    free(finalhessin);
-	    free(evalX);
-	    free(grad);
-	    
-	    /* free numeric.c allocations */
-	    JaMatrixFree(population, pop_size+2);
-	    JaMatrixFree(new_genera, pop_size+2);
-	    
-	    free_matrix(temp, 0, nvars+1, 0);
-	    free_vector(probab, 1);
-	    free_vector(t_vec, 1);
-	    free_vector(cum_probab, 1);
-	    free_ivector(live, 1);
-	    free_ivector(parents, 1);
-	    
-	    return(ERROR_CODE);
-	  }
-	}
     } // end of default evaluation
   
-  /*Sort the initial inidivduals based on their evaluation function*/
-  sort(MinMax,population,pop_size,0);
+  if(Structure->MemoryUsage!=1)
+    {
+      /*Sort the initial individuals based on their evaluation function*/
+      if (Structure->Lexical < 2)
+	{
+	  sort(MinMax,population,pop_size,0);
+	}
+      else
+	{
+	  /* in eval.cpp because it is like the EvaluateLexical() function */
+	  RlexicalSort(Structure->fnLexicalSort, Structure->rho,
+		       population,
+		       MinMax, pop_size, nvars, lexical_end, 1);
+	}
+    }
 
-  switch(MinMax) {
-  case 0:
-    Teval = population[1][0];
-    peak_cnt = count_gener;
-    peak_val = population[1][0];
-    break;
-  case 1:
-    Teval = population[1][0];
-    peak_cnt = count_gener;
-    peak_val = population[1][0];
-    break;
-  }
+  peak_cnt = count_gener;
 
+  /*
   if(PrintLevel>0)
     {
-      fprintf(output,"\nThe 2 best initial individuals are\n");
-      for(i=1; i<3; i++) {
-	print_vector(population[i],1,nvars,output);
-	fprintf(output,"\nfitness = %e", population[i][0]);
-	fprintf(output,"\n\n");
+      fprintf(output,"\nThe best initial individual is:\n");
+      print_vector(population[1],1,nvars,output);
+
+      if (Structure->Lexical > 1)
+	{
+	  fprintf(output,"\nbest (lexical) fitness:\n");
+	  fprintf(output,"%e  ", population[1][0]);
+	  for(j=(nvars+2);j<lexical_end;j++)
+	    {
+	      fprintf(output,"%e  ", population[1][j]);
+	    }		      
+	  fprintf(output,"\n");
+	} else {
+	fprintf(output,"\nbest fitness: %e\n", population[1][0]);
       }
-      
-      fprintf(output,"\nThe worst fit of the population is: %e\n", 
-	      population[pop_size][0]);
-      fprintf(output,"\n\n");
+      fprintf(output,"\n");
+
+      if (Structure->Lexical > 1)
+	{      
+	  fprintf(output,"The worst (lexical) fitness is:\n");
+	  fprintf(output,"%e  ", population[pop_size][0]);
+	  for(j=(nvars+2);j<lexical_end;j++)
+	    {
+	      fprintf(output,"%e  ", population[pop_size][j]);
+	    }		   
+	  fprintf(output,"\n");   	  
+	} else {
+	fprintf(output,"The worst fit is: %e\n", 
+		population[pop_size][0]);
+      }
+      fprintf(output,"\n");
     }
+  */
 
   if(PrintLevel==1)
     {
-      fprintf(output,"\n\nGeneration#\t    Solution Value\n");
-      fprintf(output,"\n%7d \t%e\n", 0, population[1][0]);
+      if (Structure->Lexical > 1)
+	{
+	fprintf(output,"\n\nGeneration#\t    Solution Values (lexical)\n");	  
+	fprintf(output,"\n%7d \t%e  ", 0, population[1][0]);
+	for(j=(nvars+2);j<lexical_end;j++)
+	  {
+	    fprintf(output,"%e  ", population[1][j]);
+	  }		      
+	fprintf(output,"\n");	
+	} else {
+	fprintf(output,"\n\nGeneration#\t    Solution Value\n");
+	fprintf(output,"\n%7d \t%e\n", 0, population[1][0]);
+      }
     }
-
 
   /* compute and print mean and variance of population */
   if (PrintLevel>1) {
-      fprintf(output,"GENERATION: 0 (initializing the population)\n");
-      populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
-      for (i=0; i<=nvars; i++) {
-	  if (i==0) {
-	      fprintf(output, "Fitness Value... %e\n", population[1][i]);
-	      fprintf(output, "mean............ %e\n", mean[i]);
-	      fprintf(output, "var............. %e\n", var[i]);
-	      fprintf(output, "skewness........ %e\n", skew[i]);
-	      fprintf(output, "kurtosis........ %e\n", kur[i]);
-	      fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-	      if(Structure->MemoryUsage==1)
-		fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
-			UniqueCount-OldUniqueCount, UniqueCount);
-	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
-	  }
-	  else {
-	      fprintf(output, "var %d:\n", i);
-	      fprintf(output, "best............ %e\n", population[1][i]);
-	      fprintf(output, "mean............ %e\n", mean[i]);
-	      fprintf(output, "var............. %e\n", var[i]);
-	      fprintf(output, "skewness........ %e\n", skew[i]);
-	      fprintf(output, "kurtosis........ %e\n", kur[i]);
-	      fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-	      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
-	  }
+    fprintf(output,"GENERATION: 0 (initializing the population)\n");
+    populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
+    
+    if(Structure->Lexical > 1)
+      {
+	fprintf(output, "Lexical Fit..... %e  ", population[1][0]);
+	for(j=(nvars+2);j<lexical_end;j++)
+	  {
+	    fprintf(output,"%e  ", population[1][j]);
+	  }		      
+	fprintf(output,"\n");	    
       }
+    else
+      {
+	fprintf(output, "Fitness value... %e\n", population[1][0]);
+	fprintf(output, "mean............ %e\n", mean[i]);
+	fprintf(output, "variance........ %e\n", var[i]);
+	/*
+	  fprintf(output, "skewness........ %e\n", skew[i]);
+	  fprintf(output, "kurtosis........ %e\n", kur[i]);
+	*/
+      }
+    nnull = pop_size-tobs[0];
+    if(nnull > 0)
+      fprintf(output, "#null........... %d\n", nnull);    
+    if(Structure->MemoryUsage==1)
+      fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
+	      UniqueCount-OldUniqueCount, UniqueCount);
+    /* fprintf(output, "tobs............ %d\n", tobs[i]); */
+    
+    for (i=1; i<=nvars; i++) {
+      fprintf(output, "var %d:\n", i);
+      fprintf(output, "best............ %e\n", population[1][i]);
+      fprintf(output, "mean............ %e\n", mean[i]);
+      fprintf(output, "variance........ %e\n", var[i]);
+      /*
+	fprintf(output, "skewness........ %e\n", skew[i]);
+	fprintf(output, "kurtosis........ %e\n", kur[i]);
+      */
+      nnull = pop_size-tobs[i];
+      if(nnull > 0)
+	fprintf(output, "#null........... %d\n", nnull);
+      /* fprintf(output, "tobs............ %d\n", tobs[i]); */
+    }
   } /* end of printlevel if */
-
-  /*
-  if (PrintLevel==1) {
-    popmean = popvar = 0.0 ;
-    popwrk = 1.0 / pop_size ;
-    for(i=1; i<=pop_size; i++) {
-      popmean += population[i][0] ;
-    }
-    popmean *= popwrk ; 
-    for(i=1; i<=pop_size; i++) {
-      popstat =  population[i][0] - popmean ;
-      popvar += (popstat*popstat) ;
-    }
-    popvar *= popwrk ;
-    fprintf(output, "   mean = %e, variance = %e\n\n", popmean, popvar);
-  }
-  */
-
+  
   if(PrintLevel>0)
     fflush(output);
 
@@ -3272,10 +2882,16 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       free_vector(cum_probab, 1);
       free_ivector(live, 1);
       free_ivector(parents, 1);
+
+      if(Structure->Lexical > 1)
+	{
+	  free(LexicalReturn);
+	  free(oldfitvalueVEC);
+	}
       
-      return(ERROR_CODE);
+      error("Fatal Error. See output for diagnostic information.");
     }
-    print_population(pop_size, nvars, 0, population, popout);
+    print_population(pop_size, nvars, 0, Structure->Lexical, population, popout);
     fclose(popout);
   } /* end of PrintLevel if */
   if ( PrintLevel>1) {
@@ -3307,10 +2923,16 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       free_vector(cum_probab, 1);
       free_ivector(live, 1);
       free_ivector(parents, 1);
+
+      if(Structure->Lexical > 1)
+	{
+	  free(LexicalReturn);
+	  free(oldfitvalueVEC);
+	}
       
-      return(ERROR_CODE);
+      error("Fatal Error. See output for diagnostic information.");
     }
-    print_population(pop_size, nvars, 0, population, popout);
+    print_population(pop_size, nvars, 0, Structure->Lexical, population, popout);
     fflush(popout);
     fclose(popout);
   }
@@ -3330,8 +2952,9 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       for(j=1; j<=pop_size; j++)
         {
           live[j] = 0;
-          for(i=0; i<=nvars; i++)
+          for(i=0; i<lexical_end; i++)
             new_genera[j][i] = population[j][i];
+	  new_genera[j][nvars+1]=0;
         }
 
       /*Finding the agents that will die and the agents that will reproduce*/
@@ -3619,326 +3242,250 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       new_genera = population;
       population = Jnew;
 
-      if (Structure->DynamicPopulation==1 || Structure->DynamicPopulation==2)
-	{
-	  FILE *DynamicInput;
-	  double tmp;
-
-	  if((DynamicInput = fopen(Structure->DynamicPopulationPath, "r")) == NULL) {
-	    fprintf(output,"WARNING: Unable to open the DynamicPopulationPath: %s\n", 
-		    Structure->DynamicPopulationPath);
-	    fprintf(output,"         Continuing the process.\n");
-
-	    Structure->DynamicPopulation=0;
-	    break;
-	  }
-
-	  if(PrintLevel>0)	  
-	    fprintf(output,"\nDynamically Reading in Individuals from: %s\n", Structure->DynamicPopulationPath);
-	  
-	  j = pop_size;
-	  i=0;
-	  while (fscanf(DynamicInput,"%lf", &tmp)==1)
-	    {
-	      i++;
-	      if (i>nvars)
-		{
-		  j--;
-		  if (j<2)
-		    {
-		      fprintf(output,
-			      "\nWARNING: Dynamic Population input includes more individuals than the population size.\n");
-		      fprintf(output,
-			      "         Keeping the current best individual and discarding extra individuals.\n");
-		      fprintf(output,
-			      "         See file: %s\n\n", Structure->DynamicPopulationPath);
-		      break;
-		    }
-		  i = 1;
-		} // end of if
-
-	      population[j][i] = (int) tmp;
-	      population[j][nvars+1] = 10.0;
-
-	      if (Structure->Debug==1)
-		{
-		  fprintf(output,"\nDEBUG: WE READ IN THE FOLLOWING INDIVIDUALS:\n");
-		  fprintf(output,"population[%d][%d]: %e\n", j, i, population[j][i]);
-		}
-	    } // end of while loop
-	  
-	  fclose(DynamicInput);
-
-	  fprintf(output,"   Read in %d Individuals\n\n", pop_size-j+1);
-
-	  Structure->DynamicPopulation=0;
-	} // end of DynamicPopulation
-
       if (Structure->MemoryUsage==1)
 	{
-	  /* BINARY SEARCH.  (Knuth 3:409). */
-	  /* We have sorted Memory by the "key" */
-	  /* JaIntegerSort(population, pop_size, nvars+2);  */
-	  JaIntegerSort(population, pop_size, nvars+2); 
-	  JaIntegerSort(Memory, UniqueCount, nvars+2);
-
 	  OldUniqueCount=UniqueCount;
 
-	  JaIntMemoryMatrix(Structure,
-			    Memory, population, X,
-			    &UniqueCount, OldUniqueCount, pop_size, nvars, output, Status);
+	  UniqueCount = RmemoryMatrixEvaluate(Structure->fnMemoryMatrixEvaluate, Structure->rho,
+					      Memory, population,
+					      MinMax, pop_size, UniqueCount,
+					      nvars, Structure->Lexical, lexical_end);	  	  
 
-	  if (*Status < 0) {
-	    fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-	      
-	    /* free memory */
-	    if (Structure->MemoryUsage==1)
-	      JaMatrixFree(Memory, MemorySize);
-	    
-	    /* free populationstats stuff */
-	    free(mean);
-	    free(var);
-	    free(skew);
-	    free(kur);
-	    free(tobs);
-	      
-	    free(bfgsoutX);
-	    free(finalhessin);
-	    free(evalX);
-	    free(grad);
-	      
-	    /* free numeric.c allocations */
-	    JaMatrixFree(population, pop_size+2);
-	    JaMatrixFree(new_genera, pop_size+2);
-	      
-	    free_matrix(temp, 0, nvars+1, 0);
-	    free_vector(probab, 1);
-	    free_vector(t_vec, 1);
-	    free_vector(cum_probab, 1);
-	    free_ivector(live, 1);
-	    free_ivector(parents, 1);
-	      
-	    return(ERROR_CODE);
-	  }
 	  if ( (UniqueCount+pop_size) >= MemorySize )
 	    {
 	      Structure->MemoryUsage=0;
 	      fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
+	      warning("Turned Off MemoryMatrix because memory usage was too great.");
 	    } /* end of if */
-	} // end of Memory based evaluation
+	} // end of MemoryUsage==1
         else
 	  {
-	    NetworkNumber=0;
 	    for (i=1; i<=pop_size; i++) 
 	      {
-
-		if (i > 1 && Structure->DynamicPopulation==2)
-		{
-		  JaDynamicPopulationCheck(Structure, population, i, pop_size, nvars, output, Status);
-		  if (*Status < 0) {
-		    fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-		
-		      /* free memory */
-		
-		      /* free populationstats stuff */
-		    free(mean);
-		    free(var);
-		    free(skew);
-		    free(kur);
-		    free(tobs);
-		
-		    free(bfgsoutX);
-		    free(finalhessin);
-		    free(evalX);
-		    free(grad);
-		
-		    /* free numeric.c allocations */
-		    JaMatrixFree(population, pop_size+2);
-		    JaMatrixFree(new_genera, pop_size+2);
-		
-		    free_matrix(temp, 0, nvars+1, 0);
-		    free_vector(probab, 1);
-		    free_vector(t_vec, 1);
-		    free_vector(cum_probab, 1);
-		    free_ivector(live, 1);
-		    free_ivector(parents, 1);
-		
-		    return(ERROR_CODE);
-		  } // end of Status < 0
-		} // end of DynamicPopulation==2
-	  
 		if (population[i][nvars+1]!=0)
 		  {
-		  if (Structure->Network==1)
-		    {
-		      NetworkNumber++;
-		      population[i][0] = EVALUATE;
-		    }
-		  else
-		    {
-		      for(j=1; j<=nvars; j++)
-			X[j] = population[i][j];
-		      
-		      population[i][0] = evaluate(Structure->AgentFit, X, nvars, Status);
-
-		      if (*Status < 0) {
-			fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-			
-			/* free memory */
-			
-			/* free populationstats stuff */
-			free(mean);
-			free(var);
-			free(skew);
-			free(kur);
-			free(tobs);
-			
-			free(bfgsoutX);
-			free(finalhessin);
-			free(evalX);
-			free(grad);
-			
-			/* free numeric.c allocations */
-			JaMatrixFree(population, pop_size+2);
-			JaMatrixFree(new_genera, pop_size+2);
-			
-			free_matrix(temp, 0, nvars+1, 0);
-			free_vector(probab, 1);
-			free_vector(t_vec, 1);
-			free_vector(cum_probab, 1);
-			free_ivector(live, 1);
-			free_ivector(parents, 1);
-			
-			return(ERROR_CODE);
-		      }	      
-
-		    }
+		    for(j=1; j<=nvars; j++)
+		      X[j] = population[i][j];
+		    
+		    if (Structure->Lexical < 2)
+		      {
+			population[i][0] = evaluate(Structure->fn, Structure->rho, X, nvars, MinMax);
+		      } 
+		    else 
+		      {
+			EvaluateLexical(Structure->fn, Structure->rho, 
+					X, nvars, Structure->Lexical, MinMax, LexicalReturn);
+			population[i][0] = LexicalReturn[0];
+			count = 0;
+			for(j=(nvars+2);j<lexical_end;j++)
+			  {
+			    count++;
+			    population[i][j] = LexicalReturn[count];
+			  }		      			  
+		      }
 		  }
 	      } //end of i loop
-	    
-	    if (Structure->Network==1)
-	      {
-		NetworkEvaluate(Structure->AgentFit, Structure->DBname, Structure->AgentName, 
-				population, pop_size, nvars, NetworkNumber, Status, 10);
-		
-		if (*Status < 0) {
-		  fprintf(output,"EVALUATE.C: Elegantly exiting GENOUD because of exit (status) code: %d\n", *Status);
-		  
-		  /* free memory */
-		  
-		  /* free populationstats stuff */
-		  free(mean);
-		  free(var);
-		  free(skew);
-		  free(kur);
-		  free(tobs);
-		  
-		  free(bfgsoutX);
-		  free(finalhessin);
-		  free(evalX);
-		  free(grad);
-		  
-		  /* free numeric.c allocations */
-		  JaMatrixFree(population, pop_size+2);
-		  JaMatrixFree(new_genera, pop_size+2);
-		  
-		  free_matrix(temp, 0, nvars+1, 0);
-		  free_vector(probab, 1);
-		  free_vector(t_vec, 1);
-		  free_vector(cum_probab, 1);
-		  free_ivector(live, 1);
-		  free_ivector(parents, 1);
-		  
-		  return(ERROR_CODE);
-		}	      
-	      }
-	  } // end of default evaluation
+	} //end of default evaluation scheme
 
-      /*Sort the new population based on their evaluation function*/
-      sort(MinMax,population,pop_size,0);
-
-      switch(MinMax)
-        {
-	case 0:
-	  if(Teval > population[1][0])
+      if(Structure->MemoryUsage!=1)
+	{
+	  /*Sort the new population based on their evaluation function*/
+	  if (Structure->Lexical < 2)
 	    {
-	      Teval = population[1][0];
-	      if(PrintLevel==1)	  
+	      sort(MinMax,population,pop_size,0);
+	    }
+	  else
+	    {
+	      /* in eval.cpp because it is like the EvaluateLexical() function */
+	      RlexicalSort(Structure->fnLexicalSort, Structure->rho,
+			   population,
+			   MinMax, pop_size, nvars, lexical_end, 1);
+	    }
+	}
+
+      if (count_gener == 1) {
+	oldfitvalue=population[1][0];
+
+	if(Structure->Lexical  > 1)
+	  {
+	    oldfitvalueVEC[0]=population[1][0];
+	    k = 1;
+	    for (i=(nvars+2);i<lexical_end;i++)  {
+	      oldfitvalueVEC[k]=population[1][i];
+	      k++;  
+	    } /* for (i=(nvars+2);i<lexical_end;i++) */
+	  }
+      }
+      
+      /* check to see if fit is improving */
+      if(Structure->Lexical < 2)
+	{
+	  switch(MinMax)
+	    {
+	    case 0:
+	      if ( (oldfitvalue - SolutionTolerance) > population[1][0]) {
+		nochange_gen=0;
+		oldfitvalue=population[1][0];
+		peak_cnt = count_gener;
+	      }
+	      else nochange_gen++;
+	      break;
+	    case 1:
+	      if ( (oldfitvalue + SolutionTolerance) < population[1][0]) {
+		nochange_gen=0;
+		oldfitvalue=population[1][0];
+		peak_cnt = count_gener;
+	      }
+	      else nochange_gen++;	      
+	      break;
+	    }
+	} /*       if(Structure->Lexical < 2) */
+      else
+	{
+	  switch(MinMax)
+	    {
+	    case 0:
+	      LexicalFitsImproving = 0;
+	      if ( (oldfitvalue - SolutionTolerance) > population[1][0]) 
 		{
-		  fprintf(output,"%7lu \t%e\n",
+		  LexicalFitsImproving = 1;
+		} 
+	      else
+		{
+		  k=1;
+		  for (i=(nvars+2);i<lexical_end;i++)  {
+		    if ( (oldfitvalueVEC[k] - SolutionTolerance) > population[1][i] ) {
+		      LexicalFitsImproving = 1;
+		      break;
+		    } /* (oldfitvalueVEC[k] - SolutionTolerance) > population[1][i] ) */
+		    k++;  
+		  } /* for (i=(nvars+2);i<lexical_end;i++) */
+		} /* else if ( (oldfitvalue - SolutionTolerance) > population[1][0])  */
+	      if (LexicalFitsImproving)
+		{
+		  nochange_gen = 0;
+		  peak_cnt = count_gener;
+		  oldfitvalue=population[1][0];
+		  oldfitvalueVEC[0]=population[1][0];
+		  k=1;
+		  for (i=(nvars+2);i<lexical_end;i++)  {
+		    oldfitvalueVEC[k]=population[1][i];
+		    k++;  
+		  } /* for (i=(nvars+2);i<lexical_end;i++) */
+		}
+	      else
+		nochange_gen++;
+	      break;
+	    case 1:
+	      LexicalFitsImproving = 0;
+	      if ( (oldfitvalue + SolutionTolerance) < population[1][0]) 
+		{
+		  LexicalFitsImproving = 1;
+		} 
+	      else
+		{
+		  k=1;
+		  for (i=(nvars+2);i<lexical_end;i++)  {
+		    if ( (oldfitvalueVEC[k] + SolutionTolerance) < population[1][i] ) {
+		      LexicalFitsImproving = 1;
+		      break;
+		    } /* (oldfitvalueVEC[k] - SolutionTolerance) > population[1][i] ) */
+		    k++;  
+		  } /* for (i=(nvars+2);i<lexical_end;i++) */
+		} /* else if ( (oldfitvalue - SolutionTolerance) > population[1][0])  */
+	      if (LexicalFitsImproving)
+		{
+		  nochange_gen = 0;
+		  peak_cnt = count_gener;
+		  oldfitvalue=population[1][0];
+		  oldfitvalueVEC[0]=population[1][0];
+		  k=1;
+		  for (i=(nvars+2);i<lexical_end;i++)  {
+		    oldfitvalueVEC[k]=population[1][i];
+		    k++;  
+		  } /* for (i=(nvars+2);i<lexical_end;i++) */
+		}
+	      else
+		nochange_gen++;
+	      break;	      
+	    } /* switch(MinMax) */
+	} /* else (Structure->Lexical > 2) */
+
+
+      if(PrintLevel==1)
+	{
+	  if( nochange_gen==0 )
+	    {
+	      if(Structure->Lexical > 1)
+		{
+		  fprintf(output,"\n%7d \t%e  ", 0, population[1][0]);
+		  for(j=(nvars+2);j<lexical_end;j++)
+		    {
+		      fprintf(output,"%e  ", population[1][j]);
+		    }		      
+		  fprintf(output,"\n");	
+		}
+	      else
+		{
+		  fprintf(output,"%7d \t%e\n",
 			  count_gener,population[1][0]); 
 		  fflush(output);
 		}
-	      peak_cnt = count_gener;
-	      peak_val = population[1][0];
-	    }
-	  break;
-          case 1:
-            if(Teval < population[1][0])
-              {
-                Teval = population[1][0];
-		if(PrintLevel==1)	  
-		  {
-		    fprintf(output,"%7lu \t%e\n",
-			    count_gener,population[1][0]);
-		    fflush(output);
-		  }
-                peak_cnt = count_gener;
-                peak_val = population[1][0];
-              }
-            break;
-        }
+	    } 
+	}
 
       /* compute and print mean and variance of population */
       if (PrintLevel>1) {
-	  fprintf(output,"\nGENERATION: %d\n", count_gener);
-	  populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
-	  for (i=0; i<=nvars; i++) {
-	      if (i==0) {
-		  fprintf(output, "Fitness Value... %e\n", population[1][i]);
-		  fprintf(output, "mean............ %e\n", mean[i]);
-		  fprintf(output, "var............. %e\n", var[i]);
-		  fprintf(output, "skewness........ %e\n", skew[i]);
-		  fprintf(output, "kurtosis........ %e\n", kur[i]);
-		  fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-		  if(Structure->MemoryUsage==1)
-		    fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
-			    UniqueCount-OldUniqueCount, UniqueCount);
-		  /* fprintf(output, "tobs............ %d\n", tobs[i]); */
-	      }
-	      else {
-		  fprintf(output, "var %d:\n", i);
-		  fprintf(output, "best............ %e\n", population[1][i]);
-		  fprintf(output, "mean............ %e\n", mean[i]);
-		  fprintf(output, "var............. %e\n", var[i]);
-		  fprintf(output, "skewness........ %e\n", skew[i]);
-		  fprintf(output, "kurtosis........ %e\n", kur[i]);
-		  fprintf(output, "#null........... %d\n", pop_size-tobs[i]);
-		  /* fprintf(output, "tobs............ %d\n", tobs[i]); */
-	      }
+	fprintf(output,"\nGENERATION: %d\n", count_gener);
+	populationstats(population, pop_size, nvars, mean, var, skew, kur, tobs);
+
+	if(Structure->Lexical > 1)
+	  {
+	    fprintf(output, "Lexical Fit..... %e  ", population[1][0]);
+	    for(j=(nvars+2);j<lexical_end;j++)
+	      {
+		fprintf(output,"%e  ", population[1][j]);
+	      }		      
+	    fprintf(output,"\n");	    
 	  }
+	else
+	  {
+	    fprintf(output, "Fitness value... %e\n", population[1][0]);
+	    fprintf(output, "mean............ %e\n", mean[i]);
+	    fprintf(output, "variance........ %e\n", var[i]);
+	    /*
+	      fprintf(output, "skewness........ %e\n", skew[i]);
+	      fprintf(output, "kurtosis........ %e\n", kur[i]);
+	    */
+	  }
+
+	nnull = pop_size-tobs[0];
+	if(nnull > 0)
+	  fprintf(output, "#null........... %d\n", nnull);
+	if(Structure->MemoryUsage==1)
+	  fprintf(output, "#unique......... %d, #Total UniqueCount: %d\n", 
+		  UniqueCount-OldUniqueCount, UniqueCount);
+	/* fprintf(output, "tobs............ %d\n", tobs[i]); */
+
+	for (i=1; i<=nvars; i++) {
+	  fprintf(output, "var %d:\n", i);
+	  fprintf(output, "best............ %e\n", population[1][i]);
+	  fprintf(output, "mean............ %e\n", mean[i]);
+	  fprintf(output, "variance........ %e\n", var[i]);
+	  /*
+	    fprintf(output, "skewness........ %e\n", skew[i]);
+	    fprintf(output, "kurtosis........ %e\n", kur[i]);
+	  */
+	  nnull = pop_size-tobs[i];
+	  if(nnull > 0)
+	    fprintf(output, "#null........... %d\n", nnull);
+	  /* fprintf(output, "tobs............ %d\n", tobs[i]); */
+	}
       } /* end of printlevel if */
       
-      /*
-      if (PrintLevel==1) {
-	popmean = popvar = 0.0 ;
-	popwrk = 1.0 / pop_size ;
-	for(i=1; i<=pop_size; i++) {
-	  popmean += population[i][0] ;
-	}
-	popmean *= popwrk ;
-	for(i=1; i<=pop_size; i++) {
-	  popstat =  population[i][0] - popmean ;
-	  popvar += (popstat*popstat) ;
-	}
-	popvar *= popwrk ;
-	fprintf(output, "   mean = %e, variance = %e\n\n", popmean, popvar);
-      }
-      */
-
       if (PrintLevel>0)
-	fflush(output);
-	
+	fflush(output);      
+
       /* Print the population file */
       if ( PrintLevel == 1 ) {
 	if((popout = fopen(Structure->ProjectPath, "w")) == NULL) {
@@ -3970,9 +3517,15 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free_ivector(live, 1);
 	  free_ivector(parents, 1);
 
-	  return(ERROR_CODE);
+	  if(Structure->Lexical > 1)
+	    {
+	      free(LexicalReturn);
+	      free(oldfitvalueVEC);
+	    }
+
+	  error("Fatal Error. See output for diagnostic information.");
 	}
-	print_population(pop_size, nvars, count_gener, population, popout);
+	print_population(pop_size, nvars, count_gener, Structure->Lexical, population, popout);
 	fclose(popout);
       } /* end of PrintLevel if */
       if ( PrintLevel>1) {
@@ -4004,123 +3557,79 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free_vector(cum_probab, 1);
 	  free_ivector(live, 1);
 	  free_ivector(parents, 1);
+
+	  if(Structure->Lexical > 1)
+	    {
+	      free(LexicalReturn);
+	      free(oldfitvalueVEC);
+	    }
 	  
-	  return(ERROR_CODE);
+	  error("Fatal Error. See output for diagnostic information.");
 	}
-	print_population(pop_size, nvars, count_gener, population, popout);
+	print_population(pop_size, nvars, count_gener, Structure->Lexical, population, popout);
 	fflush(popout);
 	fclose(popout);
       }
-      
-      if (count_gener == 1) {
-	oldfitvalue=population[1][0];
-      }
-      
-      /*
-	if (oldfitvalue == population[1][0]) {
-	nochange_gen++;
-	}
-      */
-      
-      switch(MinMax)
-	{
-	case 0:
-	  if (oldfitvalue - SolutionTolerance > population[1][0]) {
-	    nochange_gen=0;
-	    oldfitvalue=population[1][0];
-	  }
-	  else nochange_gen++;
-	  break;
-	case 1:
-	  if (oldfitvalue + SolutionTolerance < population[1][0]) {
-	    nochange_gen=0;
-	    oldfitvalue=population[1][0];
-	  }
-	  else nochange_gen++;	      
-	  break;
-	}
       
       if (nochange_gen > (WaitGenerations)) {
 	/* increase the number of WaitGenerations if the gradients are NOT zero! */	  
 	if (GradientCheck==0) {
 	  if(PrintLevel>0)	  
 	    {
-	      fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
-	      fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
+	      fprintf(output,"\n'wait.generations' limit reached.\n");
+	      fprintf(output,"No significant improvement in %d generations.\n", nochange_gen-1);
 	      fflush(output);
 	    }
 	  MaxGenerations = 0;
 	  nochange_gen=0;
 	}
-	else  {
-	  for (i=1; i<=nvars; i++)
-	    {
-		  bfgsoutX[i-1]=population[1][i];
-	    }
-	  gradient(Structure->AgentFit, bfgsoutX, grad, nvars, MinMax, BoundaryEnforcement, InstanceNumber, 
-		   domains, Status);
-	  if (*Status < 0) {
-	    /* Free Memory */
-	    if (Structure->MemoryUsage==1)
-	      JaMatrixFree(Memory, MemorySize);
-
-	    /* free populationstats stuff */
-	    free(mean);
-	    free(var);
-	    free(skew);
-	    free(kur);
-	    free(tobs);
-
-	    free(bfgsoutX);
-	    free(finalhessin);
-	    free(evalX);
-	    free(grad);
-	    
-	    /* free numeric.c allocations */
-	    JaMatrixFree(population, pop_size+2); 
-	    JaMatrixFree(new_genera,pop_size+2); 
-
-	    free_matrix(temp, 0, nvars+1, 0);
-	    free_vector(probab, 1);
-	    free_vector(t_vec, 1);
-	    free_vector(cum_probab, 1);
-	    free_ivector(live, 1);
-	    free_ivector(parents, 1);
-	    
-	    return(ERROR_CODE);
-	  }
-	  GradientTrigger = 0;
-	  for (i=0; i<nvars; i++) {
-	    if (fabs(grad[i]) > SolutionTolerance) {
-	      GradientTrigger = 1;
-	      break;
+	else  
+	  {
+	    for (i=1; i<=nvars; i++)
+	      {
+		bfgsoutX[i-1]=population[1][i];
+	      }
+	    if(Structure->UserGradient==0)
+	      {	    
+		gradient(Structure->fn, Structure->rho,
+			 bfgsoutX, grad, nvars, MinMax, BoundaryEnforcement, domains);
+	      } 
+	    else 
+	      {
+		userGradientfn(Structure->fnGR, Structure->rho, bfgsoutX, grad, nvars);
+	      }
+	    GradientTrigger = 0;
+	    for (i=0; i<nvars; i++) {
+	      if (fabs(grad[i]) > SolutionTolerance) {
+		GradientTrigger = 1;
+		break;
+	      }
+	    } /* end for loop */
+	    if (GradientTrigger==1) {
+	      IncreaseGenerations = WaitGenerations;
+	      WaitGenerations += IncreaseGenerations;
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,
+			  "\nDoubling 'wait.generations' limit to %d (from %d) ", 
+			  WaitGenerations, IncreaseGenerations);
+		  fprintf(output,"because at least one gradient is too large.\n");
+		  fprintf(output,"G[%d]: %e\t Solution Tolerance: %e\n\n", 
+			  i+1, grad[i], SolutionTolerance);
 		}
-	  } /* end for loop */
-	  if (GradientTrigger==1) {
-	    IncreaseGenerations = WaitGenerations;
-	    WaitGenerations += IncreaseGenerations;
-	    if(PrintLevel>0)	  
-	      {
-		fprintf(output,
-			"\nDoubling Soft Maximum Wait Generation Limit to %d (from %d).\n", 
-			WaitGenerations, IncreaseGenerations);
-		fprintf(output,"I'm doing this because at least one gradient is too large.\n");
-		fprintf(output,"G[%d]: %e\t Solution Tolerance: %e\n\n", 
-			i+1, grad[i], SolutionTolerance);
-	      }
-	  }
-	  else {
-	    if(PrintLevel>0)	  
-	      {
-		fprintf(output,"\nSoft Generation Wait Limit Hit.\n");
-		fprintf(output,"No Improvement in %d Generations\n", nochange_gen-1);
-		fflush(output);
-	      }
-	    MaxGenerations = 0;
-	    nochange_gen=0;
-	  }
-	}/* end if loop */
-      }
+	    }
+	    else {
+	      if(PrintLevel>0)	  
+		{
+		  fprintf(output,"\n'wait.generations' limit reached.\n");
+		  fprintf(output,"No significant improvement in %d generations.\n", nochange_gen-1);
+		  fflush(output);
+		}
+	      MaxGenerations = 0;
+	      nochange_gen=0;
+	    }
+	  }/* end else loop */
+      } /* end of if (nochange_gen > (WaitGenerations)) { */
       
       if ( (count_gener == MaxGenerations) && (GradientTrigger==1) ) 
 	{
@@ -4131,17 +3640,19 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	      if(PrintLevel>0)	  
 		{
 		  fprintf(output,
-			  "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
+			  "\nIncreasing 'max.generations' limit by %d generations to %d ", 
 			  IncreaseGenerations, MaxGenerations);
-		  fprintf(output,"I'm doing this because at least one gradient is too large.\n\n");
+		  fprintf(output,"because at least one gradient is too large.\n\n");
 		}
 	    } // if (Structure->HardGenerationLimit==0)
 	  else
 	    {
+	      HardMaximumNumber = 1;
+	      warning("Stopped because hard maximum generation limit was hit.\nAt least one gradient is too large.");
 	      if(PrintLevel>0)	  
 		{
-		  fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
-		  fprintf(output,"          At least one gradient is still too large\n");
+		  fprintf(output,"\nWARNING: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		  fprintf(output,"         At least one gradient is too large\n");
 		}
 	    } // else
 	} // if ( (count_gener == MaxGenerations) && (GradientTrigger==1) ) 
@@ -4157,9 +3668,9 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	      if(PrintLevel>0)	  
 		{
 		  fprintf(output,
-			  "\nIncreasing Soft Maximum Generation Limit by %d (WaitGenerations) to %d\n", 
+			  "\nIncreasing 'max.generations' limit by %d generations to %d ", 
 			  IncreaseGenerations, MaxGenerations);
-		  fprintf(output,"I'm doing this because the fitness is still impoving.\n\n");
+		  fprintf(output,"because the fitness is still impoving.\n\n");
 		}
 	    }
 	    else {
@@ -4168,89 +3679,52 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	      if(PrintLevel>0)	  
 		{
 		  fprintf(output,
-			  "\nIncreasing Soft Maximum Generation Limit by %d (MaxGenerations) to %d.\n", 
+			  "\nIncreasing 'max.generations' limit by %d generations to %d ", 
 			  IncreaseGenerations, MaxGenerations);
-		  fprintf(output,"I'm doing this because the fitness is still improving.\n\n");
+		  fprintf(output,"because the fitness is still improving.\n\n");
 		}
 	    }
 	  } // if (Structure->HardGenerationLimit==0)
 	else
 	  {
-	    if(PrintLevel>0)	  
+	    if (HardMaximumNumber==0)
 	      {
-		fprintf(output,"\nSTOPPING: HARD MAXIMUM GENERATION LIMIT HIT\n");
-		fprintf(output,"          But fitness is still improving\n");
-	      }
+		warning("Stopped because hard maximum generation limit was hit.");
+		if(PrintLevel>0)	  
+		  {
+		    fprintf(output,"\nWARNING: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		  }
+	      } /* end of if HardMax */		
 	  }
       } // if ( (count_gener == MaxGenerations) &&  (nochange_gen < WaitGenerations) )
       
       if(PrintLevel>0)	  
 	fflush(output);
-
-      /* Should we recheck the main data structure for changes to the operator set? If so, let's
-       do it now */
-      if (Structure->AllowDynamicUpdating==1) {
-	pop_size_old = pop_size;
-	if(PrintLevel>0)	  
-	  fprintf(output,"\nUpdating Main Data Structure:\n");
-	SetRunTimeParameters(Structure, 0,
-			     &pop_size, &nvars, &MaxGenerations, &WaitGenerations,
-			     &MinMax, &GradientCheck, &BoundaryEnforcement, &UseBFGS, &SolutionTolerance,
-			     &InstanceNumber, &P, &P0, &P1, &P2, &P3, &P4, &P5, &P6, &P7, &P8, 
-			     &PrintLevel, &HardGenerationLimit, output);
-	if (pop_size > pop_size_old) {
-	  population_old = JaMatrixAllocate(pop_size_old+2, nvars+2);
-	  
-	  for (i=1; i<=pop_size_old;i++) {
-	    for (j=0; j<=nvars; j++) {
-	      population_old[i][j] = population[i][j];
-	    }
-	  }
-	  JaMatrixFree(population, pop_size_old+2);
-	  population    = JaMatrixAllocate(pop_size+2, nvars+2);
-
-	  for (i=1; i<=pop_size_old;i++) {
-	    for (j=0; j<=nvars; j++) {
-	      population[i][j] = population_old[i][j];
-	    }
-	  }	  
-	  JaMatrixFree(population_old, pop_size_old+2);
-
-	  /* we need to add individuals to population! */
-	  for (j=(pop_size_old+1); j<=pop_size; j++) {
-	    for (i=1; i<=nvars; i++) {
-	      population[j][i] = frange_ran(domains[i][1], domains[i][3]); 
-	      population[j][nvars+1] = 1.0;
-	    }
-	  }
-	} /* end of if popsize > pop_size_old */
-	
-	JaMatrixFree(new_genera, pop_size_old+2);
-	free_vector(probab, 1);
-	free_vector(cum_probab, 1);
-	free_ivector(live, 1);
-	free_ivector(parents, 1);
-
-	new_genera    = JaMatrixAllocate(pop_size+2, nvars+2);
-
-	temp       = matrix(1,2,0,nvars);
-	probab     = Gvector(1,pop_size);
-	t_vec      = Gvector(1,nvars);
-	cum_probab = Gvector(1,pop_size);
-	live       = ivector(1,pop_size);
-	parents    = ivector(1,p2use);
-
-	Structure->AllowDynamicUpdating=0;
-      } // end of if AllowDynamicUpdating==1
       
     } /* end of do loop */
   /*Increment iteration count and test whether all generations are done*/
   while (++count_gener <= MaxGenerations);
-
-  if(PrintLevel>0)	  
-    {  
-      fprintf(output,"\nBest Fit Found at Generation %lu\nFit Value = %e\n",peak_cnt,peak_val);
-      fprintf(output,"\n\nParameters at the Solution (value, gradient):\n\n");
+  
+  if(PrintLevel>0)	    
+    {
+      if(Structure->Lexical > 1)
+	{
+	  fprintf(output,"\nSolution Lexical Fitness Value:\n");
+	  fprintf(output,"%e  ", population[1][0]);
+	  for(j=(nvars+2);j<lexical_end;j++)
+	    {
+	      fprintf(output,"%e  ", population[1][j]);
+	    }		      
+	  fprintf(output,"\n");
+	}
+      else
+	{
+	  fprintf(output,"\nSolution Fitness Value: %e\n", population[1][0]);
+	}
+      if (GradientCheck==0 && UseBFGS==0)
+	fprintf(output,"\nParameters at the Solution:\n\n");
+      else
+	fprintf(output,"\nParameters at the Solution (parameter, gradient):\n\n");
     }
 
   /* output data structure */
@@ -4258,67 +3732,54 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   Structure->oGenerations=count_gener-1;
 
   /* obtain gradients */
-  if (GradientCheck==0 && UseBFGS==0) {
-    if(PrintLevel>0)	  
-      fprintf(output,"\nNot Obtaining Gradient Information\n");
-    for (i=0; i< nvars; i++) {
-      grad[i]=-1.0;
-    }
-  }
-  else {
-    for (i=1; i<=nvars; i++)
-      {
-	bfgsoutX[i-1]=population[1][i];
-      }
-    gradient(Structure->AgentFit, bfgsoutX, grad, nvars, MinMax, BoundaryEnforcement, 
-	     InstanceNumber, domains, Status);
-    if (*Status < 0) {
-	/* Free Memory */
-      if (Structure->MemoryUsage==1)
-	JaMatrixFree(Memory, MemorySize);
-	
-	/* free populationstats stuff */
-	free(mean);
-	free(var);
-	free(skew);
-	free(kur);
-	free(tobs);
-	
-	
-	free(bfgsoutX);
-	free(finalhessin);
-	free(evalX);
-	free(grad);
-	
-	/* free numeric.c allocations */
-	JaMatrixFree(population, pop_size+2); 
-	JaMatrixFree(new_genera,pop_size+2); 
-	
-	free_matrix(temp, 0, nvars+1, 0);
-	free_vector(probab, 1);
-	free_vector(t_vec, 1);
-	free_vector(cum_probab, 1);
-	free_ivector(live, 1);
-	free_ivector(parents, 1);
-
-	
-	return(ERROR_CODE);
-    }
-  }
-  
   /* print best solution */
-  for(j = 1; j <= nvars; j++) {
-    i = j-1;
-    if(PrintLevel>0)	  
-      fprintf(output," X[%2d] :\t%e\tG[%2d] :\t%e\n",j,population[1][j],j,grad[i]);
-    Results[i] = population[1][j];
-    Gradients[i] = grad[i];
-  }
-  
-  /* free memory */
-  if (Structure->MemoryUsage==1)
-    JaMatrixFree(Memory, MemorySize); 
+  if (GradientCheck==0 && UseBFGS==0)
+    {
+      for(j = 1; j <= nvars; j++) {
+	i = j-1;
+	if(PrintLevel>0)	  
+	  fprintf(output," X[%2d] :\t%e\n",j,population[1][j]);
+	grad[i] = -1.0;
+	Results[i] = population[1][j];
+	Gradients[i] = grad[i];
+      }
+    } /* end of if (GradientCheck==0 && UseBFGS==0) */
+  else 
+    {
+      for (i=1; i<=nvars; i++)
+	{
+	  bfgsoutX[i-1]=population[1][i];
+	}
+      if(Structure->UserGradient==0)
+	{
+	  gradient(Structure->fn, Structure->rho,
+		   bfgsoutX, grad, nvars, MinMax, BoundaryEnforcement, domains);
+	} 
+      else 
+	{
+	  userGradientfn(Structure->fnGR, Structure->rho, bfgsoutX, grad, nvars);
+	}
 
+      for(j = 1; j <= nvars; j++) {
+	i = j-1;
+	if(PrintLevel>0)	  
+	  fprintf(output," X[%2d] :\t%e\tG[%2d] :\t%e\n",j,population[1][j],j,grad[i]);
+	Results[i] = population[1][j];
+	Gradients[i] = grad[i];
+      }
+    } /* end of  else (GradientCheck==0 && UseBFGS==0) */
+
+  Structure->oFitValues[0]=population[1][0];
+  if (Structure->Lexical > 1)
+    {
+      k = 1;
+      for (i=(nvars+2);i<lexical_end;i++)  {
+	Structure->oFitValues[k]=population[1][i];
+	k++;  	  
+      }
+    } 
+
+  /* free memory */
   /* free populationstats stuff */
   free(mean);
   free(var);
@@ -4326,16 +3787,16 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   free(kur);
   free(tobs);
   
-  
   free(bfgsoutX);
   free(finalhessin);
   free(evalX);
   free(grad);
 
-  /* free numeric.c allocations */
-  /* free_matrix(population, 0, pop_size+1,0); */
-  JaMatrixFree(population, pop_size+2); 
-  JaMatrixFree(new_genera,pop_size+2); 
+  if (Structure->MemoryUsage==1)
+    JaMatrixFree(Memory, MemorySize);
+
+  JaMatrixFree(population, pop_size+2);
+  JaMatrixFree(new_genera, pop_size+2);
 
   free_matrix(temp, 0, nvars+1, 0);
   free_vector(probab, 1);
@@ -4344,9 +3805,13 @@ double JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   free_ivector(live, 1);
   free_ivector(parents, 1);
 
-  return(peak_val);
+  if(Structure->Lexical > 1)
+    {
+      free(LexicalReturn);
+      free(oldfitvalueVEC);
+    }
+} /* end JaIntegerOptimization */
 
-} /* end of JaIntegerOptimization */
 
 
 /********************************************************************************/
@@ -4437,417 +3902,5 @@ void JaDoubleSort(double **InMatrix, long n, long k)
   JaMatrixFree(Tmp, n);
 } /* end of JaDoubleSort */
 
-void JaDoubleMemoryMatrix_Gen0(struct GND_IOstructure *Structure, 
-			       double **Memory, double **population, double *X,
-			       long *UniqueCount, long OldUniqueCount,
-			       int pop_size, int nvars, 
-			       FILE *output, long *Status)
-{
-  int i, j;
-  FLAG UniqueFlag;
 
-  /* search over i in population */
-  for(i=1; i<=pop_size; i++) {
-
-    if (Structure->DynamicPopulation==2)
-      {
-	JaDynamicPopulationCheck(Structure, population, i, pop_size, nvars, output, Status);
-	if (*Status < 0) {
-	  return;
-	} // end of Status < 0
-      } // end of DynamicPopulation==2
-    
-    UniqueFlag=FALSE;
-    if (i>1) {
-      /* 
-	 Take only unique people out of the population[][] matrix 
-      */
-      for (j=1; j<=nvars; j++) {
-	/* Unique in this population? */
-	if (population[i][j] != population[i-1][j]) {
-	  UniqueFlag=TRUE;
-	  break;
-	}
-      } /* end of j loop */
-    } /* end of if */
-    else UniqueFlag=TRUE;
-    
-    if (UniqueFlag) {
-      ++*UniqueCount; /* *UniqueCount counts from 1 */
-	  
-      for (j=0; j<=nvars; j++) 
-	Memory[*UniqueCount][j] = population[i][j];
-
-      if (population[i][nvars+1]==-1.0 || population[i][nvars+1]==11.0) {
-	for(j=1; j<=nvars; j++)
-	  X[j] = Memory[*UniqueCount][j];
-	  
-	Memory[*UniqueCount][0] = evaluate(Structure->AgentFit, X, nvars, Status);
-	if (*Status < 0) {
-	  return;
-	}
-	Memory[*UniqueCount][nvars+1] = 0.0;
-	    
-	population[i][0] = Memory[*UniqueCount][0];
-      } /* end of if */
-      else { 
-	Memory[*UniqueCount][0] = population[i][0];
-	Memory[*UniqueCount][nvars+1] = 0.0;
-      }
-    } /* end of main UniqueFlag */
-    else {
-      for (j=0; j<=nvars+1; j++) 
-	population[i][j] = population[i-1][j];
-    } /* end of else */
-  } /* end of i loop */  
-
-} //end of JaDoubleMemoryMatrix_Gen0
-
-void JaDoubleMemoryMatrix(struct GND_IOstructure *Structure, 
-			  double **Memory, double **population, double *X,
-			  long *UniqueCount, long OldUniqueCount,
-			  int pop_size, int nvars, FILE *output, long *Status)
-{
-  int i, j;
-  FLAG UniqueFlag, Redundant;
-  long upper, lower, midpoint;
-
-  /* search over i in population */
-  for(i=1; i<=pop_size; i++) {
-
-    if (i > 1 && Structure->DynamicPopulation==2)
-      {
-	JaDynamicPopulationCheck(Structure, population, i, pop_size, nvars, output, Status);
-	if (*Status < 0) {
-	  return;
-	} // end of Status < 0
-      } // end of DynamicPopulation==2
-
-    UniqueFlag=FALSE;
-    Redundant=FALSE;
-    if (population[i][nvars+1]==0) {
-      Redundant=TRUE;
-    }
-    else if (i>1) {
-      /* 
-	 Take only unique people out of the population[][] matrix 
-      */
-      for (j=1; j<=nvars; j++) {
-	/* the integer cast here is required for the integer version! */
-	/* Unique in this population? */
-	if (population[i][j] != population[i-1][j]) {
-	  UniqueFlag=TRUE;
-	  break;
-	}
-      } /* end of j loop */
-    } /* end of if */
-    else UniqueFlag=TRUE;
-	    
-    if (UniqueFlag) {
-      /* B1 initialize the upper and lower bounds */
-      upper=OldUniqueCount;
-      lower=1;
-	      
-      while(!(upper < lower)) {
-	UniqueFlag=FALSE;
-	/* B2 obtain the approximate midpoint between upper and lower */
-	midpoint = upper+lower;
-	midpoint= (int) midpoint / 2;
-		
-	/* B3 is k < k_{i} or k > k_{i} or is k==k_{i}? */
-	for (j=1; j<=nvars; j++) {
-	  /* B4 */
-	  if (population[i][j] < Memory[midpoint][j]) {
-	    upper=midpoint-1;
-	    UniqueFlag=TRUE;
-	  } /* end of if */
-	  /* B4 */
-	  else if (population[i][j] > Memory[midpoint][j]) {
-	    lower=midpoint+1;
-	    UniqueFlag=TRUE;
-	  } /* end of if */
-	  if (UniqueFlag) break;
-	} /* end of j loop */
-	if (!UniqueFlag) {
-	  population[i][0] = Memory[midpoint][0];
-	  population[i][nvars+1] = 0.0;
-	  upper=0;
-	}
-      } /* end of midpoint while */
-	      
-      /* we have a unique individual */
-      if (UniqueFlag) {
-	++*UniqueCount; /* *UniqueCount counts from 1 */
-		
-	for (j=0; j<=nvars; j++) 
-	  Memory[*UniqueCount][j] = population[i][j];
-		
-	for(j=1; j<=nvars; j++)
-	  X[j] = Memory[*UniqueCount][j];
-		
-	Memory[*UniqueCount][0] = evaluate(Structure->AgentFit, X, nvars, Status);
-		
-	if (*Status < 0) {
-	  return;
-	}
-		
-	Memory[*UniqueCount][nvars+1] = 0.0;
-		
-	for (j=0; j<=nvars+1; j++) 
-	  population[i][j] = Memory[*UniqueCount][j];
-		
-	/* This matrix indexes the position in the population matrix which is equal to the 
-	   unique individual in the population matrix */
-	/* fprintf(output,"!match: i: %d, *UniqueCount: %d\n", i, *UniqueCount); */	  
-      } /* end of if */
-    } /* end of main UniqueFlag */
-    else if (!Redundant) {
-      for (j=0; j<=nvars+1; j++) 
-	population[i][j] = population[i-1][j];
-    } /* end of else */
-  } /* end of i loop */
-      
-} // end of JaDoubleMemoryMatrix
-
-
-void JaIntMemoryMatrix_Gen0(struct GND_IOstructure *Structure, 
-			       double **Memory, double **population, double *X,
-			       long *UniqueCount, long OldUniqueCount,
-			       int pop_size, int nvars, FILE *output, long *Status)
-{
-  int i, j;
-  FLAG UniqueFlag;
-
-  /* search over i in population */
-  for(i=1; i<=pop_size; i++) {
-
-    if (Structure->DynamicPopulation==2)
-      {
-	JaDynamicPopulationCheck(Structure, population, i, pop_size, nvars, output, Status);
-	if (*Status < 0) {
-	  return;
-	} // end of Status < 0
-      } // end of DynamicPopulation==2
-
-    UniqueFlag=FALSE;
-    if (i>1) {
-      /* 
-	 Take only unique people out of the population[][] matrix 
-      */
-      for (j=1; j<=nvars; j++) {
-	/* the integer cast here is required for the integer version! */
-	/* Unique in this population? */
-	if ((int) population[i][j] != (int) population[i-1][j]) {
-	  UniqueFlag=TRUE;
-	  break;
-	}
-      } /* end of j loop */
-    } /* end of if */
-    else UniqueFlag=TRUE;
-	
-    if (UniqueFlag) {
-      ++*UniqueCount; /* *UniqueCount counts from 1 */
-      
-      for (j=0; j<=nvars; j++) 
-	Memory[*UniqueCount][j] = population[i][j];
-
-      if (population[i][nvars+1]==-1.0 || population[i][nvars+1]==11.0) {
-	for(j=1; j<=nvars; j++)
-	  X[j] = Memory[*UniqueCount][j];
-      
-	Memory[*UniqueCount][0] = evaluate(Structure->AgentFit, X, nvars, Status);
-	if (*Status < 0) {
-	  return;
-	}
-	Memory[*UniqueCount][nvars+1] = 0.0;
-	
-	population[i][0] = Memory[*UniqueCount][0];
-      } /* end of if */
-      else { 
-	Memory[*UniqueCount][0] = population[i][0];
-	Memory[*UniqueCount][nvars+1] = 0.0;
-      }
-    } /* end of main UniqueFlag */
-    else {
-      for (j=0; j<=nvars+1; j++) 
-	population[i][j] = population[i-1][j];
-    } /* end of else */
-  } /* end of i loop */
-
-} //end of JaIntMemoryMatrix_Gen0
-
-
-void JaIntMemoryMatrix(struct GND_IOstructure *Structure, 
-			  double **Memory, double **population, double *X,
-			  long *UniqueCount, long OldUniqueCount,
-			  int pop_size, int nvars, FILE *output, long *Status)
-{
-  int i, j;
-  FLAG UniqueFlag, Redundant;
-  long upper, lower, midpoint;
-
-  /* search over i in population */
-  for(i=1; i<=pop_size; i++) {
-
-    if (i > 1 && Structure->DynamicPopulation==2)
-      {
-	JaDynamicPopulationCheck(Structure, population, i, pop_size, nvars, output, Status);
-	if (*Status < 0) {
-	  return;
-	} // end of Status < 0
-      } // end of DynamicPopulation==2
-
-    UniqueFlag=FALSE;
-    Redundant=FALSE;
-    if (population[i][nvars+1]==0) {
-      Redundant=TRUE;
-    }
-    else if (i>1) {
-      /* 
-	 Take only unique people out of the population[][] matrix 
-      */
-      for (j=1; j<=nvars; j++) {
-	/* the integer cast here is required for the integer version! */
-	/* Unique in this population? */
-	if ((int) population[i][j] != (int) population[i-1][j]) {
-	  UniqueFlag=TRUE;
-	  break;
-	}
-      } /* end of j loop */
-    } /* end of if */
-    else UniqueFlag=TRUE;
-	
-    if (UniqueFlag) {
-      /* B1 initialize the upper and lower bounds */
-      upper=OldUniqueCount;
-      lower=1;
-	  
-      while(!(upper < lower)) {
-	UniqueFlag=FALSE;
-	/* B2 obtain the approximate midpoint between upper and lower */
-	midpoint = upper+lower;
-	midpoint= (int) midpoint / 2;
-	    
-	/* B3 is k < k_{i} or k > k_{i} or is k==k_{i}? */
-	for (j=1; j<=nvars; j++) {
-	  /* B4 */
-	  if ((int) population[i][j] < (int) Memory[midpoint][j]) {
-	    upper=midpoint-1;
-	    UniqueFlag=TRUE;
-	  } /* end of if */
-	  /* B4 */
-	  else if ((int) population[i][j] > (int) Memory[midpoint][j]) {
-	    lower=midpoint+1;
-	    UniqueFlag=TRUE;
-	  } /* end of if */
-	  if (UniqueFlag) break;
-	} /* end of j loop */
-	if (!UniqueFlag) {
-	  population[i][0] = Memory[midpoint][0];
-	  population[i][nvars+1] = 0.0;
-	  upper=0;
-	}
-      } /* end of midpoint while */
-	  
-      /* we have a unique individual */
-      if (UniqueFlag) {
-	++*UniqueCount; /* *UniqueCount counts from 1 */
-	    
-	for (j=0; j<=nvars; j++) 
-	  Memory[*UniqueCount][j] = (int) population[i][j];
-	    
-	for(j=1; j<=nvars; j++)
-	  X[j] = Memory[*UniqueCount][j];
-	    
-	Memory[*UniqueCount][0] = evaluate(Structure->AgentFit, X, nvars, Status);
-	    
-	if (*Status < 0) {
-	  return;
-	}
-	    
-	Memory[*UniqueCount][nvars+1] = 0.0;
-	    
-	for (j=0; j<=nvars+1; j++) 
-	  population[i][j] = Memory[*UniqueCount][j];
-	    
-	/* This matrix indexes the position in the population matrix which is equal to the 
-	   unique individual in the population matrix */
-	/* fprintf(output,"!match: i: %d, *UniqueCount: %d\n", i, *UniqueCount); */	  
-      } /* end of if */
-    } /* end of main UniqueFlag */
-    else if (!Redundant) {
-      for (j=0; j<=nvars+1; j++) 
-	population[i][j] = population[i-1][j];
-    } /* end of else */
-  } /* end of i loop */
-      
-} //end of JaIntMemoryMatrix
-
-void JaDynamicPopulationCheck(struct GND_IOstructure *Structure,
-				    double **population, int location, int pop_size, int nvars, 
-				    FILE *output, long *Status)
-{
-
-  FILE *DynamicInput;
-  double tmp;
-  long i, j, indx, maximum;
-  int Dobs;
-
-  maximum = pop_size-location+1;
-
-
-  if((DynamicInput = fopen(Structure->DynamicPopulationPath, "r")) == NULL) {
-    if(Structure->PrintLevel>0)
-      {
-	fprintf(output,"WARNING: Unable to open the DynamicPopulationPath: %s\n", 
-		Structure->DynamicPopulationPath);
-	fprintf(output,"         Continuing the process.\n");
-      }
-    
-    Structure->DynamicPopulation=0;
-    return;
-  }
-
-  if(Structure->PrintLevel>0)
-    fprintf(output,"\nDynamically Reading in Individuals from: %s\n", Structure->DynamicPopulationPath);
-
-  j=0;
-  i=0;
-  while (fscanf(DynamicInput,"%lf", &tmp)==1)
-    {
-      i++;
-      if (i>nvars)
-	{
-	  j++;
-	  if (j>maximum)
-	    {
-	      fprintf(output,
-		      "\nWARNING: Dynamic Population input includes more individuals than can be added at this time.\n");
-	      fprintf(output,
-		      "         If you want more freedom in adding individuals into the population please use do not use the MemoryMatrix feature.\n");
-	      break;
-	    }
-	  i = 1;
-	} // end of if
-
-      indx = location+j;
-      population[indx][i] = tmp;
-      population[indx][nvars+1] = 11.0;
-      
-      if (Structure->Debug==1)
-	{
-	  fprintf(output, "\nDEBUG: WE READ IN THE FOLLOWING INDIVIDUALS:\n");
-	  fprintf(output, "population[%d][%d]: %e\n", indx, i, population[indx][i]);
-	}
-		    
-    } // end of while loop
-  fclose(DynamicInput);
-		
-  Dobs = j+1;
-	
-  if(Structure->PrintLevel>0)	
-    fprintf(output,"   Read in %d Individuals\n\n", Dobs);		
-		
-  Structure->DynamicPopulation=0; 
-} // end of DynamicPopulationCheck
 

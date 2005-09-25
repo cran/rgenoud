@@ -5,14 +5,14 @@
   Walter R. Mebane, Jr.
   Cornell University
   http://macht.arts.cornell.edu/wrm1
-  wrm1@macht.arts.cornell.edu
+  <wrm1@macht.arts.cornell.edu>
 
   Jasjeet Singh Sekhon 
-  Harvard University
-  http://jsekhon.fas.harvard.edu/
-  jsekhon@fas.harvard.edu
+  UC Berkeley
+  http://sekhon.polisci.berkeley.edu
+  <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.cpp,v 1.31 2005/03/01 06:36:36 jsekhon Exp $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.cpp,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
 
 */
 
@@ -54,8 +54,6 @@ double genoud(struct GND_IOstructure *Structure)
   double delta_time;
   long   hours, minutes, seconds;
   char   time_str[27];
-
-  double peak_val;
 
   static long BaseNewUnifSeed=81282,
     BaseRandIntSeed=53058;
@@ -173,58 +171,12 @@ double genoud(struct GND_IOstructure *Structure)
   if(Structure->PrintLevel>0)
     print_domains(domains,nvars,Structure->DataType, output);
 
-
-#ifdef SQL_DEFINE
-  // Initialize the SQL database for network evaluation
-  if (Structure->Network==1)
-    {
-      short sval;
-
-      sval = (short) InitializeMySQL(NULL, Structure->DBname);
-      if (sval < 0)
-	{
-	  Structure->Status = -1;
-	  return(sval);
-	}
-      
-      // Let's setup our databases
-      sval = setup_database(Structure->DBname, Structure->AgentName);
-      if (sval < 0)
-	{
-	  Structure->Status = -1;
-	  return(sval);
-	}
-    }
-#endif
-
-  //  initialize(final_mat,fin);
-  // find_final_mat1(LowerBounds,UpperBounds,final_mat,nvars,fin.c);
-
-  /* --- Lamarck Child Test ---- */
-	//  strcpy(LVMchar,"Genoud.StartUp");
-	// LVM_TextToGenome(LVMchar, Structure->pvm->GenomeBuffer, TRUE);
-	// LVMreturn = LVM_SubEval(Structure->pvm, "Genoud Child Test", 0);
-#ifdef MS_WINDOWS
-  //LVMreturn = LVM_EvalSubScript(Structure->pvm, "GENOUD Startup Logo", "Genoud.startup end", 0);
-#endif
-	
-
-  /*This procedure initializes the initial population with the values generated*/
-  /*and applies the genetic operators and reproduces a new generation; evaluates*/
-  /*each agent of the new generation, and again goes through the cycle of*/
-  /*reproduction and evaluation, for the number of times, user has specified*/
-  /*and prints out a final population with best agents*/
   if (Structure->DataType==1) {
-    peak_val = JaIntegerOptimization(Structure, X, domains, output);
+    JaIntegerOptimization(Structure, X, domains, output);
   }
   else {
-    peak_val = optimization(Structure, X, domains, output);
+    optimization(Structure, X, domains, output);
   }
-
-  /* print out the hessian matrix */
-  /*
-    dohessians(nvars, runcases, 9, X+1, func4g, func4g);
-  */
 
   /* free memory */
   free_matrix(final_mat,1,fin.r,1);
@@ -232,7 +184,7 @@ double genoud(struct GND_IOstructure *Structure)
   free_vector(LowerBounds,1);
   free_vector(UpperBounds,1);
   free_vector(X,1);
-  
+
   /* print final numbers and the time this has taken */
   if(Structure->PrintLevel>0)
     {
@@ -240,12 +192,11 @@ double genoud(struct GND_IOstructure *Structure)
       fprintf(output, "Solution Found Generation %d\n", Structure->oPeakGeneration);
       fprintf(output, "Number of Generations Run %d\n", Structure->oGenerations);
     }
-
   time(&stop_time);
 
   strcpy(time_str, ctime(&stop_time));
   if(Structure->PrintLevel>0)
-    fprintf(output,"\n\n%s",time_str);
+    fprintf(output,"\n%s",time_str);
 
   delta_time = difftime(stop_time, start_time);
   hours   = (int) (delta_time/3600);
@@ -260,15 +211,5 @@ double genoud(struct GND_IOstructure *Structure)
     }
 
   if (Structure->OutputType==1) fclose(output);
-
-  if (peak_val==ERROR_CODE)
-    {
-    if (Structure->MinMax==1)
-      return(ERROR_CODE);
-    else
-      return(-1*ERROR_CODE);
-    }
-  else
-    return(peak_val);
 }
 
