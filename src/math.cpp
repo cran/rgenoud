@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/math.cpp,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
+  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/math.cpp,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
 
 */
 

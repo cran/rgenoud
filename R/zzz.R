@@ -10,14 +10,14 @@
 #  http://sekhon.polisci.berkeley.edu
 #  <sekhon@berkeley.edu>
 #
-#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/zzz.R,v 2.0 2005/09/19 03:58:47 jsekhon Exp jsekhon $
+#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/zzz.R,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
 #
 
 #.First.lib <- function(lib, pkg) library.dynam("rgenoud", pkg, lib)
 
 # use .onLoad instead of .First.lib for use with NAMESPACE and R(>= 1.7.0)
 .onLoad <- function(lib, pkg) {
-  library.dynam(pkg, pkg, lib)
+  library.dynam("rgenoud", pkg, lib)
 }#end of .onLoad
 
 .onUnload <- function(libpath) {
