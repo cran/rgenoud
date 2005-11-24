@@ -1328,7 +1328,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    {
 	      if(Structure->Lexical > 1)
 		{
-		  fprintf(output,"\n%7d \t%e  ", 0, population[1][0]);
+		  fprintf(output,"\n%7d \t%e  ", count_gener, population[1][0]);
 		  for(j=(nvars+2);j<lexical_end;j++)
 		    {
 		      fprintf(output,"%e  ", population[1][j]);
@@ -3418,7 +3418,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	    {
 	      if(Structure->Lexical > 1)
 		{
-		  fprintf(output,"\n%7d \t%e  ", 0, population[1][0]);
+		  fprintf(output,"\n%7d \t%e  ", count_gener, population[1][0]);
 		  for(j=(nvars+2);j<lexical_end;j++)
 		    {
 		      fprintf(output,"%e  ", population[1][j]);
