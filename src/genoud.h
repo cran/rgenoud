@@ -23,7 +23,6 @@
 #include<time.h>
 #include<string.h>
 #include <stdarg.h>
-#include "LmkGenoud.h"
 
 extern "C"
 {
@@ -269,7 +268,7 @@ void oper7(VECTOR p1, VECTOR p2, double **domains, int nvars);
 void oper8(SEXP fn, SEXP rho,
 	   VECTOR parent, MATRIX domains, 
 	   double SolutionTolerance, long nvars, 
-	   short int MinMax, short BoundaryEnforcement, 
+	   short BoundaryEnforcement, 
 	   FILE *output, short PrintLevel);
 void find_range(double *llim, double *ulim, int comp, double **domains, int nvars, VECTOR parent);
 int irange_ran(int llim, int ulim);
@@ -290,16 +289,3 @@ void print_matrix(int lr, int ur, int lc, int uc, MATRIX mat, FILE *output);
 void print_population(long popsize, long nvars, long generation, long lexical, double **foo, FILE *out);
 void print_vector(VECTOR arr, int l, int u, FILE *output);
 void print_ivector(IVECTOR arr, int l, int u, FILE *output);
-
-
-// if we don't have any Numerical Recipes code
-
-#ifdef NONR
-inline void dfgsmin(double (*VMfunction)(double *LX, long *LStatus),
-	     double *p, int n, double gtol, int *iter, double *fret, double *hessian,
-	     short int MinMax, short int BoundaryEnforcement, long InstanceNumber,
-	     double **Domains, long *LVMstatus, short PrintLevel, FILE *output)
-{
-  
-}
-#endif

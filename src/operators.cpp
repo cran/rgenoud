@@ -576,7 +576,6 @@ double get_F(int T, int t, double y, int B)
 /*                                  from the parent vector, after applying      */
 /*                                  the operator, BFGS.                         */
 /*                                                                              */
-/*           FUNCTIONS CALLED  :   dfgsmin(),                                   */
 /*                                                                              */
 /*           CALLING FUNCITONS :   optimization()                               */
 /*                                                                              */
@@ -585,7 +584,7 @@ double get_F(int T, int t, double y, int B)
 void oper8(SEXP fn, SEXP rho,
 	   VECTOR parent, MATRIX domains, 
 	   double SolutionTolerance, long nvars, 
-	   short int MinMax, short BoundaryEnforcement, 
+	   short BoundaryEnforcement, 
 	   FILE *output, short PrintLevel)
 {
 
@@ -607,7 +606,7 @@ void oper8(SEXP fn, SEXP rho,
 
   bfgsfit = genoud_optim(fn, rho, parm, nvars);
 
-  if (BoundaryEnforcement<0) {
+  if (BoundaryEnforcement==0) {
     for(i=1; i<=nvars; i++) {
       parent[i] = A * parm[i-1] + B * parent[i];
     }

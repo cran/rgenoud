@@ -1036,7 +1036,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
                         for(i=1; i<=nvars; i++)
                           t_vec[i] = population[first_live][i];
                         oper8(Structure->fn, Structure->rho, t_vec, domains, SolutionTolerance, 
-			      nvars, BoundaryEnforcement, MinMax, output, PrintLevel);
+			      nvars, BoundaryEnforcement, output, PrintLevel);
 
 			for(i=1; i<=nvars; i++)
 			  new_genera[die_now][i] = t_vec[i];
@@ -3841,14 +3841,6 @@ void JaIntegerSort(double **InMatrix, long n, long k)
     }
   }
 
-#ifdef MS_WINDOWS 
-     qsort(Tmp, n, sizeof(double *), 
-	   (int (__cdecl *)(const void *,const void *)) JaIntegerCMP);
-#else
-     qsort(Tmp, n, sizeof(double *), 
-	   (int (*)(const void *, const void *)) JaIntegerCMP);
-#endif
-
   for (i=1; i<=n; i++) {
     for (j=0; j<k; j++) {
       InMatrix[i][j] = Tmp[i-1][j];
@@ -3886,13 +3878,6 @@ void JaDoubleSort(double **InMatrix, long n, long k)
     }
   }
 
-#ifdef MS_WINDOWS 
-     qsort(Tmp, n, sizeof(double *), 
-	   (int (__cdecl *)(const void *,const void *)) JaDoubleCMP);
-#else
-     qsort(Tmp, n, sizeof(double *), 
-	   (int (*)(const void *, const void *)) JaDoubleCMP);
-#endif
   for (i=1; i<=n; i++) {
     for (j=0; j<k; j++) {
       InMatrix[i][j] = Tmp[i-1][j];

@@ -26,7 +26,7 @@ long ThreadNumber;
 
 extern double func4g(double *X);
 
-double genoud(struct GND_IOstructure *Structure)
+void genoud(struct GND_IOstructure *Structure)
 {
 
   extern long NewUnifSeed[MAXTHREADS];
@@ -82,26 +82,18 @@ double genoud(struct GND_IOstructure *Structure)
     if((output = fopen(Structure->OutputPath, "w")) == NULL) {
       fprintf(output,"%s", Structure->OutputPath);
 
-      if (Structure->MinMax==1)
-	return(ERROR_CODE);
-      else
-	return(-1*ERROR_CODE);
+      return;
     }
   }
   else if (Structure->OutputType==2) {
     if((output = fopen(Structure->OutputPath, "a")) == NULL) {
       fprintf(output,"%s", Structure->OutputPath);
-      if (Structure->MinMax==1)
-	return(ERROR_CODE);
-      else
-	return(-1*ERROR_CODE);
+
+      return;
     }
   }
   else {
-    if (Structure->MinMax==1)
-      return(ERROR_CODE);
-    else
-      return(-1*ERROR_CODE);
+    return;
   }
 
   if(Structure->PrintLevel>0)
@@ -110,10 +102,7 @@ double genoud(struct GND_IOstructure *Structure)
   ThreadNumber=Structure->ThreadNumber;
   if (ThreadNumber > MAXTHREADS) {
     fprintf(output,"\nERROR: NO MORE THAN %d THREADS ALLOWED\n\n", MAXTHREADS);
-    if (Structure->MinMax==1)
-      return(ERROR_CODE);
-    else
-      return(-1*ERROR_CODE);
+    return;
   }
   if (Structure->ProvideSeeds == 1) {
     /*

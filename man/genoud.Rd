@@ -170,7 +170,7 @@
     \code{boundary.enforcement} flag is turned on. \cr
     
     \code{boundary.enforcement} has three possible values: 0 (anything goes), 1
-    (regular), and 2 (no trespassing):
+    (partial), and 2 (no trespassing):
     \itemize{
       \item{\emph{0: Anything Goes}}{
 	This option allows any of the operators to
@@ -497,8 +497,7 @@
 #minimize the sin function
  sin2 <- genoud(sin, nvars=1, max=FALSE);
 
-#maximize a univariate normal mixture which looks like a claw and
-#plot it
+#maximize a univariate normal mixture which looks like a claw
 claw <- function(xx) {
   Nd <- function(x, mu, sigma) {
     w <- (1.0/sqrt(2.0*pi*sigma*sigma)) ;
@@ -513,11 +512,13 @@ claw <- function(xx) {
   as.double(y);
 }
  claw1   <- genoud(claw, nvars=1,P9=100,max=TRUE);
- xx <- seq(-3,3,.05);
- plot(xx,lapply(xx,claw),type="l",xlab="Parameter",ylab="Fit",main="GENOUD: Maximize the Claw Density");
- points(claw1$par,claw1$value,col="red");
 
 \dontrun{
+#Plot the previous run
+xx <- seq(-3,3,.05);
+plot(xx,lapply(xx,claw),type="l",xlab="Parameter",ylab="Fit",main="GENOUD: Maximize the Claw Density");
+points(claw1$par,claw1$value,col="red");
+
 # Maximize a bivariate normal mixture which looks like a claw.
 biclaw <- function(xx) {
   mNd2 <- function(x1, x2, mu1, mu2, sigma1, sigma2, rho)
