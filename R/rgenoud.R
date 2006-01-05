@@ -161,6 +161,18 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
             clusterCall(cl, gets, name, get(name))
           }
         }
+
+      ExpandDots  <- function(...)
+        {
+          return(match.call())
+        }      
+
+      dots  <- ExpandDots(...)
+      if ( (length(dots) > 1) & balance==TRUE)
+        {
+          balance  <- FALSE
+          warning("load balancing has been turned off because the function to be optimized requires extra arguments")
+        }
       
       if (class(cluster)[1]=="SOCKcluster" | class(cluster)[1]=="PVMcluster" | class(cluster)[1]=="spawnedMPIcluster" | class(cluster)[1]=="MPIcluster") {
         clustertrigger=1
@@ -170,11 +182,28 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
       } else {
         clustertrigger=2
         cluster <- as.vector(cluster)
-        cat("You will now be prompted for passwords so your cluster can be setup.\n")
+        cat("Initializing Cluster\n")
         cl <- makeSOCKcluster(cluster)
         GENclusterExport(cl, "fn")        
         GENclusterExport(cl, "fn1")
-      }      
+      }
+
+      if (length(cl) < 2 )
+        {
+          warning("You only have one node. You probably shouldn't be using the cluster option")
+
+          #override snow parRapply to work with only one node
+          parRapply.1node  <- function (cl, x, fun, ...)
+            {
+              splitRows  <- function (x, ncl)
+                {
+                  lapply(list(1:nrow(x)), function(i) x[i, , drop = F])
+                }
+              
+              docall(c, clusterApply(cl, splitRows(x, length(cl)), apply, 1,
+                                     fun, ...))
+            } #end of parRapply.1node
+        }
     }
 
   fnLexicalSort <- function(mat, parms)
@@ -280,7 +309,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
               if (balance==TRUE) {
                 in.mat = t(matrix(population.mat[eval.indx,], ncol=nvars))
                 cl.in <- as.list(as.data.frame(in.mat))
-                cl.out <- clusterApplyLB(cl, cl.in, fn1, ...)
+                cl.out <- clusterApplyLB(cl, cl.in, fn1)
                 try(ret <- matrix(t(data.frame(cl.out)), ncol=lexical), TRUE)
                 if (!is.matrix(ret)) {
                   if (!debug) {
@@ -293,7 +322,13 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                 }
               } else {
                 in.mat = matrix(population.mat[eval.indx,], ncol=nvars)
-                cl.out = parRapply(cl, in.mat, fn1, ...)
+                if(length(cl) > 1 )
+                  {
+                    cl.out = parRapply(cl, in.mat, fn1)
+                  } else {
+                    cl.out = parRapply.1node(cl, in.mat, fn1)
+                  } 
+
                 try(ret <- matrix(cl.out, byrow=TRUE, ncol=lexical), TRUE)
                 if (!is.matrix(ret)) {
                   if (!debug) {
