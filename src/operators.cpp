@@ -581,21 +581,20 @@ double get_F(int T, int t, double y, int B)
 /*                                                                              */
 /********************************************************************************/
 
-void oper8(SEXP fn, SEXP rho,
+void oper8(SEXP fn_optim, SEXP rho,
 	   VECTOR parent, MATRIX domains, 
 	   double SolutionTolerance, long nvars, 
 	   short BoundaryEnforcement, 
 	   FILE *output, short PrintLevel)
 {
 
-  double *parm, *hessin, *work;
+  double *parm, *work;
   long i, j, btest;
   double bfgsfit;
   double A, B;
 
-  parm  = (double *) malloc((nvars)*sizeof(double)); 
+  parm  = (double *) malloc((nvars+1)*sizeof(double)); 
   work  = (double *) malloc((nvars+1)*sizeof(double));
-  hessin  = (double *) malloc((nvars*nvars+nvars)*sizeof(double));    
 
   A = frange_ran(0.0,1.0);
   B = 1.0 - A;
@@ -604,7 +603,7 @@ void oper8(SEXP fn, SEXP rho,
     parm[i] = parent[i+1];
   }
 
-  bfgsfit = genoud_optim(fn, rho, parm, nvars);
+  bfgsfit = genoud_optim(fn_optim, rho, parm, nvars);
 
   if (BoundaryEnforcement==0) {
     for(i=1; i<=nvars; i++) {
@@ -642,7 +641,6 @@ void oper8(SEXP fn, SEXP rho,
       }
   }
 
-  free(hessin);
   free(work);
   free(parm);
 

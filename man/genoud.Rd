@@ -364,9 +364,9 @@
     \code{\link[snow]{makeCluster}}, and then passing the returned
     cluster object to \code{genoud}. For an example of how to manually setup up
     a cluster with a direct call to \code{\link[snow]{makeCluster}} see
-    \url{http://sekhon.polisci.berkeley.edu/rgenoud/R/genoud_cluster_manual.R}.
+    \url{http://sekhon.berkeley.edu/rgenoud/R/genoud_cluster_manual.R}.
     For an example of how to get around a firewall by ssh tunneling see:
-    \url{http://sekhon.polisci.berkeley.edu/rgenoud/R/genoud_cluster_manual_tunnel.R}.}
+    \url{http://sekhon.berkeley.edu/rgenoud/R/genoud_cluster_manual_tunnel.R}.}
   \item{balance}{This logical flag controls if load balancing is done
     across the cluster.  Load balancing can result in better cluster
     utilization; however, increased communication can reduce
@@ -449,7 +449,7 @@
     \item Heuristic Crossover
     \item Local-Minimum Crossover: BFGS}
   For more information please see Table 1 of the reference article: 
-  \url{http://sekhon.polisci.berkeley.edu/genoud/node7.shtml}.}
+  \url{http://sekhon.berkeley.edu/genoud/node7.shtml}.}
 \note{
   The most important options affecting performance are those determining
   population size (\code{pop.size}) and the
@@ -475,18 +475,18 @@
   Sekhon, Jasjeet Singh and Walter R. Mebane, Jr. 1998.  ``Genetic
   Optimization Using Derivatives: Theory and Application to Nonlinear
   Models.'' \emph{Political Analysis}, 7: 187-210.
-  \url{http://sekhon.polisci.berkeley.edu/genoud/genoud.pdf} \cr
+  \url{http://sekhon.berkeley.edu/genoud/genoud.pdf} \cr
 
   Mebane, Walter R., Jr. and Jasjeet S. Sekhon. 2004. ``Robust
   Estimation and Outlier Detection for Overdispersed Multinomial Models
   of Count Data.''  \emph{American Journal of Political Science}, 48
-  (April): 391-410. \url{http://sekhon.polisci.berkeley.edu/papers/MebaneSekhon.multinom.pdf}
+  (April): 391-410. \url{http://sekhon.berkeley.edu/papers/MebaneSekhon.multinom.pdf}
 }
 \author{Walter R. Mebane, Jr., Cornell University,
   \email{wrm1@cornell.edu}, \url{http://macht.arts.cornell.edu/wrm1/} \cr
 
   Jasjeet S. Sekhon, UC Berkeley, \email{sekhon@berkeley.edu},
-  \url{http://sekhon.polisci.berkeley.edu/}}
+  \url{http://sekhon.berkeley.edu/}}
 \seealso{
   \code{\link{optim}}.
 }
@@ -543,7 +543,7 @@ biclaw <- function(xx) {
 }
 biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,P9=100,max=TRUE);
 }
-# For more examples see: http://sekhon.polisci.berkeley.edu/rgenoud/R.
+# For more examples see: http://sekhon.berkeley.edu/rgenoud/R.
 }
 \keyword{optimize}
 \keyword{nonlinear}

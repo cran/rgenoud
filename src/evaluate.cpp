@@ -1035,7 +1035,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
                         new_genera[die_now][nvars+1] = 8.0;
                         for(i=1; i<=nvars; i++)
                           t_vec[i] = population[first_live][i];
-                        oper8(Structure->fn, Structure->rho, t_vec, domains, SolutionTolerance, 
+                        oper8(Structure->fn_optim, Structure->rho, t_vec, domains, SolutionTolerance, 
 			      nvars, BoundaryEnforcement, output, PrintLevel);
 
 			for(i=1; i<=nvars; i++)
@@ -1121,7 +1121,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    bfgsoutX[i-1]=population[1][i];
 	  }
 
-	bfgsfit = genoud_optim(Structure->fn, Structure->rho, bfgsoutX, nvars);
+	bfgsfit = genoud_optim(Structure->fn_optim, Structure->rho, bfgsoutX, nvars);
 	
 	switch(MinMax) {
 	case 0:

@@ -110,6 +110,7 @@ struct GND_IOstructure
   SEXP          fnLexicalSort;
   SEXP          fnMemoryMatrixEvaluate;
   SEXP          fnGR;
+  SEXP          fn_optim;
   long		nvars;
   long		PopSize;
   long		MaxGenerations;

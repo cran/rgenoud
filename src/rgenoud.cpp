@@ -156,6 +156,7 @@ extern "C"
     MainStructure->fnLexicalSort=fnLexicalSort;
     MainStructure->fnMemoryMatrixEvaluate=fnMemoryMatrixEvaluate;
     MainStructure->fnGR=fnGR;
+    MainStructure->fn_optim=fn_optim;
     MainStructure->Lexical=asInteger(lexical);
     MainStructure->UserGradient=asInteger(RuserGradient);
     MainStructure->nvars=parameters;
