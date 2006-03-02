@@ -26,7 +26,28 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                    P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
                    cluster=FALSE, balance=FALSE, debug=FALSE, ...)
 {
-  fn1 <- function(par) fn(par, ...)
+  if (max==FALSE)
+    {
+      g.scale <- 1;
+      FiniteBadFitValue <- .Machine$double.xmax
+    } else  {
+      g.scale <- -1;
+      FiniteBadFitValue <- -.Machine$double.xmax
+    }
+
+  fn1 <- function(par) {
+    fit <- fn(par, ...)
+
+    if(is.null(fit))
+      fit <- FiniteBadFitValue
+
+    if(length(fit)==1)
+      if(!is.finite(fit))
+        fit <- FiniteBadFitValue
+
+    return(fit)
+  }#end of fn1
+  
   gr1 <- if (!is.null(gr)) {
     function(par) gr(par, ...)
   } else {
@@ -80,15 +101,6 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
     provide.seeds <- FALSE
   else
     provide.seeds <- TRUE;
-
-  if (max==FALSE)
-        {
-          g.scale <- 1;
-        }
-  else
-    {
-      g.scale <- -1;
-    }
 
   #optim st
   genoud.optim.wrapper101 <- function(foo.vals)
