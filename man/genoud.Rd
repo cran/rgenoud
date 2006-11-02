@@ -241,12 +241,19 @@
     When this flag is set to \emph{TRUE}, \code{genoud} will return the
     hessian matrix at the solution as part of its return list.  A user
     can use this matrix to calculate standard errors.}
-  \item{unif.seed}{
-    This is the first of the two random number seeds which \code{genoud} uses.
-    The default value of this seed is 81282.}
+  \item{unif.seed}{This sets the seed for the floating-point random
+    number generator which \code{genoud} uses.  The default value of this seed
+    is 81282. \code{genoud} uses its own internal random number generator
+    (a Tausworthe-Lewis-Payne) to allow for recursive and parallel calls
+    to \code{genoud}.  It does not use the seed set by the
+    \code{\link{set.seed}} function.}
   \item{int.seed}{
-    This is the second of the two random number seeds which \code{genoud} uses.
-    The default value of this seed is 53058.}
+    This sets the seed for the integer random number generator which
+    \code{genoud} uses. The default value of this seed is
+    53058. \code{genoud} uses its own internal random number generator
+    (a Tausworthe-Lewis-Payne) to allow for recursive and parallel calls
+    to \code{genoud}.  It does not use the seed set by the
+    \code{\link{set.seed}} function.}
   \item{print.level}{
     This variable controls the level of printing that \code{genoud} does.  There
     are four possible levels: 0 (minimal printing), 1 (normal), 2

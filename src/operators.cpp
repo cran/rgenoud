@@ -834,8 +834,11 @@ void JaIntegeroper4(MATRIX p, int p2use, int nvars)
     sum = p[1][i] * A[1];
     for (k=2; k<=p2use; k++)
       sum += p[k][i] * A[k];
-    p[1][i] = (int) sum;
+    p[1][i] = sum;
   }
+
+  for(i=1; i<=nvars; i++) 
+    p[1][i] = (int) sum;
 
   free(A);
 }
