@@ -2,12 +2,12 @@
 #
 #  Walter R. Mebane, Jr.                                        
 #  Cornell University
-#  http://macht.arts.cornell.edu/wrm1
-#  <wrm1@macht.arts.cornell.edu>
+#  http://www-personal.umich.edu/~wmebane
+#  <wmebane@umich.edu>
 #
 #  Jasjeet Singh Sekhon 
 #  UC Berkeley
-#  http://sekhon.polisci.berkeley.edu
+#  http://sekhon.berkeley.edu
 #  <sekhon@berkeley.edu>
 #
 

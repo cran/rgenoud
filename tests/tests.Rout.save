@@ -1,5 +1,5 @@
 
-R version 2.5.0 (2007-04-23)
+R version 2.6.1 (2007-11-26)
 Copyright (C) 2007 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
@@ -16,14 +16,14 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 Type 'q()' to quit R.
 
 > library(rgenoud)
-##  rgenoud (Version 5.3-4, Build Date: 2007-11-19)
+##  rgenoud (Version 5.4-7, Build Date: 2007-01-04)
 ##  See http://sekhon.berkeley.edu/rgenoud for additional documentation.
 > 
 > #maximize the sin function
 > sin1 <- genoud(sin, nvars=1, max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Mon Nov 19 15:22:15 2007
+Fri Jan  4 23:04:58 2008
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -181,8 +181,8 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 11
 
-Mon Nov 19 15:22:17 2007
-Total run time : 0 hours 0 minutes and 2 seconds
+Fri Jan  4 23:05:01 2008
+Total run time : 0 hours 0 minutes and 3 seconds
 > print(sin1)
 $value
 [1] 1
@@ -210,7 +210,7 @@ $operators
 > sin2 <- genoud(sin, nvars=1, max=FALSE, unif.seed=912821, int.seed=93058)
 
 
-Mon Nov 19 15:22:17 2007
+Fri Jan  4 23:05:01 2008
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -368,7 +368,7 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 11
 
-Mon Nov 19 15:22:19 2007
+Fri Jan  4 23:05:03 2008
 Total run time : 0 hours 0 minutes and 2 seconds
 > print(sin2)
 $value
@@ -404,7 +404,7 @@ $operators
 > claw1   <- genoud(claw, nvars=1,pop.size=3000,max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Mon Nov 19 15:22:19 2007
+Fri Jan  4 23:05:03 2008
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -562,7 +562,7 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 11
 
-Mon Nov 19 15:22:22 2007
+Fri Jan  4 23:05:06 2008
 Total run time : 0 hours 0 minutes and 3 seconds
 > print(claw1)
 $value
@@ -612,7 +612,7 @@ $operators
 > biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,pop.size=5000,max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Mon Nov 19 15:22:22 2007
+Fri Jan  4 23:05:06 2008
 Domains:
  -2.000000e+01   <=  X1   <=    2.000000e+01 
  -2.000000e+01   <=  X2   <=    2.000000e+01 
@@ -834,8 +834,8 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 12
 
-Mon Nov 19 15:22:31 2007
-Total run time : 0 hours 0 minutes and 9 seconds
+Fri Jan  4 23:05:18 2008
+Total run time : 0 hours 0 minutes and 12 seconds
 > print(biclaw1)
 $value
 [1] 1.671127

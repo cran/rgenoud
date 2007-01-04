@@ -3,16 +3,16 @@
   RGENOUD
 
   Walter R. Mebane, Jr.
-  Cornell University
-  http://macht.arts.cornell.edu/wrm1
-  <wrm1@macht.arts.cornell.edu>
+  University of Michigan
+  http://www-personal.umich.edu/~wmebane
+  <wmebane@umich.edu>
 
   Jasjeet Singh Sekhon 
   UC Berkeley
-  http://sekhon.polisci.berkeley.edu
+  http://sekhon.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/eval.cpp,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
+  December 22, 2007
 
 */
 
@@ -26,7 +26,7 @@ extern "C"
 {
   double evaluate(SEXP fn, SEXP rho, double *X, long nvars, short int MinMax)
   {
-    SEXP R_fcall, Rx, Rret;
+    SEXP R_fcall, Rx;
     double fit;
     long i;
     int isFinite=0;

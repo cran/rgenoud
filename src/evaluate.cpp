@@ -3,16 +3,16 @@
   RGENOUD
 
   Walter R. Mebane, Jr.
-  Cornell University
-  http://macht.arts.cornell.edu/wrm1
-  <wrm1@macht.arts.cornell.edu>
+  University of Michigan
+  http://www-personal.umich.edu/~wmebane
+  <wmebane@umich.edu>
 
   Jasjeet Singh Sekhon 
   UC Berkeley
-  http://sekhon.polisci.berkeley.edu
+  http://sekhon.berkeley.edu
   <sekhon@berkeley.edu>
 
-  October 18 27, 2007
+  December 22, 2007
 
 */
 
@@ -724,13 +724,18 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free(LexicalReturn);
 	  free(oldfitvalueVEC);
 	}
-
-	error("Fatal Error. See output for diagnostic information.");
+      
+      error("Fatal Error. See output for diagnostic information.");
     }
     print_population(pop_size, nvars, 0, Structure->Lexical, population, popout);
     fflush(popout);
     fclose(popout);
   }
+
+  /* Interrupt setup.  Let's print a nice message to recover the best
+     solution so far if at least generation 0 has been run */
+  if (PrintLevel > 0 & (strcmp(Structure->ProjectPath, "/dev/null")!=0))
+    setVar(install("interrupted"), ScalarLogical(1), Structure->rho);
 
   /*Assigning probability of survival for each of the agent, with the*/
   /*probability provided by the user for the best agent*/
@@ -1046,7 +1051,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
               case 8:
 		/* JS Description: Local-Minimum Crossover */
                      /*Applying the eighth operator, homotopy (BFGS) */
-		if (j8 < P8 & (count_gener > Structure->BFGSburnin))
+		if (j8 < P8 & (Structure->BFGSburnin >= 0) & (count_gener > Structure->BFGSburnin))
                       {
                         /*Find one parent for BFGS operator 1*/
                         first_live  = find_parent(live,pop_size);
@@ -1141,7 +1146,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	}
 
       /* apply the bfgs to the best individual */
-      if (UseBFGS != 0 & (count_gener > Structure->BFGSburnin)) {
+      if (UseBFGS != 0 & (Structure->BFGSburnin >= 0) & (count_gener > Structure->BFGSburnin)) {
 	for (i=1; i<=nvars; i++)
 	  {
 	    bfgsoutX[i-1]=population[1][i];
@@ -1624,6 +1629,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    if (GradientTrigger==1) {
 	      IncreaseGenerations = WaitGenerations;
 	      WaitGenerations += IncreaseGenerations;
+              if(Structure->BFGSburnin < 0) Structure->BFGSburnin = 0;
 	      if(PrintLevel>0)	  
 		{
 		  fprintf(output,
@@ -2518,7 +2524,6 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 
   /* Old variables which may change when SetRunTimeParameters is run during a run! */
   long pop_size_old;
-  double **population_old;
 
   /* Summary Statistics (mean, variance etc) */
   /* double popmean, popvar, popwrk, popstat; */
@@ -3053,6 +3058,11 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     fclose(popout);
   }
 
+  /* Interrupt setup.  Let's print a nice message to recover the best
+     solution so far if at least generation 0 has been run */
+  if (PrintLevel > 0 & (strcmp(Structure->ProjectPath, "/dev/null")!=0))
+    setVar(install("interrupted"), ScalarLogical(1), Structure->rho);
+  
   /*Assigning probability of survival for each of the agent, with the*/
   /*probability provided by the user for the best agent*/
   assign_probab(probab,pop_size,Q); 

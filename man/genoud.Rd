@@ -36,7 +36,7 @@
               output.path="stdout", output.append=FALSE, project.path=NULL,
               P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
               P9mix=NULL, BFGSburnin=0, BFGSfn=NULL, BFGShelp=NULL,
-              cluster=FALSE, balance=FALSE, debug=FALSE, ...)
+              cluster=FALSE, balance=FALSE, debug=FALSE, control=list(), ...)
 }
 \arguments{
   \item{fn}{
@@ -187,9 +187,15 @@
 	will often be evaluated).  But when the operator has decided
 	on an individual, it \emph{must} be in bounds to be acceptable.}
       \item{\emph{2: No Trespassing}}{
-	No out-of-bounds evaluations will ever be requested. In this case, boundary
-	enforcement is also applied to the BFGS algorithm, which prevents candidates
-	from straying beyond the bounds defined by \code{Domains}.}}}
+	No out-of-bounds evaluations will ever be requested. In this
+	case, boundary enforcement is also applied to the BFGS
+	algorithm, which prevents candidates from straying beyond the
+	bounds defined by \code{Domains}. Note that this forces the use
+	of the L-BFGS-B algorithm for \code{\link[stats]{optim}}.
+	This algorithm requires that all fit values and gradients be
+	defined and finite for all function evaluations.  If this causes
+	an error, it is suggested that the BFGS algorithm be used
+	instead by setting \code{boundary.enforcement=1}.}}}
   \item{lexical}{This option enables lexical optimization.  This is
     where there are multiple fit criteria and the parameters are chosen so
     as to maximize fitness values in lexical order---i.e., the second fit
@@ -208,7 +214,8 @@
     \code{solution.tolerance} close to zero.  This
     variable has no effect if the \code{max.generations} limit has been
     hit and the \code{hard.generation.limit} option has been set to
-    \code{TRUE}.}
+    \code{TRUE}. If \code{BFGSburnin < 0}, then it will be ignored unless
+    \code{gradient.check = TRUE}. }
   \item{BFGS}{
     This variable denotes whether or not \code{genoud} applies a
     quasi-Newton derivative optimizer (BFGS) to the best individual at
@@ -327,18 +334,19 @@
     tells \code{genoud} whether it should append to the file if it already
     exists or if it should overwrite an existing file.}
   \item{project.path}{
-    This is the path of the \code{genoud} project file. The project file prints
-    one individual per line with the fit value(s) printed first and then
-    the parameter values. By default \code{genoud} places its output in a file
-    called "genoud.pro" located in the temporary directory provided by
-    \code{\link{tempdir}}.  The behavior of the project file depends on
-    the \code{print.level} chosen.  If the \code{print.level} variable
-    is set to 1, then the project file is rewritten after each
-    generation.  Therefore, only the currently fully completed
-    generation is included in the file.  If the \code{print.level}
-    variable is set to 2, then each new generation is simply appended to
-    the project file.  For all other values of \code{print.level}, the
-    project file is not created.}
+    This is the path of the \code{genoud} project file. The project file
+    prints one individual per line with the fit value(s) printed first
+    and then the parameter values. By default \code{genoud} places its
+    output in a file called "genoud.pro" located in the temporary
+    directory provided by \code{\link{tempdir}}.  The behavior of the
+    project file depends on the \code{print.level} chosen.  If the
+    \code{print.level} variable is set to 1, then the project file is
+    rewritten after each generation.  Therefore, only the currently
+    fully completed generation is included in the file.  If the
+    \code{print.level} variable is set to 2, then each new generation is
+    simply appended to the project file.  For \code{print.level=0}, the
+    project file is not created.
+  }
   \item{P1}{
     This is the cloning operator.  \code{genoud} always clones the best
     individual each generation.  But this operator clones others as
@@ -383,10 +391,14 @@
     equal to 1.  If 1, then the BFGS result is simply used.}
   \item{BFGSburnin}{The number of generations which are run before the
     BFGS is first used.  Premature use of the BFGS can lead to convergence
-    to a local minimum instead of the global one.  This option allows the
+    to a local optimum instead of the global one.  This option allows the
     user to control how many generations are run before the BFGS is
-    started.  This option delays the use of both the BFGS on the best
-    individual and of the \code{P9} operator.}
+    started and would logically be a non-negative integer. However, if
+    \code{BFGSburnin < 0}, the BFGS will be used if and when
+    \code{wait.generations} is doubled because at least one gradient is
+    too large, which can only occur when \code{gradient.check =
+      TRUE}. This option delays the use of both the BFGS on the best
+    individual and the \code{P9} operator. }
   \item{BFGSfn}{This is a function for the BFGS optimizer to optimize,
     if one wants to make it distinct from the \code{fn} function.  This is
     useful when doing \code{lexical} optimization because otherwise a
@@ -444,6 +456,11 @@
   \item{debug}{
     This variable turns on some debugging information.  This variable may
     be \code{TRUE} or \code{FALSE}.}
+  \item{control}{A list of control parameters that is passed to
+    \code{\link[stats]{optim}} if \code{BFGS = TRUE} or \code{P9 >
+      0}. Please see the \code{\link[stats]{optim}} documentation for
+    details. 
+  }
   \item{...}{Further arguments to be passed to \code{fn} and \code{gr}.}
   }
   \value{

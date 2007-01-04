@@ -2,16 +2,16 @@
 #  RGENOUD
 #
 #  Walter R. Mebane, Jr.
-#  Cornell University
-#  http://macht.arts.cornell.edu/wrm1
-#  <wrm1@macht.arts.cornell.edu>
+#  University of Michigan
+#  http://www-personal.umich.edu/~wmebane
+#  <wmebane@umich.edu>
 #
 #  Jasjeet Singh Sekhon 
 #  UC Berkeley
-#  http://sekhon.polisci.berkeley.edu
+#  http://sekhon.berkeley.edu
 #  <sekhon@berkeley.edu>
 #
-#  October 17, 2007
+#  January 4, 2008
 #
 
 
@@ -24,7 +24,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                    output.path="stdout", output.append=FALSE, project.path=NULL,
                    P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
                    P9mix=NULL, BFGSburnin=0, BFGSfn=NULL, BFGShelp = NULL,
-                   cluster=FALSE, balance=FALSE, debug=FALSE, ...)
+                   cluster=FALSE, balance=FALSE, debug=FALSE, control = list(), ...)
 {
   if(!is.null(BFGShelp) && !is.function(BFGShelp)) stop("'BFGShelp' must be NULL or a function")
 
@@ -39,20 +39,38 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
     }
   }
 
-  if(BFGSburnin < 0)
+  if( (BFGSburnin < 0) & !gradient.check )
     {
-      BFGSburnin <- 0
-      warning("'BFGSburnin' must be a non-negative integer. Reseting to 0")
+      warning("If 'BFGSburnin' is negative, gradient.check must be TRUE for 'BFGSburnin' to have any effect.")
     }
 
-  if (max==FALSE)
-    {
-      g.scale <- 1;
-      FiniteBadFitValue <- .Machine$double.xmax
-    } else  {
-      g.scale <- -1;
-      FiniteBadFitValue <- -.Machine$double.xmax
+  if(!is.list(control))
+    stop("'control' must be a list, see ?optim")
+    g.scale <- control$fnscale
+    if(!is.null(g.scale)) {
+      if(g.scale > 0 & max) {
+        stop("positive control$fnscale is inconsistent with maximization")
+      }
+      else if(g.scale < 0 & !max) {
+        stop("negative control$fnscale is inconsistent with minimization")
+      }
+      else if(g.scale == 0) {
+        stop("optim divides the function value by control$fnscale ",
+             "setting control$fnscale to zero is therefore impossible")
+      }
+      FiniteBadFitValue <- ifelse(max, -.Machine$double.xmax, .Machine$double.xmax)
     }
+    else { # NULL g.scale
+      if (max == FALSE) {
+        g.scale <- 1
+        FiniteBadFitValue <- .Machine$double.xmax
+      }
+      else {
+        g.scale <- -1
+        FiniteBadFitValue <- -.Machine$double.xmax
+      }
+    }
+    control$fnscale <- g.scale
 
   if(!lexical & !is.null(BFGSfn))
     {
@@ -78,11 +96,19 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
 
     return(fit)
   }#end of fn1
-  
-  gr1 <- if (!is.null(gr)) {
-    function(par) gr(par, ...)
-  } else {
-    gr1 <- NULL
+
+  if(!is.null(BFGShelp)) {
+      if (!is.null(gr)) {
+        gr1 <- function(par, helper = do.call(BFGShelp, 
+					args = list(initial = par, done = TRUE))) {
+				gr(par, helper, ...)
+			}
+      } else gr1 <- NULL
+  }
+  else {  
+    if (!is.null(gr)) {
+           gr1 <- function(par) gr(par, ...)
+    } else gr1 <- NULL
   }
 
   #setpath to tempdir
@@ -119,6 +145,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
       nStartingValues <- 0
     }
   }
+  else stop("starting.values must be NULL, a vector, or a matrix")
 
   #set output.type
   if (output.path=="stdout")
@@ -162,6 +189,9 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
   }  
 
   # BG: now check all starting values are sane
+  if(nStartingValues > 0 && any(is.na(starting.values))) {
+	stop("Some starting values are NA")
+  }
   if(nStartingValues > 0 && boundary.enforcement != 0 && 
      !all(apply(starting.values, 1, FUN = function(x) 
                Domains[,1] <= x & x <= Domains[,2])) )
@@ -184,7 +214,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
     {
       if(nStartingValues)
         {
-          foo <- fn1(starting.values[1:nvars])          
+          foo <- fn1(starting.values[1,])          
         } else {
           rfoo <- runif(nrow(Domains), Domains[,1], Domains[,2])
           if(data.type.int)
@@ -196,8 +226,14 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
 	  warning(paste("Function returns a vector of length", foo.length, 
                         "\nbut you specified lexical =", lexical))
 	}
-        lexical <- foo.length
+        if(foo.length == 1) {
+          lexical <- 0
+          warning("you specified lexical = TRUE but the function returns a scalar")
+	}
+        else lexical <- foo.length
     }
+  else foo.length <- 1
+
   if (lexical > 0)
     {
       if(is.null(BFGSfn))
@@ -212,21 +248,32 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
 
            P9 = 0
          } else {
-           fn1.bfgs <- function(par, helper = NA) {
-             fit <- if(is.null(BFGShelp)) BFGSfn(par, ...) else BFGSfn(par, helper, ...) 
+             if(!is.null(BFGShelp)) {
+               fn1.bfgs <-  function(par, helper = do.call(BFGShelp, 
+                                     args = list(initial = par, done = TRUE), 
+                                     envir = environment(fn))) {
+                 fit <- BFGSfn(par, helper, ...) 
              
-             if(is.null(fit))
-               fit <- FiniteBadFitValue
+                 if(is.null(fit)) fit <- FiniteBadFitValue
              
-             if(length(fit)==1)
-               if(!is.finite(fit))
-                 fit <- FiniteBadFitValue
+                 if(length(fit)==1) if(!is.finite(fit)) fit <- FiniteBadFitValue
              
-             return(fit)
-           }#end of fn1.bfgs
+                 return(fit)
+               }#end of fn1.bfgs
+             } else {
+               fn1.bfgs <-  function(par) {
+                 fit <- BFGSfn(par, ...) 
+             
+                 if(is.null(fit)) fit <- FiniteBadFitValue
+             
+                 if(length(fit)==1) if(!is.finite(fit)) fit <- FiniteBadFitValue
+             
+                 return(fit)
+               }#end of fn1.bfgs
+             } # end else
 
            if(is.null(gr)) {
-             gr <- function(par, helper, ...)
+             gr <- function(par, helper = NA, ...)
                {
                   gr.fn1.bfgs <- function(par, helper, FBFV) {
                     fit <- if(is.null(BFGShelp)) BFGSfn(par, ...) else BFGSfn(par, helper, ...) 
@@ -240,9 +287,6 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                     
                     return(fit)
                   }  # end of gr.fn1.bfgs               
-                 if(is.na(helper) && !is.null(BFGShelp)) {
-                   helper <- do.call(BFGShelp, args = list(initial = par), envir = environment(fn))
-                 }
                  genoud.wrapper101.env <- new.env()
                  assign("x", par, env = genoud.wrapper101.env)
                  assign("helper", helper, env = genoud.wrapper101.env)
@@ -250,8 +294,12 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                  foo <- as.real(attr(numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
                  return(foo)
                } #end of gr
-             gr1 <- function(par, helper = NA) gr(par, helper, ...)
-	          } # end of if(!is.null(gr))
+             gr1 <- if(is.null(BFGShelp)) function(par, ...) gr(par) else
+                    function(par, helper = do.call(BFGShelp, args = list(initial = par,
+					    done = TRUE), envir = environment(fn))) {
+				gr(par, helper, ...)
+			} # end of gr1
+	   } # end of if(!is.null(gr))
            gr1func <- gr1
          }# end of else
     }#if lexical > 0
@@ -265,7 +313,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
          genoud.optim.wrapper101 <- function(foo.vals)
            {
              ret <- optim(foo.vals, fn=fn1, gr=gr1, method="BFGS",
-                          control=list(fnscale=g.scale));
+                          control=control);
              return(c(ret$value,ret$par));
            } # end of genoud.optim.wrapper101
        }
@@ -274,7 +322,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
            {
              ret <- optim(foo.vals, fn=fn1, gr=gr1, method="L-BFGS-B",
                           lower = Domains[,1], upper = Domains[,2],
-                          control=list(fnscale=g.scale));
+                          control=control);
              return(c(ret$value,ret$par));
            } # end of genoud.optim.wrapper101
        }
@@ -289,11 +337,11 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
              }
              if(is.null(BFGShelp)) {
                ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="BFGS",
-                            control=list(fnscale=g.scale));
+                            control=control);
              }
              else {
                ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="BFGS",
-                            control=list(fnscale=g.scale),
+                            control=control,
                             helper = do.call(BFGShelp, args = list(initial = foo.vals), envir = environment(fn)) );
              }
              
@@ -321,13 +369,13 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
                             lower = Domains[,1],
                             upper = Domains[,2],
-                            control=list(fnscale=g.scale));
+                            control=control);
              }
              else {
                ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
                             lower = Domains[,1],
                             upper = Domains[,2],
-                            control=list(fnscale=g.scale),
+                            control=control,
                             helper = do.call(BFGShelp, args = list(initial = foo.vals), envir = environment(fn)) );
              }
              
@@ -416,7 +464,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
 
       if (length(cl) < 2 )
         {
-          warning("You only have one node. You probably shouldn't be using the cluster option")
+          warning("You only have one node. You probably should not be using the cluster option")
 
           #override snow parRapply to work with only one node
           parRapply.1node  <- function (cl, x, fun, ...)
@@ -626,6 +674,19 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
   if(is.matrix(starting.values))
     starting.values <- t(starting.values)
 
+  #C++ code checks if at least Generation 0 has been run and if
+  #print.level>0 and project.path!="/dev/null".  Otherwise, 'interrupted'
+  #remains FALSE
+  interrupted <- FALSE
+  interrupt.message <- paste("genoud interrupted:\none may recover the best solution found so far by executing")
+  interrupt.expression <- paste("pop <- read.table('",project.path, 
+				"', comment.char = 'G')", sep = "")
+  interrupt.expression2 <- "best <- pop[pop$V1 == 1,, drop = FALSE]"
+  interrupt.expression3 <- paste("very.best <- as.matrix(best[nrow(best), ", 
+				foo.length + 2, ":ncol(best)])", sep = "")
+  on.exit(if(interrupted) cat(interrupt.message, "\n", interrupt.expression, "\n",
+				interrupt.expression2, "\n", interrupt.expression3, "\n"))
+  
   gout <- .Call("rgenoud", as.function(fn1), new.env(),
                 as.integer(nvars), as.integer(pop.size), as.integer(max.generations),
                 as.integer(wait.generations),
@@ -705,6 +766,8 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
   
   if (clustertrigger==2)
     snow::stopCluster(cl)
+
+  interrupted <- FALSE
   
   return(ret)  
 } #end of genoud()
