@@ -268,7 +268,7 @@ void oper4(VECTOR p1, VECTOR p2, int nvars)
 /********************************************************************************/
 /*                                                                              */
 /*           FUNCTION NAME     :   oper5()                                      */
-/*                                 Multiple Point Simple Crossover              */
+/*                                 Simple Crossover                             */
 /*                                                                              */
 /********************************************************************************/
 
@@ -366,9 +366,7 @@ void oper6(VECTOR parent, double **domains, int nvars, int T, int t, int B)
 	unsigned long t;    Current generation number
 	int B; */
 {
-  int  comp=0,
-       i,
-      *next;
+  int  i;
   double llim,ulim;
 
   /* unique check variables */
@@ -378,43 +376,30 @@ void oper6(VECTOR parent, double **domains, int nvars, int T, int t, int B)
 
   count=0;
   SAME=TRUE;
-  next = ivector(1, nvars);
 
   while (SAME==TRUE)
     {
-      count++;
-      
-      for(i=1; i<=nvars; i++)
-	next[i] = 0;
-      
       for (i=1; i<=nvars; i++)
 	{
-	  do
-	    comp = irange_ran(1, nvars);
-	  while (next[comp] == 1);
-	  next[comp] = 1;
-	  
-	  find_range(&llim,&ulim,comp,domains,nvars,parent);
+	  count++;
+	  find_range(&llim,&ulim,i,domains,nvars,parent);
 	  
 	  /*From the current value of the component to be mutated, chooose at random*/
 	  /*whether to mutate with a lesser value or a greater value*/
 	  /*Then find a value lesser or greater than the original value from the*/
 	  /*function get_f()*/
-	  tmp = (flip() == TAIL) ? parent[comp]-get_F(T,t,parent[comp]-llim,B) :
-	    parent[comp]+get_F(T,t,ulim-parent[comp],B);
-	}
+	  tmp = (flip() == TAIL) ? parent[i]-get_F(T,t,parent[i]-llim,B) :
+	    parent[i]+get_F(T,t,ulim-parent[i],B);
 
-      if ( parent[comp] != tmp)
-	SAME=FALSE;
-      else if (count >= MAX_OPER_UNIQUE_TRY)
-	SAME=FALSE;
-    } /* end of while loop */
+	  if ( parent[i] != tmp)
+	    SAME=FALSE;
+	  else if (count >= MAX_OPER_UNIQUE_TRY)
+	    SAME=FALSE;
 
-  //this line added on 2004-03-02
-  parent[comp] = tmp;
-
-  free_ivector(next,1);
-}
+	  parent[i] = tmp;
+	}//end of for loop
+    } // end of while loop 
+}//oper6
 
 
 /********************************************************************************/
@@ -908,7 +893,7 @@ void JaIntegerOper4(VECTOR p1, VECTOR p2, int nvars)
 /********************************************************************************/
 /*                                                                              */
 /*           FUNCTION NAME     :   JaIntegerOper5()                             */
-/*                                 Multiple Point Simple Crossover              */
+/*                                 Simple Crossover                             */
 /*                                                                              */
 /*           SYNOPSIS          :   void oper5(p1,p2,STEP,rc,fin_mat,X,x2)       */
 /*                                                                              */
@@ -1013,9 +998,7 @@ void JaIntegerOper6(VECTOR parent, double **domains, int nvars, int T, int t, in
 	unsigned long t;    Current generation number
 	int B; */
 {
-  int  comp=0,
-       i,
-      *next;
+  int  i;
   double llim,ulim;
 
   /* unique check variables */
@@ -1025,42 +1008,30 @@ void JaIntegerOper6(VECTOR parent, double **domains, int nvars, int T, int t, in
 
   count=0;
   SAME=TRUE;
-  next = ivector(1, nvars);
 
   while (SAME==TRUE)
     {
-      count++;
-
-      for(i=1; i<=nvars; i++)
-	next[i] = 0;
-      
       for (i=1; i<=nvars; i++)
 	{
-	  do
-	    comp = irange_ran(1, nvars);
-	  while (next[comp] == 1);
-	  next[comp] = 1;
-	  
-	  find_range(&llim,&ulim,comp,domains,nvars,parent);
+	  count++;
+	  find_range(&llim,&ulim,i,domains,nvars,parent);
 	  
 	  /*From the current value of the component to be mutated, chooose at random*/
 	  /*whether to mutate with a lesser value or a greater value*/
 	  /*Then find a value lesser or greater than the original value from the*/
 	  /*function get_f()*/
-	  tmp = (int) (flip() == TAIL) ? parent[comp]-get_F(T,t,parent[comp]-llim,B) :
-	    parent[comp]+get_F(T,t,ulim-parent[comp],B);
-	}
+	  tmp = (int) (flip() == TAIL) ? parent[i]-get_F(T,t,parent[i]-llim,B) :
+	    parent[i]+get_F(T,t,ulim-parent[i],B);
 
-      if ( (int) parent[comp] != (int) tmp)
-	SAME=FALSE;
-      else if (count >= MAX_OPER_UNIQUE_TRY)
-	SAME=FALSE;
-    } /* end of SAME loop */
-
-  parent[comp] = (int) tmp;
-
-  free_ivector(next,1);
-}
+	  if ( (int) parent[i] != (int) tmp)
+	    SAME=FALSE;
+	  else if (count >= MAX_OPER_UNIQUE_TRY)
+	    SAME=FALSE;
+	  
+	  parent[i] = (int) tmp;
+	}//end of for loop
+    } // end of while loop 
+}//oper6
 
 /********************************************************************************/
 /*                                                                              */

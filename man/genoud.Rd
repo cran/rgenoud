@@ -6,7 +6,7 @@
 \description{
   \code{Genoud} is a function that combines evolutionary algorithm
   methods with a derivative-based, quasi-Newton method to solve
-  difficult unconstrained optimization problems.  \code{Genoud} is made
+  difficult optimization problems.  \code{Genoud} is made
   to solve problems that are nonlinear or perhaps even discontinuous in
   the parameters of the function to be optimized.  When a statistical
   model's estimating function (for example, a log-likelihood) is
@@ -60,7 +60,7 @@
     certain that the relevant restrictions are satisfied.  These
     restrictions originate
     in what is required by several of the operators.  In particular,
-    operators 6 (Multiple Point Simple Crossover) and 8 (Heuristic
+    operators 6 (Simple Crossover) and 8 (Heuristic
     Crossover) require an even number of individuals to work on---i.e., they
     require two parents.  Therefore, the \code{pop.size} variable and the
     operators sets must be such that these three operators have an even
@@ -339,7 +339,7 @@
     This is the polytope crossover.  Please see the Operators Section
     for details about operators and how they are weighted.}
   \item{P6}{
-    Multiple Point Simple Crossover.  Please see the Operators Section
+    Simple Crossover.  Please see the Operators Section
     for details about operators and how they are weighted.}
   \item{P7}{
     Whole Non-Uniform Mutation.  Please see the Operators Section for
@@ -429,7 +429,7 @@
   times an operator is called usually equals \eqn{c_{n} = W_{n} \times
   pop.size}{c_n = W_n * pop.size}. \cr
   
-  Operators 6 (Multiple Point Simple Crossover) and 8 (Heuristic
+  Operators 6 (Simple Crossover) and 8 (Heuristic
   Crossover) require an even number of individuals to work on---i.e.,
   they require two parents.  Therefore, the \code{pop.size} variable and
   the operators sets must be such that these three operators have an
@@ -451,7 +451,7 @@
     \item Boundary Mutation
     \item Non-Uniform Crossover
     \item Polytope Crossover
-    \item Multiple Point Simple Crossover
+    \item Simple Crossover
     \item Whole Non-Uniform Mutation
     \item Heuristic Crossover
     \item Local-Minimum Crossover: BFGS}
@@ -499,56 +499,50 @@
 }
 \examples{
 #maximize the sin function
- sin1 <- genoud(sin, nvars=1, max=TRUE);
+ sin1 <- genoud(sin, nvars=1, max=TRUE)
 
 #minimize the sin function
- sin2 <- genoud(sin, nvars=1, max=FALSE);
+ sin2 <- genoud(sin, nvars=1, max=FALSE)
 
 #maximize a univariate normal mixture which looks like a claw
-claw <- function(xx) {
-  Nd <- function(x, mu, sigma) {
-    w <- (1.0/sqrt(2.0*pi*sigma*sigma)) ;
-    z <- (x-mu)/sigma;
-    w <- w*exp(-0.5*z*z) ;
-    as.double(w);
-  }
-  x <- xx[1];
-  y <- (0.46*(Nd(x,-1.0,2.0/3.0) + Nd(x,1.0,2.0/3.0)) +
-	   (1.0/300.0)*(Nd(x,-0.5,.01) + Nd(x,-1.0,.01) + Nd(x,-1.5,.01)) +
-	   (7.0/300.0)*(Nd(x,0.5,.07) + Nd(x,1.0,.07) + Nd(x,1.5,.07))) ;
-  as.double(y);
-}
- claw1   <- genoud(claw, nvars=1,P9=100,max=TRUE);
+ claw <- function(xx) {
+   x <- xx[1]
+   y <- (0.46*(dnorm(x,-1.0,2.0/3.0) + dnorm(x,1.0,2.0/3.0)) +
+   (1.0/300.0)*(dnorm(x,-0.5,.01) + dnorm(x,-1.0,.01) + dnorm(x,-1.5,.01)) +
+   (7.0/300.0)*(dnorm(x,0.5,.07) + dnorm(x,1.0,.07) + dnorm(x,1.5,.07))) 
+   return(y)
+ }
+ claw1   <- genoud(claw, nvars=1,pop.size=3000,max=TRUE)
 
 \dontrun{
 #Plot the previous run
-xx <- seq(-3,3,.05);
-plot(xx,lapply(xx,claw),type="l",xlab="Parameter",ylab="Fit",main="GENOUD: Maximize the Claw Density");
-points(claw1$par,claw1$value,col="red");
+ xx <- seq(-3,3,.05)
+ plot(xx,lapply(xx,claw),type="l",xlab="Parameter",ylab="Fit",main="GENOUD: Maximize the Claw Density")
+ points(claw1$par,claw1$value,col="red")
 
 # Maximize a bivariate normal mixture which looks like a claw.
-biclaw <- function(xx) {
+ biclaw <- function(xx) {
   mNd2 <- function(x1, x2, mu1, mu2, sigma1, sigma2, rho)
     {
-      z1 <- (x1-mu1)/sigma1;
-      z2 <- (x2-mu2)/sigma2;
-      w <- (1.0/(2.0*pi*sigma1*sigma2*sqrt(1-rho*rho))) ;
-      w <- w*exp(-0.5*(z1*z1 - 2*rho*z1*z2 + z2*z2)/(1-rho*rho)) ;
-      as.double(w);
+      z1 <- (x1-mu1)/sigma1
+      z2 <- (x2-mu2)/sigma2
+      w <- (1.0/(2.0*pi*sigma1*sigma2*sqrt(1-rho*rho))) 
+      w <- w*exp(-0.5*(z1*z1 - 2*rho*z1*z2 + z2*z2)/(1-rho*rho)) 
+      return(w)
     }
-  x1 <- xx[1]+1;
-  x2 <- xx[2]+1;
+  x1 <- xx[1]+1
+  x2 <- xx[2]+1
   
   y <- (0.5*mNd2(x1,x2,0.0,0.0,1.0,1.0,0.0) +
 	    0.1*(mNd2(x1,x2,-1.0,-1.0,0.1,0.1,0.0) +
 		 mNd2(x1,x2,-0.5,-0.5,0.1,0.1,0.0) +
 		 mNd2(x1,x2,0.0,0.0,0.1,0.1,0.0) +
 		 mNd2(x1,x2,0.5,0.5,0.1,0.1,0.0) +
-		 mNd2(x1,x2,1.0,1.0,0.1,0.1,0.0)));
+		 mNd2(x1,x2,1.0,1.0,0.1,0.1,0.0)))
 
-  as.double(y);
-}
-biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,P9=100,max=TRUE);
+  return(y)
+ }
+ biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,pop.size=5000,max=TRUE)
 }
 # For more examples see: http://sekhon.berkeley.edu/rgenoud/R.
 }

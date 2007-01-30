@@ -527,6 +527,18 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 
   peak_cnt = count_gener;
 
+  /* since we are on generation 0 */
+  oldfitvalue=population[1][0];
+  if(Structure->Lexical  > 1)
+    {
+      oldfitvalueVEC[0]=population[1][0];
+      k = 1;
+      for (i=(nvars+2);i<lexical_end;i++)  {
+	oldfitvalueVEC[k]=population[1][i];
+	k++;  
+      } /* for (i=(nvars+2);i<lexical_end;i++) */
+    }
+
   /*
   if(PrintLevel>0)
     {
@@ -862,7 +874,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
                       }		
                     break;
               case 5:
-		/* JS Description: Multiple Point Simple Crossover
+		/* JS Description: Simple Crossover
 		   Applying the fifth operator, simple arithmetical crossover*/
                     if (j5 < (int) P5/2)
                       {
@@ -1213,20 +1225,6 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	} /* end switch */
 	/* end of bfgs stuff */
       } /* end of UseBFGS */  
-
-      if (count_gener == 1) {
-	oldfitvalue=population[1][0];
-
-	if(Structure->Lexical  > 1)
-	  {
-	    oldfitvalueVEC[0]=population[1][0];
-	    k = 1;
-	    for (i=(nvars+2);i<lexical_end;i++)  {
-	      oldfitvalueVEC[k]=population[1][i];
-	      k++;  
-	    } /* for (i=(nvars+2);i<lexical_end;i++) */
-	  }
-      }
 
       /* check to see if fit is improving */
       if(Structure->Lexical < 2)
@@ -2126,9 +2124,9 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
     Structure->P[4]=0;
   }
   if (Structure->P[5] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 6 (Multiple Point Simple Crossover) was Assigned an Illegal Value: %d\n", 
+    fprintf(output,"\n\nWARNING: Operator 6 (Simple Crossover) was Assigned an Illegal Value: %d\n", 
 	    Structure->P[5]);
-    warning("Operator 6 (Multiple Point Simple Crossover) was Assigned an Illegal Value: %d.", 
+    warning("Operator 6 (Simple Crossover) was Assigned an Illegal Value: %d.", 
 	    Structure->P[5]);
     Structure->P[5]=0;
   }
@@ -2201,15 +2199,15 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 
   /* Check to make sure that all operators (i.e., 5, 7) which have to be even numbers are */
   if (fmod(*P5,2) > 0.0) {
-    if(Structure->PrintLevel>0)
+    if(Structure->PrintLevel>2)
       {
-	fprintf(output,"\nNOTE: Operator 6 (Multiple Point Simple Crossover) may only be started\n");
+	fprintf(output,"\nNOTE: Operator 6 (Simple Crossover) may only be started\n");
 	fprintf(output,"NOTE: an even number of times.  I am increasing this operator by one.\n");
       }
     *P5=*P5+1;
   }
   if (fmod(*P7,2) > 0.0) {
-    if(Structure->PrintLevel>0)
+    if(Structure->PrintLevel>2)
       {
 	fprintf(output,"\nNOTE: Operator 8 (Heuristic Crossover) may only be started\n");
 	fprintf(output,"NOTE: an even number of times.  I am increasing this operator by one.\n");
@@ -2297,7 +2295,7 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
       fprintf(output,"\t(3) Boundary Mutation................. \t%d\n", *P2);
       fprintf(output,"\t(4) Non-Uniform Mutation.............. \t%d\n", *P3);
       fprintf(output,"\t(5) Polytope Crossover................ \t%d\n", *P4);
-      fprintf(output,"\t(6) Multiple Point Simple Crossover... \t%d\n", *P5);
+      fprintf(output,"\t(6) Simple Crossover.................. \t%d\n", *P5);
       fprintf(output,"\t(7) Whole Non-Uniform Mutation........ \t%d\n", *P6);
       fprintf(output,"\t(8) Heuristic Crossover............... \t%d\n", *P7);
       fprintf(output,"\t(9) Local-Minimum Crossover........... \t%d\n\n", *P8);
@@ -2747,6 +2745,18 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 
   peak_cnt = count_gener;
 
+  /* since we are on generation 0 */
+  oldfitvalue=population[1][0];
+  if(Structure->Lexical  > 1)
+    {
+      oldfitvalueVEC[0]=population[1][0];
+      k = 1;
+      for (i=(nvars+2);i<lexical_end;i++)  {
+	oldfitvalueVEC[k]=population[1][i];
+	k++;  
+      } /* for (i=(nvars+2);i<lexical_end;i++) */
+    }
+
   /*
   if(PrintLevel>0)
     {
@@ -3079,7 +3089,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		}		
 	      break;
 	    case 5:
-	      /* JS Description: Multiple Point Simple Crossover
+	      /* JS Description: Simple Crossover
 		 Applying the fifth operator, simple arithmetical crossover*/
 	      if (j5 < (int) P5/2)
 		{
@@ -3303,20 +3313,6 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	    }
 	}
 
-      if (count_gener == 1) {
-	oldfitvalue=population[1][0];
-
-	if(Structure->Lexical  > 1)
-	  {
-	    oldfitvalueVEC[0]=population[1][0];
-	    k = 1;
-	    for (i=(nvars+2);i<lexical_end;i++)  {
-	      oldfitvalueVEC[k]=population[1][i];
-	      k++;  
-	    } /* for (i=(nvars+2);i<lexical_end;i++) */
-	  }
-      }
-      
       /* check to see if fit is improving */
       if(Structure->Lexical < 2)
 	{
