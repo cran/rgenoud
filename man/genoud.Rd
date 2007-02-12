@@ -5,30 +5,32 @@
 }
 \description{
   \code{Genoud} is a function that combines evolutionary algorithm
-  methods with a derivative-based, quasi-Newton method to solve
-  difficult optimization problems.  \code{Genoud} is made
-  to solve problems that are nonlinear or perhaps even discontinuous in
-  the parameters of the function to be optimized.  When a statistical
-  model's estimating function (for example, a log-likelihood) is
-  nonlinear in the model's parameters, the function to be optimized will
-  usually not be globally concave and may contain irregularities such as
-  saddlepoints or discontinuous jumps.  Optimization methods that rely
-  on derivatives of the objective function may be unable to find any
-  optimum at all.  Multiple local optima may exist, so that there is no
-  guarantee that a derivative-based method will converge to the global
-  optimum.  On the other hand, algorithms that do not use derivative
-  information (such as pure GAs) are for many problems needlessly poor
-  at local hill climbing.  Most statistical problems are regular in the
+  methods with a derivative-based (quasi-Newton) method to solve
+  difficult optimization problems.  \code{Genoud} may also be used for
+  optimization problems for which derivatives do not exist.
+  \code{Genoud} solves problems that are nonlinear or perhaps even
+  discontinuous in the parameters of the function to be optimized.
+  When a statistical model's estimating function (for example, a
+  log-likelihood) is nonlinear in the model's parameters, the function
+  to be optimized will generally not be globally concave and may have
+  irregularities such as saddlepoints or discontinuities.
+  Optimization methods that rely on derivatives of the objective
+  function may be unable to find any optimum at all.  Multiple local
+  optima may exist, so that there is no guarantee that a
+  derivative-based method will converge to the global optimum. On the
+  other hand, algorithms that do not use derivative information (such
+  as pure genetic algorithms) are for many problems needlessly poor at
+  local hill climbing.  Most statistical problems are regular in a
   neighborhood of the solution.  Therefore, for some portion of the
-  search space derivative information is useful.  \code{Genoud}, via the
-  \code{cluster} option, supports the use of multiple computers, CPUs or
-  cores to perform parallel computations.
-  }
+  search space, derivative information is useful.  \code{Genoud}, via
+  the \code{cluster} option, supports the use of multiple computers,
+  CPUs or cores to perform parallel computations.
+}
 
 \usage{genoud(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wait.generations=10,
               hard.generation.limit=TRUE, starting.values=NULL, MemoryMatrix=TRUE, 
               Domains=NULL, default.domains=10, solution.tolerance=0.001,
-              gr=NULL, boundary.enforcement=0, lexical=FALSE, gradient.check=TRUE, BFGS=TRUE, 
+              gr=NULL, boundary.enforcement=0, lexical=FALSE, gradient.check=TRUE, BFGS=TRUE,
               data.type.int=FALSE, hessian=FALSE, unif.seed=812821, int.seed=53058,
               print.level=2, share.type=0, instance.number=0,
               output.path="stdout", output.append=FALSE, project.path=NULL,
@@ -38,20 +40,18 @@
 \arguments{
   \item{fn}{
     The function to be minimized (or maximized if
-    max=\emph{TRUE}).  The first argument of the function must be the
+    max=\code{TRUE}).  The first argument of the function must be the
     vector of parameters over which minimizing is to
     occur.  The function must return a scalar result.
     
     For example, if we wish to \emph{maximize} the \code{sin()}
     function.  We can simply call genoud by \code{genoud(sin,
       nvars=1,max=TRUE)}.}
-  \item{nvars}{
-    This is the number of variables the function to be minimized (or
-    maximized) takes.}
+  \item{nvars}{The number of parameters to be selected for the function to be minimized (or
+    maximized).}
   \item{max}{
-    Maximization (\emph{TRUE}) or Minimizing (\emph{FALSE}).  This
-    variable tells \code{genoud}
-    if it is to minimize or maximize the objective function.}
+    Maximization (\code{TRUE}) or Minimizing (\code{FALSE}).  Determines
+    if \code{genoud} minimizes or maximizes the objective function.}
   \item{pop.size}{
     Population Size.  This is the number of individuals \code{genoud} uses to
     solve the optimization problem.  There are several restrictions on
@@ -72,11 +72,11 @@
     \code{genoud} will run when attempting to optimize a function.  This is a
     \emph{soft} limit.  The maximum generation limit will be binding for
     \code{genoud} only if \code{hard.generation.limit} has
-    been set equal to \emph{TRUE}.  If it has not been set equal to
-    \emph{TRUE}, two soft  triggers control when \code{genoud} stops:
+    been set equal to \code{TRUE}.  If it has not been set equal to
+    \code{TRUE}, two soft  triggers control when \code{genoud} stops:
     \code{wait.generations} and \code{gradient.check}. \cr
     
-    Although, the \code{max.generations} variable is not, by default,
+    Although the \code{max.generations} variable is not, by default,
     binding, it is nevertheless important because many operators use it
     to adjust
     their behavior.  In essence, many of the operators become less random
@@ -102,7 +102,7 @@
   \item{hard.generation.limit}{
     This logical variable determines if the \code{max.generations}
     variable is a binding constraint for \code{genoud}.  If
-    \code{hard.generation.limit} is \emph{FALSE}, then \code{genoud} may exceed
+    \code{hard.generation.limit} is \code{FALSE}, then \code{genoud} may exceed
     the \code{max.generations} count if either the objective function
     has improved within a given number of generations (determined by
     \code{wait.generations}) or if the gradients are not zero
@@ -119,9 +119,9 @@
     This variable controls if \code{genoud} sets up a memory matrix.  Such a
     matrix ensures that \code{genoud} will request the fitness evaluation of a
     given set of parameters only once. The variable may
-    be \emph{TRUE} or \emph{FALSE}.  If it is \emph{FALSE}, \code{genoud} will
+    be \code{TRUE} or \code{FALSE}.  If it is \code{FALSE}, \code{genoud} will
     be aggressive in conserving memory.  The most significant negative
-    implication of this variable being set to \emph{FALSE} is that
+    implication of this variable being set to \code{FALSE} is that
     \code{genoud} will no longer maintain a memory matrix of all evaluated
     individuals.  Therefore, \code{genoud} may request evaluations which it has
     already previously requested. \cr
@@ -129,11 +129,12 @@
     Note that when \code{nvars} or \code{pop.size} are large, the memory
     matrix consumes a large amount of RAM. \code{Genoud's} memory matrix will
     require somewhat less memory if the user sets
-    \code{hard.generation.limit} equal to \emph{TRUE}.}
+    \code{hard.generation.limit} equal to \code{TRUE}.}
   \item{Domains}{
     This is a \code{nvars} \eqn{\times 2}{*2}
-    matrix.  The first column is the lower bound, and the second column is
-    the upper bound.  None of \code{genoud}'s starting population will be
+    matrix.  For each variable, in the first column is the lower bound and
+    in the second column the upper bound.  None of \code{genoud}'s
+    starting population will be
     generated outside of the bounds.  But some of the operators may
     generate children which
     will be outside of the bounds unless the
@@ -158,15 +159,15 @@
     particularly
     important when it comes to evaluating \code{wait.generations} and
     conducting the \code{gradient.check}.}  
-  \item{gr}{A function to return the gradient for the \code{BFGS}
-    optimizer.  It it is \code{NULL}, numerical gradients will be used
+  \item{gr}{A function to provide the gradient for the \code{BFGS}
+    optimizer.  If it is \code{NULL}, numerical gradients will be used
     instead.}
   \item{boundary.enforcement}{
     This variable determines the degree to which \code{genoud} obeys the
-    boundary constraints.  Notwithstanding
-    the value of the variable, none of \code{genoud}'s starting population will
-    be outside of the bounds.  But some of the operators may generate
-    children which will be outside of the bounds unless the
+    boundary constraints.  Notwithstanding the value of the variable,
+    none of \code{genoud}'s starting population values will be outside
+    of the bounds.  But some of the operators may generate children
+    which will be outside of the bounds unless the
     \code{boundary.enforcement} flag is turned on. \cr
     
     \code{boundary.enforcement} has three possible values: 0 (anything goes), 1
@@ -187,9 +188,9 @@
       \item{\emph{2: No Trespassing}}{
 	No out-of-bounds evaluations will ever be requested.}}}
   \item{lexical}{This option enables lexical optimization.  This is
-    where there are multiple fit criterion and the parameters are chosen
-    so as to maximize them in lexical order---i.e., the second fit
-    criterion is only considered if the parameters has the same fit for
+    where there are multiple fit criteria and the parameters are chosen
+    so as to maximize fitness values in lexical order---i.e., the second fit
+    criterion is only considered if the parameters have the same fit for
     the first.  The fit function used with this option should return a
     vector of fits in the order of precedence.  This option can take on
     the values of FALSE, TRUE or an integer equal to the number of fit
@@ -198,30 +199,28 @@
     criterion at the solution.  The \code{\link[Matching]{GenMatch}}
     function makes extensive use of this option.}
   \item{gradient.check}{
-    If this variable is \emph{TRUE}, \code{genoud} will not start counting
+    If this variable is \code{TRUE}, \code{genoud} will not start counting
     \code{wait.generations} unless each gradient is
     \code{solution.tolerance} close to zero.  This
     variable has no effect if the \code{max.generations} limit has been
     hit and the \code{hard.generation.limit} option has been set to
-    \emph{TRUE}.}
+    \code{TRUE}.}
   \item{BFGS}{
-    This variable denotes whether or not \code{genoud} applies a quasi-Newton
-    derivative optimizer (BFGS) to the best individual at the end of each
-    generation after the initial one.  Setting BFGS to \emph{FALSE} does
-    not mean that the BFGS will never be used.  In particular, Operator 9
-    (Local-Minimum Crossover) must also be set to zero.}
+    This variable denotes whether or not \code{genoud} applies a
+    quasi-Newton derivative optimizer (BFGS) to the best individual at
+    the end of each generation after the initial one.  Setting BFGS to
+    \code{FALSE} does not mean that the BFGS will never be used.  In
+    particular, if you want BFGS never to be used, \code{P9} (the
+    Local-Minimum Crossover operator) must also be set to zero.}
   \item{data.type.int}{
     This option sets the data type of the parameters of the function to
-    be optimized.  If the variable is \emph{TRUE},
+    be optimized.  If the variable is \code{TRUE},
     \code{genoud} is
-    informed that it is dealing with integer values.  \emph{Use of the
-      integer data type is supported only as a beta feature.}  Some of the
-    included operators will not work well with integer type
-    parameters. \cr
+    informed that it is dealing with integer values.  \cr
     
     With integer parameters, \code{genoud} never uses derivative
     information.  This implies that the BFGS quasi-Newton optimizer is
-    never used---i.e., the \code{BFGS} flag is set to \emph{FALSE}.  It
+    never used---i.e., the \code{BFGS} flag is set to \code{FALSE}.  It
     also implies
     that Operator 9 (Local-Minimum Crossover) is set to zero and that
     gradient checking (as a convergence criterion) is turned off.  No
@@ -233,12 +232,12 @@
     There is no option to mix integer and floating point parameters.  If
     one wants
     to mix the two, it is suggested that the user pick integer type and in
-    her objective function map a particular integer range into a
+    the objective function map a particular integer range into a
     floating point number range.  For example, tell \code{genoud} to search
     from 0 to 100 and divide by 100 to obtain a search grid of 0 to 1.0
     (by .1).}
   \item{hessian}{
-    When this flag is set to \emph{TRUE}, \code{genoud} will return the
+    When this flag is set to \code{TRUE}, \code{genoud} will return the
     hessian matrix at the solution as part of its return list.  A user
     can use this matrix to calculate standard errors.}
   \item{unif.seed}{This sets the seed for the floating-point random
@@ -308,7 +307,7 @@
   \item{project.path}{
     This is the path of the \code{genoud} project file. The project file prints
     one individual per line with the fit value(s) printed first and then
-    the parameter values. By default \code{genoud} places it's output in a file
+    the parameter values. By default \code{genoud} places its output in a file
     called "genoud.pro" located in the temporary directory provided by
     \code{\link{tempdir}}.  The behavior of the project file depends on
     the \code{print.level} chosen.  If the \code{print.level} variable
@@ -355,7 +354,7 @@
   \item{cluster}{This can either be an object of the  'cluster' class
     returned by one of the \code{\link[snow]{makeCluster}} commands in
     the snow package or a vector of machine names so \code{genoud} can
-    setup the cluster automatically.  If it is the later, the vector should
+    setup the cluster automatically.  If it is the latter, the vector should
     look like: \cr
     \code{c("localhost","musil","musil","deckard")}.\cr
     This vector would create a cluster with four nodes: one on the
@@ -377,13 +376,13 @@
   \item{balance}{This logical flag controls if load balancing is done
     across the cluster.  Load balancing can result in better cluster
     utilization; however, increased communication can reduce
-    performance.  This options is best used if the function being
+    performance.  This option is best used if the function being
     optimized takes at least several minutes to calculate or if the
     nodes in the cluster vary significantly in their performance. If
     cluster==FALSE, this option has no effect.}
   \item{debug}{
     This variable turns on some debugging information.  This variable may
-    be \emph{TRUE} or \emph{FALSE}.}
+    be \code{TRUE} or \code{FALSE}.}
   \item{...}{Further arguments to be passed to \code{fn} and \code{gr}.}
   }
   \value{
@@ -394,14 +393,14 @@
 
   \item{value}{
     This variable contains the fitness value at the solution. If
-    \code{lexical} optimization was request, it is a vector.}
+    \code{lexical} optimization was requested, it is a vector.}
   \item{par}{
     This vector contains the parameter values found at the solution.}
   \item{gradients}{
     This vector contains the gradients found at the solution.  If no
     gradients were calculated, they are reported to be \code{NA}.}
   \item{generations}{
-    This variables contains the number of generations \code{genoud} ran for.}
+    This variable contains the number of generations \code{genoud} ran for.}
   \item{peakgeneration}{
     This variable contains the generation number at which \code{genoud} found
     the solution.}
@@ -456,7 +455,7 @@
     \item Heuristic Crossover
     \item Local-Minimum Crossover: BFGS}
   For more information please see Table 1 of the reference article: 
-  \url{http://sekhon.berkeley.edu/genoud/node7.shtml}.}
+  \url{http://sekhon.berkeley.edu/papers/rgenoudJSS.pdf}.}
 \note{
   The most important options affecting performance are those determining
   population size (\code{pop.size}) and the
@@ -464,9 +463,9 @@
   (\code{max.generations}, \code{wait.generations},
   \code{hard.generation.limit} and \code{gradient.check}).  Search
   performance is expected to improve as
-  the population size and the number of generations the program runs
+  the population size and the number of generations the program runs for
   increase.  These and the other options should be adjusted for the
-  problem at hand.  Please pay particular attentions to the search
+  problem at hand.  Please pay particular attention to the search
   domains (\code{Domains} and \code{default.domains}). For more information
   please see the reference article. \cr
 
@@ -479,6 +478,10 @@
   linear constrain is violated.  \code{genoud} will then attempt to find
   parameter values that satisfy the constraint.}
 \references{
+  Walter, Mebane R. Jr. and Jasjeet Singh Sekhon.  2007.  ``Genetic
+  Optimization Using Derivatives: The rgenoud package for R.''
+  \url{http://sekhon.berkeley.edu/papers/rgenoudJSS.pdf} \cr
+  
   Sekhon, Jasjeet Singh and Walter R. Mebane, Jr. 1998.  ``Genetic
   Optimization Using Derivatives: Theory and Application to Nonlinear
   Models.'' \emph{Political Analysis}, 7: 187-210.
