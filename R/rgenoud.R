@@ -118,7 +118,12 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
     }
   if (lexical==1)
     {
-      foo <- fn1(Domains[,1])
+      if(nStartingValues)
+        {
+          foo <- fn1(starting.values)          
+        } else {
+          foo <- fn1(Domains[,1])          
+        }
       lexical = length(as.vector(foo))
     }
   if (lexical > 0)

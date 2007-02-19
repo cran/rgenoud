@@ -23,3 +23,16 @@
 .onUnload <- function(libpath) {
    library.dynam.unload("rgenoud", libpath)
 }
+
+
+.onAttach <- function( ... )
+{
+  rgenoudLib <- dirname(system.file(package = "rgenoud"))
+  version <- packageDescription("rgenoud", lib = rgenoudLib)$Version
+  BuildDate <- packageDescription("rgenoud", lib = rgenoudLib)$Date
+  
+  cat(paste("##  rgenoud (Version ", version, ", Build Date: ", BuildDate, ")\n", sep = "")) 
+# cat("##  See http://sekhon.berkeley.edu/rgenoud for additional documentation.\n")
+}
+
+

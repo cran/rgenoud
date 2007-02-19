@@ -490,7 +490,7 @@
   Mebane, Walter R., Jr. and Jasjeet S. Sekhon. 2004. ``Robust
   Estimation and Outlier Detection for Overdispersed Multinomial Models
   of Count Data.''  \emph{American Journal of Political Science}, 48
-  (April): 391-410. \url{http://sekhon.berkeley.edu/papers/MebaneSekhon.multinom.pdf}
+  (April): 391-410. \url{http://sekhon.berkeley.edu/multinom.pdf}
 }
 \author{Walter R. Mebane, Jr., Cornell University,
   \email{wrm1@cornell.edu}, \url{http://macht.arts.cornell.edu/wrm1/} \cr
