@@ -12,8 +12,6 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/operators.cpp,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
-
 */
 
 #include "genoud.h"
@@ -570,7 +568,8 @@ void oper8(SEXP fn_optim, SEXP rho,
 	   VECTOR parent, MATRIX domains, 
 	   double SolutionTolerance, long nvars, 
 	   short BoundaryEnforcement, 
-	   FILE *output, short PrintLevel)
+	   FILE *output, short PrintLevel,
+	   double mix)
 {
 
   double *parm, *work;
@@ -581,7 +580,14 @@ void oper8(SEXP fn_optim, SEXP rho,
   parm  = (double *) malloc((nvars+1)*sizeof(double)); 
   work  = (double *) malloc((nvars+1)*sizeof(double));
 
-  A = frange_ran(0.0,1.0);
+  if( mix < 0)
+    {
+      A = frange_ran(0.0,1.0);
+    } 
+  else 
+    {
+      A = mix;
+    }
   B = 1.0 - A;
 
   for (i=0; i<nvars; i++) {
@@ -607,8 +613,11 @@ void oper8(SEXP fn_optim, SEXP rho,
 	    /* shrink point until all parameters are in bounds */
 	    if (btest) 
 	      {
-		fprintf(output, "WARNING: killing out-of-bounds individual created by bfgs oper(9). fit:%10.8lf\n",bfgsfit);
-		fprintf(output, "WARNING: oper(9) Parameter: %d \t Value: %e\n\n", i, work[i]);
+		if(PrintLevel > 1)
+		  {
+		    fprintf(output, "WARNING: killing out-of-bounds individual created by bfgs oper(9). fit:%10.8lf\n",bfgsfit);
+		    fprintf(output, "WARNING: oper(9) Parameter: %d \t Value: %e\n\n", i, work[i]);
+		  }
 		warning("killed out-of-bounds individual created by bfgs oper(9)");
 	      }
 	  }

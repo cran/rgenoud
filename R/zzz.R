@@ -10,8 +10,6 @@
 #  http://sekhon.polisci.berkeley.edu
 #  <sekhon@berkeley.edu>
 #
-#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/zzz.R,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
-#
 
 #.First.lib <- function(lib, pkg) library.dynam("rgenoud", pkg, lib)
 
@@ -31,8 +29,8 @@
   version <- packageDescription("rgenoud", lib = rgenoudLib)$Version
   BuildDate <- packageDescription("rgenoud", lib = rgenoudLib)$Date
   
-  cat(paste("##  rgenoud (Version ", version, ", Build Date: ", BuildDate, ")\n", sep = "")) 
-# cat("##  See http://sekhon.berkeley.edu/rgenoud for additional documentation.\n")
+  cat(paste("##  rgenoud (Version ", version, ", Build Date: ", BuildDate, ")\n", sep = ""))
+  cat("##  See http://sekhon.berkeley.edu/rgenoud for additional documentation.\n")
 }
 
 

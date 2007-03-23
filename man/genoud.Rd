@@ -35,6 +35,7 @@
               print.level=2, share.type=0, instance.number=0,
               output.path="stdout", output.append=FALSE, project.path=NULL,
               P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
+              P9mix=NULL, BFGSfn=NULL, BFGShelp=NULL,
               cluster=FALSE, balance=FALSE, debug=FALSE, ...)
 }
 \arguments{
@@ -42,7 +43,8 @@
     The function to be minimized (or maximized if
     max=\code{TRUE}).  The first argument of the function must be the
     vector of parameters over which minimizing is to
-    occur.  The function must return a scalar result.
+    occur.  The function must return a scalar result (unless
+    \code{lexical=TRUE}).
     
     For example, if we wish to \emph{maximize} the \code{sin()}
     function.  We can simply call genoud by \code{genoud(sin,
@@ -194,7 +196,7 @@
     the first.  The fit function used with this option should return a
     vector of fits in the order of precedence.  This option can take on
     the values of FALSE, TRUE or an integer equal to the number of fit
-    criterion which are returned by \code{fn}.  The \code{par} object
+    criterion which are returned by \code{fn}.  The \code{value} object
     which is returned by \code{genoud} will include all of the fit
     criterion at the solution.  The \code{\link[Matching]{GenMatch}}
     function makes extensive use of this option.}
@@ -351,6 +353,26 @@
     and should be generally used less than the other operators.  Please
     see the Operators Section for details about operators and how they
     are weighted.}
+  \item{P9mix}{This is a tuning parameter for the \code{P9} operator.
+    The local-minimum crossover operator by default takes the convex
+    combination of the result of a BFGS optimization and the parent
+    individual.  By default the mixing (weight) parameter for the convex
+    combination is chosen by a uniform random draw between 0 and 1.
+    The \code{P9mix} option allows the user to select this mixing
+    parameter.  It may be any number greater than 0 and less than or
+    equal to 1.  If 1, then the BFGS result is simply used.}
+  \item{BFGSfn}{This is a function for the BFGS optimizer to optimize,
+    if one wants to make it distinct from the \code{fn} function.  This is useful
+    when doing \code{lexical} optimization because otherwise a derivate
+    based optimizer cannot be used (since it requires a single fit
+    value).  It is suggested that if this functionality is being
+    used, both the \code{fn} and \code{BFGSfn} functions obtain all of the
+    arguments they need (except for the parameters being optimized) by
+    lexical scope instead of being passed in as arguments to the
+    functions.  Alternatively, one may use the \code{BFGShelp} option to
+    pass arguments to \code{BFGSfn}. If \code{print.level > 2}, the
+    results from the BFGS optimizer are printed every time it is called.}
+  \item{BFGShelp}{An optional function to pass arguments to \code{BFGSfn}.}
   \item{cluster}{This can either be an object of the  'cluster' class
     returned by one of the \code{\link[snow]{makeCluster}} commands in
     the snow package or a vector of machine names so \code{genoud} can

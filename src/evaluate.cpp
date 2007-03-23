@@ -12,8 +12,6 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/evaluate.cpp,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
-
 */
 
 #include "genoud.h"
@@ -1048,7 +1046,8 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
                         for(i=1; i<=nvars; i++)
                           t_vec[i] = population[first_live][i];
                         oper8(Structure->fn_optim, Structure->rho, t_vec, domains, SolutionTolerance, 
-			      nvars, BoundaryEnforcement, output, PrintLevel);
+			      nvars, BoundaryEnforcement, output, PrintLevel,
+			      Structure->P9mix);
 
 			for(i=1; i<=nvars; i++)
 			  new_genera[die_now][i] = t_vec[i];
@@ -1135,95 +1134,187 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 
 	bfgsfit = genoud_optim(Structure->fn_optim, Structure->rho, bfgsoutX, nvars);
 	
-	switch(MinMax) {
-	case 0:
-	  if (population[1][0] > bfgsfit) /* minimize */
-	    {
-	      /* is the BFGS individual in the bounds? */
-	      BoundaryTrigger=0; /* outside of bounds ? */
-	      for (i=0; i<nvars; i++) {
-		j = i+1;
-		if (bfgsoutX[i] < domains[j][1]) {
-		  BoundaryTrigger=1;
-		  fprintf(output,
-			  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
-		  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
-			  count_gener, i+1, bfgsoutX[i]);
-		  fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
-		  warning("BFGS hit on best individual produced Out of Boundary individual.");
-		}
-		if (bfgsoutX[i] > domains[j][3]) {
-		  BoundaryTrigger=1;
-		  fprintf(output,
-			  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
-		  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n", 
-			  count_gener, i+1, bfgsoutX[i]);
-		  fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
-		  warning("BFGS hit on best individual produced Out of Boundary individual.");
-		}
-	      } /* end for loop */
+	if (Structure->Lexical < 2)
+	  {
+	    switch(MinMax) {
+	    case 0:
+	      if (population[1][0] > bfgsfit) /* minimize */
+		{
+		  /* is the BFGS individual in the bounds? */
+		  BoundaryTrigger=0; /* outside of bounds ? */
+		  for (i=0; i<nvars; i++) {
+		    j = i+1;
+		    if (bfgsoutX[i] < domains[j][1]) {
+		      BoundaryTrigger=1;
+		      if (PrintLevel>1)
+			{
+			  fprintf(output,
+				  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
+			  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
+				  count_gener, i+1, bfgsoutX[i]);
+			  fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
+			}
+		      warning("BFGS hit on best individual produced Out of Boundary individual.");
+		    }
+		    if (bfgsoutX[i] > domains[j][3]) {
+		      BoundaryTrigger=1;
+		      if (PrintLevel>1)
+			{
+			  fprintf(output,
+				  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
+			  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n", 
+				  count_gener, i+1, bfgsoutX[i]);
+			  fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
+			}
+		      warning("BFGS hit on best individual produced Out of Boundary individual.");
+		    }
+		  } /* end for loop */
+		  
+		  /* if we use out of bounds individuals then proceed */
+		  /* 0=anything goes, 1: regular; 2: no trespassing! */
+		  if (BoundaryEnforcement==0) {
+		    for(i=1;i<=nvars;i++) 
+		      {
+			population[1][i]=bfgsoutX[i-1];
+		      }
+		    population[1][0]=bfgsfit;
+		  }
+		  else if (BoundaryTrigger==0) {
+		    for(i=1;i<=nvars;i++) 
+		      {
+			population[1][i]=bfgsoutX[i-1];
+		      }
+		    population[1][0]=bfgsfit;
+		  }
+		} /* end if (population[1][0] > bfgs) */
+	    case 1:
+	      if (population[1][0] < bfgsfit) /* maximize */
+		{
+		  /* is the BFGS individual in the bounds? */
+		  BoundaryTrigger=0; /* outside of bounds ? */
+		  for (i=0; i<nvars; i++) {
+		    j = i+1;
+		    if (bfgsoutX[i] < domains[j][1]) {
+		      BoundaryTrigger=1;
+		      if (PrintLevel>1)
+			{
+			  fprintf(output,
+				  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
+			  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
+				  count_gener, i+1, bfgsoutX[i]);
+			}
+		      warning("BFGS hit on best individual produced Out of Boundary individual.");
+		    }
+		    if (bfgsoutX[i] > domains[j][3]) {
+		      BoundaryTrigger=1;
+		      if (PrintLevel>1)
+			{
+			  fprintf(output,
+				  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
+			  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
+				  count_gener, i+1, bfgsoutX[i]);
+			}
+		      warning("BFGS hit on best individual produced Out of Boundary individual.");
+		    }
+		  } /* end for loop */
 	      
-	      /* if we we use out of bounds individuals then proceed */
-	      /* 0=anything goes, 1: regular; 2: no trespassing! */
-	      if (BoundaryEnforcement==0) {
-		for(i=1;i<=nvars;i++) 
-		  {
-		    population[1][i]=bfgsoutX[i-1];
+		  /* if we we use out of bounds individuals then proceed */
+		  /* 0=anything goes, 1: regular; 2: no trespassing! */
+		  if (BoundaryEnforcement==0) {
+		    for(i=1;i<=nvars;i++) 
+		      {
+			population[1][i]=bfgsoutX[i-1];
+		      }
+		    population[1][0]=bfgsfit;
 		  }
-		population[1][0]=bfgsfit;
-	      }
-	      else if (BoundaryTrigger==0) {
-		for(i=1;i<=nvars;i++) 
-		  {
-		    population[1][i]=bfgsoutX[i-1];
+		  else if (BoundaryTrigger==0) {
+		    for(i=1;i<=nvars;i++) 
+		      {
+			population[1][i]=bfgsoutX[i-1];
+		      }
+		    population[1][0]=bfgsfit;
 		  }
-		population[1][0]=bfgsfit;
+		} /* end if (population[1][0] < bfgsfit) */
+	    } /* end switch */
+	  }/*end of NOT lexical bfgs hit */
+	else 
+	  {
+	    /* is the BFGS individual in the bounds? */
+	    BoundaryTrigger=0; /* outside of bounds ? */
+	    for (i=0; i<nvars; i++) {
+	      j = i+1;
+	      if (bfgsoutX[i] < domains[j][1]) {
+		BoundaryTrigger=1;
+		if (PrintLevel>1)
+		  {
+		    fprintf(output,
+			    "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
+		    fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
+			    count_gener, i+1, bfgsoutX[i]);
+		    fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
+		  }
+		warning("BFGS hit on best individual produced Out of Boundary individual.");
 	      }
-	    } /* end if (population[1][0] > bfgs) */
-	case 1:
-	  if (population[1][0] < bfgsfit) /* maximize */
-	    {
-	      /* is the BFGS individual in the bounds? */
-	      BoundaryTrigger=0; /* outside of bounds ? */
-	      for (i=0; i<nvars; i++) {
-		j = i+1;
-		if (bfgsoutX[i] < domains[j][1]) {
-		  BoundaryTrigger=1;
-		  fprintf(output,
-			  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
-		  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
-			  count_gener, i+1, bfgsoutX[i]);
-		  warning("BFGS hit on best individual produced Out of Boundary individual.");
+	      if (bfgsoutX[i] > domains[j][3]) {
+		BoundaryTrigger=1;
+		if (PrintLevel>1)
+		  {
+		    fprintf(output,
+			    "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
+		    fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n", 
+			    count_gener, i+1, bfgsoutX[i]);
+		    fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
+		  }
+		warning("BFGS hit on best individual produced Out of Boundary individual.");
+	      }
+	    } /* end for loop */
+		  
+	    /* if we use out of bounds individuals then proceed */
+	    /* 0=anything goes, 1: regular; 2: no trespassing! */
+	    /* Add new individual to the END because we are doing lexical stuff */
+	    if (BoundaryEnforcement==0) {
+	      for(i=1;i<=nvars;i++) 
+		{
+		  population[(pop_size-1)][i]=bfgsoutX[i-1];
+		  X[i] = bfgsoutX[i-1];
 		}
-		if (bfgsoutX[i] > domains[j][3]) {
-		  BoundaryTrigger=1;
-		  fprintf(output,
-			  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
-		  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
-			  count_gener, i+1, bfgsoutX[i]);
-		  warning("BFGS hit on best individual produced Out of Boundary individual.");
+	      EvaluateLexical(Structure->fn, Structure->rho, 
+			      X, nvars, Structure->Lexical, MinMax, LexicalReturn);
+	      population[(pop_size-1)][0] = LexicalReturn[0];
+	      count = 0;
+	      for(i=(nvars+2);i<lexical_end;i++)
+		{
+		  count++;
+		  population[(pop_size-1)][i] = LexicalReturn[count];
+		}		      			  
+
+	      /* REDO SORT.  This is inefficient becase we only changed 1 individual*/
+	      RlexicalSort(Structure->fnLexicalSort, Structure->rho,
+			   population,
+			   MinMax, pop_size, nvars, lexical_end, 1);
+	    }
+	    else if (BoundaryTrigger==0) {
+	      for(i=1;i<=nvars;i++) 
+		{
+		  population[(pop_size-1)][i]=bfgsoutX[i-1];
+		  X[i] = bfgsoutX[i-1];
 		}
-	      } /* end for loop */
-	      
-	      /* if we we use out of bounds individuals then proceed */
-	      /* 0=anything goes, 1: regular; 2: no trespassing! */
-	      if (BoundaryEnforcement==0) {
-		for(i=1;i<=nvars;i++) 
-		  {
-		    population[1][i]=bfgsoutX[i-1];
-		  }
-		population[1][0]=bfgsfit;
-	      }
-	      else if (BoundaryTrigger==0) {
-		for(i=1;i<=nvars;i++) 
-		  {
-		    population[1][i]=bfgsoutX[i-1];
-		  }
-		population[1][0]=bfgsfit;
-	      }
-	    } /* end if (population[1][0] < bfgsfit) */
-	} /* end switch */
-	/* end of bfgs stuff */
+	      EvaluateLexical(Structure->fn, Structure->rho, 
+			      X, nvars, Structure->Lexical, MinMax, LexicalReturn);
+	      population[(pop_size-1)][0] = LexicalReturn[0];
+	      count = 0;
+	      for(i=(nvars+2);i<lexical_end;i++)
+		{
+		  count++;
+		  population[(pop_size-1)][i] = LexicalReturn[count];
+		}		      			  
+
+	      /* REDO SORT.  This is inefficient becase we only changed 1 individual*/
+	      RlexicalSort(Structure->fnLexicalSort, Structure->rho,
+			   population,
+			   MinMax, pop_size, nvars, lexical_end, 1);
+	    }
+	  } /*end of LEXICAL bfgs hit */
       } /* end of UseBFGS */  
 
       /* check to see if fit is improving */

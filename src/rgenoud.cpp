@@ -107,7 +107,8 @@ extern "C"
 	       SEXP hard_generation_limit,
 	       SEXP fn_optim, 
 	       SEXP lexical, SEXP fnLexicalSort, SEXP fnMemoryMatrixEvaluate,
-	       SEXP RuserGradient, SEXP fnGR) 
+	       SEXP RuserGradient, SEXP fnGR,
+	       SEXP RP9mix) 
   {
 
     SEXP ret;
@@ -225,6 +226,9 @@ extern "C"
     MainStructure->oPeakGeneration=0;
     MainStructure->oPopSize=0;
     MainStructure->ThreadNumber=0;
+
+    /* Operator Options */
+    MainStructure->P9mix=asReal(RP9mix);
 
     genoud(MainStructure);
 

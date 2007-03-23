@@ -12,7 +12,6 @@
 #  http://sekhon.polisci.berkeley.edu
 #  <sekhon@berkeley.edu>
 #
-#  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/rgenoud.R,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
 #
 
 
@@ -24,8 +23,22 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                    print.level=2, share.type=0, instance.number=0,
                    output.path="stdout", output.append=FALSE, project.path=NULL,
                    P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
+                   P9mix=NULL, BFGSfn=NULL, BFGShelp = NULL,
                    cluster=FALSE, balance=FALSE, debug=FALSE, ...)
 {
+  if(!is.null(BFGShelp) && !is.function(BFGShelp)) stop("'BFGShelp' must be NULL or a function")
+
+  if(!is.null(P9mix) && !is.real(P9mix))  {
+    stop("'P9mix' must be NULL or a number between 0 and 1")
+  } else {
+    if(is.null(P9mix)) {
+      P9mix <- -1
+    } else {
+      if(! ( (1 >= P9mix) && (P9mix > 0) ))
+        stop("'P9mix' must be NULL or a number between 0 and 1 (it may be equal to 1)")
+    }
+  }
+
   if (max==FALSE)
     {
       g.scale <- 1;
@@ -33,6 +46,18 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
     } else  {
       g.scale <- -1;
       FiniteBadFitValue <- -.Machine$double.xmax
+    }
+
+  if(!lexical & !is.null(BFGSfn))
+    {
+      stop("'BFGSfn' can only be provided with lexical optimization")
+    }
+  if (!is.null(BFGSfn) & BFGS==FALSE)
+    {
+      if (!is.function(BFGSfn))
+        stop("IF 'BFGSfn' is not a function, it must be NULL")
+      warning("setting BFGS==TRUE because 'BFGSfn' is not null")
+      BFGS <- TRUE
     }
 
   fn1 <- function(par) {
@@ -102,40 +127,130 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
   else
     provide.seeds <- TRUE;
 
-  #optim st
-  genoud.optim.wrapper101 <- function(foo.vals)
-    {
-      ret <- optim(foo.vals, fn=fn1, gr=gr1, method="BFGS",
-                   control=list(fnscale=g.scale));
-      return(c(ret$value,ret$par));
-    } # end of genoud.optim.wrapper101
-
   #if lexical==TRUE we need to know how many items will be returned
   if (lexical < 0)
     {
       warning("lexical < 0.  Resetting to FALSE\n")
       lexical <- 0
     }
-  if (lexical==1)
+  if (lexical>=1) # BG: check regardless in case someone inputs the wrong value for lexical
     {
       if(nStartingValues)
         {
           foo <- fn1(starting.values)          
         } else {
-          foo <- fn1(Domains[,1])          
+          rfoo <- runif(nrow(Domains), Domains[,1], Domains[,2])
+          if(data.type.int)
+            rfoo <- as.integer(round(rfoo))
+          foo <- fn1(rfoo)          
         }
-      lexical = length(as.vector(foo))
+	foo.length <- length(as.vector(foo))
+	if(lexical > 1 && foo.length != lexical) {
+	  warning(paste("Function returns a vector of length", foo.length, 
+                        "\nbut you specified lexical =", lexical))
+	}
+        lexical <- foo.length
     }
   if (lexical > 0)
     {
-      #All derivative stuff is turned off if we are going to do lexical sorting
-      BFGS=FALSE
-      gradient.check=FALSE
-      hessian=FALSE
-      P9 = 0
-    }
+      if(is.null(BFGSfn))
+         {
+           #All derivative stuff is turned off if we are going to do lexical if BFGSfn is not provided
+           BFGS=FALSE
+           gradient.check=FALSE
+           if(hessian) {
+             warning("'hessian' being set to false because of lexical optimization.  See 'BFGSfn' for workaround")
+             hessian=FALSE             
+           }
+
+           P9 = 0
+         } else {
+           fn1.bfgs <- function(par, helper = NA) {
+             fit <- if(is.null(BFGShelp)) BFGSfn(par, ...) else BFGSfn(par, helper, ...) 
+             
+             if(is.null(fit))
+               fit <- FiniteBadFitValue
+             
+             if(length(fit)==1)
+               if(!is.finite(fit))
+                 fit <- FiniteBadFitValue
+             
+             return(fit)
+           }#end of fn1.bfgs
+
+           if(is.null(gr)) {
+             gr <- function(par, helper, ...)
+               {
+                  gr.fn1.bfgs <- function(par, helper, FBFV) {
+                    fit <- if(is.null(BFGShelp)) BFGSfn(par, ...) else BFGSfn(par, helper, ...) 
+                    
+                    if(is.null(fit))
+                      fit <- FBFV
+                    
+                    if(length(fit)==1)
+                      if(!is.finite(fit))
+                        fit <- FBFV
+                    
+                    return(fit)
+                  }  # end of gr.fn1.bfgs               
+                 if(is.na(helper) && !is.null(BFGShelp)) {
+                   helper <- do.call(BFGShelp, args = list(initial = par), envir = environment(fn))
+                 }
+                 genoud.wrapper101.env <- new.env()
+                 assign("x", par, env = genoud.wrapper101.env)
+                 assign("helper", helper, env = genoud.wrapper101.env)
+                 assign("FiniteBadFitValue", FiniteBadFitValue, env = genoud.wrapper101.env)
+                 foo <- as.real(attr(numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
+                 return(foo)
+               } #end of gr
+             gr1 <- function(par, helper = NA) gr(par, helper, ...)
+	          } # end of if(!is.null(gr))
+           gr1func <- gr1
+         }# end of else
+    }#if lexical > 0
   if (lexical==0)
     lexical <- 1
+
+  #optim st
+  if(is.null(BFGSfn))
+     {
+       genoud.optim.wrapper101 <- function(foo.vals)
+         {
+           ret <- optim(foo.vals, fn=fn1, gr=gr1, method="BFGS",
+                        control=list(fnscale=g.scale));
+           return(c(ret$value,ret$par));
+         } # end of genoud.optim.wrapper101
+     } else {
+       genoud.optim.wrapper101 <- function(foo.vals)
+         {
+	       if(print.level > 2) {
+      		 fit <- fn1(foo.vals)
+       		 cat("\nPre-BFGS Complete Lexical Fit:\n")
+		       print(fit)
+         }
+         if(is.null(BFGShelp)) {
+             ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="BFGS",
+                          control=list(fnscale=g.scale));
+         }
+         else {
+             ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="BFGS",
+                          control=list(fnscale=g.scale),
+                          helper = do.call(BFGShelp, args = list(initial = foo.vals), envir = environment(fn)) );
+         }
+
+         if(print.level > 2)
+             {
+               cat("BFGS Fit:",ret$value,"\n")
+
+               fit <- fn1(ret$par)
+               cat("Post-BFGS Complete Lexical Fit:\n")
+               print(fit)
+             }           
+           
+         foo <- c(ret$value,ret$par)
+         return(foo);
+      } # end of genoud.optim.wrapper101       
+     }
 
   # create the P vector
   P <- vector(length=9, mode="numeric");
@@ -420,7 +535,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                 as.integer(hard.generation.limit),
                 as.function(genoud.optim.wrapper101), 
                 as.integer(lexical), as.function(fnLexicalSort), as.function(fnMemoryMatrixEvaluate),
-                as.integer(UserGradient), as.function(gr1func), 
+                as.integer(UserGradient), as.function(gr1func), as.real(P9mix),
                 PACKAGE="rgenoud");
 
   indx1 <- 4;
@@ -447,8 +562,9 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
 
   if (hessian==TRUE)
     {
-      hes <- optim(gout[5:(nvars+4)], fn=fn1, gr=gr1, method="BFGS", hessian=TRUE,
-                   control=list(fnscale=g.scale));
+      hes <- optim(gout[5:(nvars+4)], fn=if(lexical == 1) fn1 else fn1.bfgs,
+                   gr=gr1, method="BFGS", hessian=TRUE, control=list(fnscale=g.scale));
+                   
       
       hes <- hes$hessian;
       

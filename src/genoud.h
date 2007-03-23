@@ -163,6 +163,9 @@ struct GND_IOstructure
 
   short int     UserGradient;
 
+  /* Operator Options */
+  double        P9mix;
+
 };
 
 /* bfgs.c */
@@ -270,7 +273,7 @@ void oper8(SEXP fn, SEXP rho,
 	   VECTOR parent, MATRIX domains, 
 	   double SolutionTolerance, long nvars, 
 	   short BoundaryEnforcement, 
-	   FILE *output, short PrintLevel);
+	   FILE *output, short PrintLevel, double mix);
 void find_range(double *llim, double *ulim, int comp, double **domains, int nvars, VECTOR parent);
 int irange_ran(int llim, int ulim);
 double get_F(int T, int t, double y, int B);
