@@ -214,13 +214,25 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
   #optim st
   if(is.null(BFGSfn))
      {
+       if(boundary.enforcement < 2) {
        genoud.optim.wrapper101 <- function(foo.vals)
          {
            ret <- optim(foo.vals, fn=fn1, gr=gr1, method="BFGS",
                         control=list(fnscale=g.scale));
            return(c(ret$value,ret$par));
          } # end of genoud.optim.wrapper101
+       }
+       else {
+         genoud.optim.wrapper101 <- function(foo.vals)
+           {
+             ret <- optim(foo.vals, fn=fn1, gr=gr1, method="L-BFGS-B",
+                          lower = Domains[,1], upper = Domains[,2],
+                          control=list(fnscale=g.scale));
+             return(c(ret$value,ret$par));
+           } # end of genoud.optim.wrapper101
+       }
      } else {
+       if(boundary.enforcement < 2) {
        genoud.optim.wrapper101 <- function(foo.vals)
          {
 	       if(print.level > 2) {
@@ -249,7 +261,40 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
            
          foo <- c(ret$value,ret$par)
          return(foo);
-      } # end of genoud.optim.wrapper101       
+         } # end of genoud.optim.wrapper101
+      } else { 
+       genoud.optim.wrapper101 <- function(foo.vals)
+         {
+	       if(print.level > 2) {
+      		 fit <- fn1(foo.vals)
+       		 cat("\nPre-BFGS Complete Lexical Fit:\n")
+		       print(fit)
+         }
+         if(is.null(BFGShelp)) {
+             ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
+                          lower = Domains[,1], upper = Domains[,2],
+                          control=list(fnscale=g.scale));
+         }
+         else {
+             ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
+                          lower = Domains[,1], upper = Domains[,2],
+                          control=list(fnscale=g.scale),
+                          helper = do.call(BFGShelp, args = list(initial = foo.vals), envir = environment(fn)) );
+         }
+
+         if(print.level > 2)
+             {
+               cat("BFGS Fit:",ret$value,"\n")
+
+               fit <- fn1(ret$par)
+               cat("Post-BFGS Complete Lexical Fit:\n")
+               print(fit)
+             }           
+           
+         foo <- c(ret$value,ret$par)
+         return(foo);
+         } # end of genoud.optim.wrapper101
+       } 
      }
 
   # create the P vector
@@ -562,24 +607,41 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
 
   if (hessian==TRUE)
     {
-      hes <- optim(gout[5:(nvars+4)], fn=if(lexical == 1) fn1 else fn1.bfgs,
-                   gr=gr1, method="BFGS", hessian=TRUE, control=list(fnscale=g.scale));
-                   
+      con <- list(trace = 0, fnscale = g.scale,
+                  parscale = rep.int(1, length(par)), ndeps = rep.int(0.001, length(par)), maxit = 100,
+                  abstol = -Inf, reltol = sqrt(.Machine$double.eps), alpha = 1,
+                  beta = 0.5, gamma = 2, REPORT = 10, type = 1, lmm = 5,
+                  factr = 1e+07, pgtol = 0, tmax = 10, temp = 10)
       
-      hes <- hes$hessian;
+      nm <- names(gout[5:(nvars+4)])
+      
+      if(lexical == 1) {
+        hess.fn <- function(par) fn1(par, ...)
+        hess <- .Internal(optimhess(gout[5:(nvars+4)], fn1, gr1, con))
+      }
+      else {
+        help.stuff <- do.call(BFGShelp, args = list(initial = gout[5:(nvars+4)], done = TRUE), 
+                              envir = environment(fn))
+        hess.fn <- function(par, helper = help.stuff) fn1.bfgs(par, helper, ...)
+        hess <- .Internal(optimhess(gout[5:(nvars+4)], hess.fn, NULL, con))
+      }
+      
+      hes <- 0.5 * (hess + t(hess))
+      if (!is.null(nm)) dimnames(hes) <- list(nm, nm)
+      
       
       ret <- list(value=value, par=par, gradients=gradients,
                   generations=gout[1], peakgeneration=gout[2], popsize=gout[3],
                   operators=operators,
-                  hessian=hes);
+                  hessian=hes)
     }
   else
     {
       ret <- list(value=value, par=par, gradients=gradients,
                   generations=gout[1], peakgeneration=gout[2], popsize=gout[3],
-                  operators=operators);
+                  operators=operators)
     }
-
+  
   if (clustertrigger==2)
     stopCluster(cl)
   

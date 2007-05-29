@@ -168,9 +168,7 @@
     This variable determines the degree to which \code{genoud} obeys the
     boundary constraints.  Notwithstanding the value of the variable,
     none of \code{genoud}'s starting population values will be outside
-    of the bounds.  But some of the operators may generate children
-    which will be outside of the bounds unless the
-    \code{boundary.enforcement} flag is turned on. \cr
+    of the bounds.  \cr
     
     \code{boundary.enforcement} has three possible values: 0 (anything goes), 1
     (partial), and 2 (no trespassing):
@@ -188,18 +186,21 @@
 	will often be evaluated).  But when the operator has decided
 	on an individual, it \emph{must} be in bounds to be acceptable.}
       \item{\emph{2: No Trespassing}}{
-	No out-of-bounds evaluations will ever be requested.}}}
+	No out-of-bounds evaluations will ever be requested. In this case, boundary
+	enforcement is also applied to the BFGS algorithm, which prevents candidates
+	from straying beyond the bounds defined by \code{Domains}.}}}
   \item{lexical}{This option enables lexical optimization.  This is
-    where there are multiple fit criteria and the parameters are chosen
-    so as to maximize fitness values in lexical order---i.e., the second fit
-    criterion is only considered if the parameters have the same fit for
-    the first.  The fit function used with this option should return a
-    vector of fits in the order of precedence.  This option can take on
-    the values of FALSE, TRUE or an integer equal to the number of fit
-    criterion which are returned by \code{fn}.  The \code{value} object
-    which is returned by \code{genoud} will include all of the fit
-    criterion at the solution.  The \code{\link[Matching]{GenMatch}}
-    function makes extensive use of this option.}
+    where there are multiple fit criteria and the parameters are chosen so
+    as to maximize fitness values in lexical order---i.e., the second fit
+    criterion is only relevant if the parameters have the same fit for the
+    first etc.  The fit function used with this option should return a
+    numeric vector of fitness values in lexical order.  This option
+    can take on the values of \code{FALSE}, \code{TRUE} or an integer
+    equal to the number of fit criteria which are returned by \code{fn}.
+    The \code{value} object which is returned by \code{genoud} will
+    include all of the fit criteria at the solution.  The
+    \code{\link[Matching]{GenMatch}} function makes extensive use of this
+    option.}
   \item{gradient.check}{
     If this variable is \code{TRUE}, \code{genoud} will not start counting
     \code{wait.generations} unless each gradient is
@@ -216,9 +217,8 @@
     Local-Minimum Crossover operator) must also be set to zero.}
   \item{data.type.int}{
     This option sets the data type of the parameters of the function to
-    be optimized.  If the variable is \code{TRUE},
-    \code{genoud} is
-    informed that it is dealing with integer values.  \cr
+    be optimized.  If the variable is \code{TRUE}, \code{genoud} will
+    search over integers when it optimizes the parameters.  \cr
     
     With integer parameters, \code{genoud} never uses derivative
     information.  This implies that the BFGS quasi-Newton optimizer is
@@ -232,29 +232,37 @@
     information is never considered. \cr
     
     There is no option to mix integer and floating point parameters.  If
-    one wants
-    to mix the two, it is suggested that the user pick integer type and in
-    the objective function map a particular integer range into a
+    one wants to mix the two, it is suggested that the user pick integer type 
+    and in the objective function map a particular integer range into a
     floating point number range.  For example, tell \code{genoud} to search
     from 0 to 100 and divide by 100 to obtain a search grid of 0 to 1.0
-    (by .1).}
+    (by .1). \cr
+    
+    Alternatively, one could use lexical optimization with floating point 
+    parameters and specify, for example, that the first criterion is a binary 
+    variable that equals 1.0 if and only if the parameters that should be 
+    ``integers'' are all sufficiently close to an integer so that rounding them to 
+    the nearest integer is tolerable for the purposes of calculating 
+    subsequent criteria. See also \code{BFGSfn}.}
   \item{hessian}{
     When this flag is set to \code{TRUE}, \code{genoud} will return the
     hessian matrix at the solution as part of its return list.  A user
     can use this matrix to calculate standard errors.}
   \item{unif.seed}{This sets the seed for the floating-point random
-    number generator which \code{genoud} uses.  The default value of this seed
-    is 81282. \code{genoud} uses its own internal random number generator
-    (a Tausworthe-Lewis-Payne) to allow for recursive and parallel calls
-    to \code{genoud}.  It does not use the seed set by the
-    \code{\link{set.seed}} function.}
+    number generator which \code{genoud} uses.  The default value of this
+    seed is 81282. \code{genoud} uses its own internal random number
+    generator (a Tausworthe-Lewis-Payne) to allow for recursive and
+    parallel calls to \code{genoud}.  \code{genoud} does not use the seed
+    set by \code{R}'s \code{\link{set.seed}} function. This will change in
+    the next version.}
   \item{int.seed}{
     This sets the seed for the integer random number generator which
     \code{genoud} uses. The default value of this seed is
     53058. \code{genoud} uses its own internal random number generator
     (a Tausworthe-Lewis-Payne) to allow for recursive and parallel calls
-    to \code{genoud}.  It does not use the seed set by the
-    \code{\link{set.seed}} function.}
+    to \code{genoud}.  \code{genoud} does not use the seed set by \code{R}'s
+    \code{\link{set.seed}} function. This will change in the next
+    version.}
   \item{print.level}{
     This variable controls the level of printing that \code{genoud} does.  There
     are four possible levels: 0 (minimal printing), 1 (normal), 2
@@ -362,17 +370,30 @@
     parameter.  It may be any number greater than 0 and less than or
     equal to 1.  If 1, then the BFGS result is simply used.}
   \item{BFGSfn}{This is a function for the BFGS optimizer to optimize,
-    if one wants to make it distinct from the \code{fn} function.  This is useful
-    when doing \code{lexical} optimization because otherwise a derivate
-    based optimizer cannot be used (since it requires a single fit
-    value).  It is suggested that if this functionality is being
-    used, both the \code{fn} and \code{BFGSfn} functions obtain all of the
+    if one wants to make it distinct from the \code{fn} function.  This is
+    useful when doing \code{lexical} optimization because otherwise a
+    derivative based optimizer cannot be used (since it requires a single
+    fit value).  It is suggested that if this functionality is being used,
+    both the \code{fn} and \code{BFGSfn} functions obtain all of the
     arguments they need (except for the parameters being optimized) by
     lexical scope instead of being passed in as arguments to the
     functions.  Alternatively, one may use the \code{BFGShelp} option to
     pass arguments to \code{BFGSfn}. If \code{print.level > 2}, the
     results from the BFGS optimizer are printed every time it is called.}
-  \item{BFGShelp}{An optional function to pass arguments to \code{BFGSfn}.}
+  \item{BFGShelp}{An optional function to pass arguments to
+    \code{BFGSfn}.  This function should take an argument named `initial', an
+    argument named `done' that defaults to \code{FALSE}, or at least allow \code{...}
+    to be an argument. \code{BFGSfn} must have an argument named `helper' if
+    \code{BFGShelp} is used because the call to \code{optim} includes the
+    hard-coded expression \code{helper =
+      do.call(BFGShelp, args = list(initial = foo.vals), envir =
+      environment(fn)))}, which evaluates the \code{BFGShelp} function in
+    the environment of \code{BFGSfn} (\code{fn} is just a wrapper for
+    \code{BFGSfn}) at \code{par = foo.vals} where \code{foo.vals}
+    contains the starting values for the BFGS algorithm. The `done'
+    argument to \code{BFGSfn} is used if the
+    user requests that the Hessian be calculated at the \code{genoud}
+    solution.}
   \item{cluster}{This can either be an object of the  'cluster' class
     returned by one of the \code{\link[snow]{makeCluster}} commands in
     the snow package or a vector of machine names so \code{genoud} can
@@ -498,7 +519,16 @@
   maximize: \code{if ( (parm1 + parm2) >= 725) \{ return(-99999999) \}}.
   In this example, a very bad fit value is returned to \code{genoud} if the
   linear constrain is violated.  \code{genoud} will then attempt to find
-  parameter values that satisfy the constraint.}
+  parameter values that satisfy the constraint. \cr
+  
+  Alternatively, one can use lexical optimization where the first criterion is a
+  binary variable that equals 1.0 iff \code{ (parm1 + parm2) < 725} and the
+  second criterion is the fit function, which should also be passed to 
+  \code{BFGSfn}. All candidates where \code{ (parm1 + parm2) >= 725} will be
+  ranked below all candidates where \code{ (parm1 + parm2) < 725} and within 
+  these two groups, candidates will be ranked by their fit on the second 
+  criterion. The optimal candidate is thus the one with the best fit on the
+  second criterion among candidates that satisfy this restriction.}
 \references{
   Walter, Mebane R. Jr. and Jasjeet Singh Sekhon.  2007.  ``Genetic
   Optimization Using Derivatives: The rgenoud package for R.''
