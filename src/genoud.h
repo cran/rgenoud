@@ -12,25 +12,20 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.h,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
-
+  2007-08-04
 */
 
 #include <R.h>
 #include<stdio.h>
 #include<stdlib.h>
-#include<math.h>
+#include<cmath>
 #include<time.h>
 #include<string.h>
-#include <stdarg.h>
+#include<stdarg.h>
+#include <Rdefines.h>
 
 extern "C"
 {
-  // <Rdefines.h> must appear inside the {extern "C"} declaration
-  // because this header file, unlike <R.h>, does not have an {#ifdef
-  // __cplusplus} statment included.
-#include <Rdefines.h>
-
   void MyRprintf(FILE *foo, char *out, ...);
   
   inline void MyRprintf(FILE *foo, char *out, ...)

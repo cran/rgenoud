@@ -1,0 +1,861 @@
+
+R version 2.5.0 (2007-04-23)
+Copyright (C) 2007 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(rgenoud)
+##  rgenoud (Version 5.1-14, Build Date: 2007-08-04)
+##  See http://sekhon.berkeley.edu/rgenoud for additional documentation.
+> 
+> #maximize the sin function
+> sin1 <- genoud(sin, nvars=1, max=TRUE, unif.seed=812821, int.seed=53058)
+
+
+Sat Aug  4 00:00:01 2007
+Domains:
+ -1.000000e+01   <=  X1   <=    1.000000e+01 
+
+Data Type: Floating Point
+Operators (code number, name, population) 
+	(1) Cloning........................... 	122
+	(2) Uniform Mutation.................. 	125
+	(3) Boundary Mutation................. 	125
+	(4) Non-Uniform Mutation.............. 	125
+	(5) Polytope Crossover................ 	125
+	(6) Simple Crossover.................. 	126
+	(7) Whole Non-Uniform Mutation........ 	125
+	(8) Heuristic Crossover............... 	126
+	(9) Local-Minimum Crossover........... 	0
+
+HARD Maximum Number of Generations: 100
+Maximum Nonchanging Generations: 10
+Population size       : 1000
+Convergence Tolerance: 1.000000e-03
+
+Using the BFGS Derivative Based Optimizer on the Best Individual Each Generation.
+Checking Gradients before Stopping.
+Using Out of Bounds Individuals.
+
+Maximization Problem.
+GENERATION: 0 (initializing the population)
+Fitness value... 9.999970e-01
+mean............ 2.104858e-02
+variance........ 4.765535e-01
+#unique......... 1000, #Total UniqueCount: 1000
+var 1:
+best............ -4.709956e+00
+mean............ 1.799116e-01
+variance........ 3.261355e+01
+
+GENERATION: 1
+Fitness value... 1.000000e+00
+mean............ 4.029675e-01
+variance........ 5.108538e-01
+#unique......... 629, #Total UniqueCount: 1629
+var 1:
+best............ 1.570796e+00
+mean............ -6.380030e-01
+variance........ 2.945213e+01
+
+GENERATION: 2
+Fitness value... 1.000000e+00
+mean............ 4.541426e-01
+variance........ 5.039227e-01
+#unique......... 669, #Total UniqueCount: 2298
+var 1:
+best............ 1.570796e+00
+mean............ -1.248252e-01
+variance........ 2.167905e+01
+
+GENERATION: 3
+Fitness value... 1.000000e+00
+mean............ 6.488244e-01
+variance........ 3.843082e-01
+#unique......... 417, #Total UniqueCount: 2715
+var 1:
+best............ 1.570796e+00
+mean............ 4.451318e-01
+variance........ 1.114830e+01
+
+GENERATION: 4
+Fitness value... 1.000000e+00
+mean............ 6.291288e-01
+variance........ 3.883127e-01
+#unique......... 447, #Total UniqueCount: 3162
+var 1:
+best............ 1.570796e+00
+mean............ 1.203377e+00
+variance........ 6.950387e+00
+
+GENERATION: 5
+Fitness value... 1.000000e+00
+mean............ 6.306573e-01
+variance........ 4.008402e-01
+#unique......... 411, #Total UniqueCount: 3573
+var 1:
+best............ 1.570796e+00
+mean............ 1.286317e+00
+variance........ 6.876130e+00
+
+GENERATION: 6
+Fitness value... 1.000000e+00
+mean............ 6.297288e-01
+variance........ 4.048830e-01
+#unique......... 433, #Total UniqueCount: 4006
+var 1:
+best............ 1.570796e+00
+mean............ 1.363863e+00
+variance........ 6.782709e+00
+
+GENERATION: 7
+Fitness value... 1.000000e+00
+mean............ 6.474731e-01
+variance........ 3.943662e-01
+#unique......... 401, #Total UniqueCount: 4407
+var 1:
+best............ 1.570796e+00
+mean............ 1.397956e+00
+variance........ 4.942668e+00
+
+GENERATION: 8
+Fitness value... 1.000000e+00
+mean............ 6.550424e-01
+variance........ 3.681378e-01
+#unique......... 429, #Total UniqueCount: 4836
+var 1:
+best............ 1.570796e+00
+mean............ 1.315878e+00
+variance........ 6.549571e+00
+
+GENERATION: 9
+Fitness value... 1.000000e+00
+mean............ 6.584561e-01
+variance........ 3.701402e-01
+#unique......... 409, #Total UniqueCount: 5245
+var 1:
+best............ 1.570796e+00
+mean............ 1.414062e+00
+variance........ 5.709720e+00
+
+GENERATION: 10
+Fitness value... 1.000000e+00
+mean............ 6.555492e-01
+variance........ 3.787378e-01
+#unique......... 403, #Total UniqueCount: 5648
+var 1:
+best............ 1.570796e+00
+mean............ 1.400265e+00
+variance........ 5.830806e+00
+
+GENERATION: 11
+Fitness value... 1.000000e+00
+mean............ 6.861434e-01
+variance........ 3.432521e-01
+#unique......... 377, #Total UniqueCount: 6025
+var 1:
+best............ 1.570796e+00
+mean............ 1.313091e+00
+variance........ 4.953515e+00
+
+'wait.generations' limit reached.
+No significant improvement in 10 generations.
+
+Solution Fitness Value: 1.000000e+00
+
+Parameters at the Solution (parameter, gradient):
+
+ X[ 1] :	1.570796e+00	G[ 1] :	-6.504443e-10
+
+Solution Found Generation 1
+Number of Generations Run 11
+
+Sat Aug  4 00:00:01 2007
+Total run time : 0 hours 0 minutes and 0 seconds
+> print(sin1)
+$value
+[1] 1
+
+$par
+[1] 1.570796
+
+$gradients
+[1] -6.504443e-10
+
+$generations
+[1] 11
+
+$peakgeneration
+[1] 1
+
+$popsize
+[1] 1000
+
+$operators
+[1] 122 125 125 125 125 126 125 126   0
+
+> 
+> #minimize the sin function
+> sin2 <- genoud(sin, nvars=1, max=FALSE, unif.seed=812821, int.seed=53058)
+
+
+Sat Aug  4 00:00:01 2007
+Domains:
+ -1.000000e+01   <=  X1   <=    1.000000e+01 
+
+Data Type: Floating Point
+Operators (code number, name, population) 
+	(1) Cloning........................... 	122
+	(2) Uniform Mutation.................. 	125
+	(3) Boundary Mutation................. 	125
+	(4) Non-Uniform Mutation.............. 	125
+	(5) Polytope Crossover................ 	125
+	(6) Simple Crossover.................. 	126
+	(7) Whole Non-Uniform Mutation........ 	125
+	(8) Heuristic Crossover............... 	126
+	(9) Local-Minimum Crossover........... 	0
+
+HARD Maximum Number of Generations: 100
+Maximum Nonchanging Generations: 10
+Population size       : 1000
+Convergence Tolerance: 1.000000e-03
+
+Using the BFGS Derivative Based Optimizer on the Best Individual Each Generation.
+Checking Gradients before Stopping.
+Using Out of Bounds Individuals.
+
+Minimization Problem.
+GENERATION: 0 (initializing the population)
+Fitness value... -1.000000e-00
+mean............ 2.231281e-02
+variance........ 4.665109e-01
+#unique......... 1000, #Total UniqueCount: 1000
+var 1:
+best............ -7.854094e+00
+mean............ -6.519462e-02
+variance........ 3.235277e+01
+
+GENERATION: 1
+Fitness value... -1.000000e+00
+mean............ -5.406518e-01
+variance........ 3.826541e-01
+#unique......... 633, #Total UniqueCount: 1633
+var 1:
+best............ -7.853982e+00
+mean............ -2.802992e+00
+variance........ 3.158378e+01
+
+GENERATION: 2
+Fitness value... -1.000000e+00
+mean............ -6.927537e-01
+variance........ 3.226421e-01
+#unique......... 664, #Total UniqueCount: 2297
+var 1:
+best............ -7.853982e+00
+mean............ -5.760287e+00
+variance........ 1.751948e+01
+
+GENERATION: 3
+Fitness value... -1.000000e+00
+mean............ -7.289119e-01
+variance........ 2.918372e-01
+#unique......... 427, #Total UniqueCount: 2724
+var 1:
+best............ -7.853982e+00
+mean............ -6.702181e+00
+variance........ 9.986012e+00
+
+GENERATION: 4
+Fitness value... -1.000000e+00
+mean............ -7.004201e-01
+variance........ 3.257318e-01
+#unique......... 417, #Total UniqueCount: 3141
+var 1:
+best............ -7.853982e+00
+mean............ -6.605074e+00
+variance........ 1.090429e+01
+
+GENERATION: 5
+Fitness value... -1.000000e+00
+mean............ -7.088992e-01
+variance........ 3.006135e-01
+#unique......... 445, #Total UniqueCount: 3586
+var 1:
+best............ -7.853982e+00
+mean............ -6.748899e+00
+variance........ 9.936371e+00
+
+GENERATION: 6
+Fitness value... -1.000000e+00
+mean............ -7.120893e-01
+variance........ 3.148209e-01
+#unique......... 427, #Total UniqueCount: 4013
+var 1:
+best............ -7.853982e+00
+mean............ -6.864174e+00
+variance........ 8.973899e+00
+
+GENERATION: 7
+Fitness value... -1.000000e+00
+mean............ -7.470577e-01
+variance........ 2.836197e-01
+#unique......... 389, #Total UniqueCount: 4402
+var 1:
+best............ -7.853982e+00
+mean............ -6.786469e+00
+variance........ 9.821133e+00
+
+GENERATION: 8
+Fitness value... -1.000000e+00
+mean............ -6.930046e-01
+variance........ 3.399839e-01
+#unique......... 423, #Total UniqueCount: 4825
+var 1:
+best............ -7.853982e+00
+mean............ -6.713790e+00
+variance........ 9.384509e+00
+
+GENERATION: 9
+Fitness value... -1.000000e+00
+mean............ -7.360695e-01
+variance........ 2.904384e-01
+#unique......... 417, #Total UniqueCount: 5242
+var 1:
+best............ -7.853982e+00
+mean............ -6.816342e+00
+variance........ 9.018013e+00
+
+GENERATION: 10
+Fitness value... -1.000000e+00
+mean............ -7.316829e-01
+variance........ 2.946688e-01
+#unique......... 435, #Total UniqueCount: 5677
+var 1:
+best............ -7.853982e+00
+mean............ -6.840576e+00
+variance........ 8.396809e+00
+
+GENERATION: 11
+Fitness value... -1.000000e+00
+mean............ -7.371155e-01
+variance........ 2.710997e-01
+#unique......... 429, #Total UniqueCount: 6106
+var 1:
+best............ -7.853982e+00
+mean............ -6.712793e+00
+variance........ 1.022722e+01
+
+'wait.generations' limit reached.
+No significant improvement in 10 generations.
+
+Solution Fitness Value: -1.000000e+00
+
+Parameters at the Solution (parameter, gradient):
+
+ X[ 1] :	-7.853982e+00	G[ 1] :	-1.748408e-11
+
+Solution Found Generation 1
+Number of Generations Run 11
+
+Sat Aug  4 00:00:02 2007
+Total run time : 0 hours 0 minutes and 1 seconds
+> print(sin2)
+$value
+[1] -1
+
+$par
+[1] -7.853982
+
+$gradients
+[1] -1.748408e-11
+
+$generations
+[1] 11
+
+$peakgeneration
+[1] 1
+
+$popsize
+[1] 1000
+
+$operators
+[1] 122 125 125 125 125 126 125 126   0
+
+> 
+> #maximize a univariate normal mixture which looks like a claw
+> claw <- function(xx) {
++   x <- xx[1]
++   y <- (0.46*(dnorm(x,-1.0,2.0/3.0) + dnorm(x,1.0,2.0/3.0)) +
++         (1.0/300.0)*(dnorm(x,-0.5,.01) + dnorm(x,-1.0,.01) + dnorm(x,-1.5,.01)) +
++         (7.0/300.0)*(dnorm(x,0.5,.07) + dnorm(x,1.0,.07) + dnorm(x,1.5,.07))) 
++   return(y)
++ }
+> claw1   <- genoud(claw, nvars=1,pop.size=3000,max=TRUE, unif.seed=812821, int.seed=53058)
+
+
+Sat Aug  4 00:00:02 2007
+Domains:
+ -1.000000e+01   <=  X1   <=    1.000000e+01 
+
+Data Type: Floating Point
+Operators (code number, name, population) 
+	(1) Cloning........................... 	372
+	(2) Uniform Mutation.................. 	375
+	(3) Boundary Mutation................. 	375
+	(4) Non-Uniform Mutation.............. 	375
+	(5) Polytope Crossover................ 	375
+	(6) Simple Crossover.................. 	376
+	(7) Whole Non-Uniform Mutation........ 	375
+	(8) Heuristic Crossover............... 	376
+	(9) Local-Minimum Crossover........... 	0
+
+HARD Maximum Number of Generations: 100
+Maximum Nonchanging Generations: 10
+Population size       : 3000
+Convergence Tolerance: 1.000000e-03
+
+Using the BFGS Derivative Based Optimizer on the Best Individual Each Generation.
+Checking Gradients before Stopping.
+Using Out of Bounds Individuals.
+
+Maximization Problem.
+GENERATION: 0 (initializing the population)
+Fitness value... 4.105197e-01
+mean............ 4.878887e-02
+variance........ 9.401720e-03
+#unique......... 3000, #Total UniqueCount: 3000
+var 1:
+best............ -1.001081e+00
+mean............ 6.103252e-02
+variance........ 3.358357e+01
+
+GENERATION: 1
+Fitness value... 4.113123e-01
+mean............ 2.095655e-01
+variance........ 2.382117e-02
+#unique......... 1879, #Total UniqueCount: 4879
+var 1:
+best............ 9.995033e-01
+mean............ -4.444072e-01
+variance........ 7.547498e+00
+
+GENERATION: 2
+Fitness value... 4.113123e-01
+mean............ 2.766314e-01
+variance........ 3.003933e-02
+#unique......... 2073, #Total UniqueCount: 6952
+var 1:
+best............ 9.995033e-01
+mean............ 4.259986e-01
+variance........ 7.515445e+00
+
+GENERATION: 3
+Fitness value... 4.113123e-01
+mean............ 2.861409e-01
+variance........ 2.866038e-02
+#unique......... 1966, #Total UniqueCount: 8918
+var 1:
+best............ 9.995033e-01
+mean............ 8.712924e-01
+variance........ 6.443545e+00
+
+GENERATION: 4
+Fitness value... 4.113123e-01
+mean............ 2.817598e-01
+variance........ 2.960316e-02
+#unique......... 1921, #Total UniqueCount: 10839
+var 1:
+best............ 9.995033e-01
+mean............ 8.719869e-01
+variance........ 6.936629e+00
+
+GENERATION: 5
+Fitness value... 4.113123e-01
+mean............ 2.915051e-01
+variance........ 2.798288e-02
+#unique......... 1806, #Total UniqueCount: 12645
+var 1:
+best............ 9.995033e-01
+mean............ 8.307089e-01
+variance........ 6.442178e+00
+
+GENERATION: 6
+Fitness value... 4.113123e-01
+mean............ 2.918638e-01
+variance........ 2.745809e-02
+#unique......... 1803, #Total UniqueCount: 14448
+var 1:
+best............ 9.995033e-01
+mean............ 8.512735e-01
+variance........ 5.723070e+00
+
+GENERATION: 7
+Fitness value... 4.113123e-01
+mean............ 2.891918e-01
+variance........ 2.780884e-02
+#unique......... 1839, #Total UniqueCount: 16287
+var 1:
+best............ 9.995033e-01
+mean............ 7.925455e-01
+variance........ 5.963073e+00
+
+GENERATION: 8
+Fitness value... 4.113123e-01
+mean............ 2.902467e-01
+variance........ 2.748676e-02
+#unique......... 1837, #Total UniqueCount: 18124
+var 1:
+best............ 9.995033e-01
+mean............ 9.310318e-01
+variance........ 5.788874e+00
+
+GENERATION: 9
+Fitness value... 4.113123e-01
+mean............ 2.962064e-01
+variance........ 2.658406e-02
+#unique......... 1802, #Total UniqueCount: 19926
+var 1:
+best............ 9.995033e-01
+mean............ 8.394428e-01
+variance........ 5.434165e+00
+
+GENERATION: 10
+Fitness value... 4.113123e-01
+mean............ 2.955955e-01
+variance........ 2.634599e-02
+#unique......... 1816, #Total UniqueCount: 21742
+var 1:
+best............ 9.995033e-01
+mean............ 9.216922e-01
+variance........ 5.756363e+00
+
+GENERATION: 11
+Fitness value... 4.113123e-01
+mean............ 2.976848e-01
+variance........ 2.568500e-02
+#unique......... 1819, #Total UniqueCount: 23561
+var 1:
+best............ 9.995033e-01
+mean............ 7.914524e-01
+variance........ 5.439990e+00
+
+'wait.generations' limit reached.
+No significant improvement in 10 generations.
+
+Solution Fitness Value: 4.113123e-01
+
+Parameters at the Solution (parameter, gradient):
+
+ X[ 1] :	9.995033e-01	G[ 1] :	2.603297e-09
+
+Solution Found Generation 1
+Number of Generations Run 11
+
+Sat Aug  4 00:00:04 2007
+Total run time : 0 hours 0 minutes and 2 seconds
+> print(claw1)
+$value
+[1] 0.4113123
+
+$par
+[1] 0.9995033
+
+$gradients
+[1] 2.603297e-09
+
+$generations
+[1] 11
+
+$peakgeneration
+[1] 1
+
+$popsize
+[1] 3000
+
+$operators
+[1] 372 375 375 375 375 376 375 376   0
+
+> 
+> # Maximize a bivariate normal mixture which looks like a claw.
+> biclaw <- function(xx) {
++   mNd2 <- function(x1, x2, mu1, mu2, sigma1, sigma2, rho)
++     {
++       z1 <- (x1-mu1)/sigma1
++       z2 <- (x2-mu2)/sigma2
++       w <- (1.0/(2.0*pi*sigma1*sigma2*sqrt(1-rho*rho))) 
++       w <- w*exp(-0.5*(z1*z1 - 2*rho*z1*z2 + z2*z2)/(1-rho*rho)) 
++       return(w)
++     }
++   x1 <- xx[1]+1
++   x2 <- xx[2]+1
++   
++   y <- (0.5*mNd2(x1,x2,0.0,0.0,1.0,1.0,0.0) +
++         0.1*(mNd2(x1,x2,-1.0,-1.0,0.1,0.1,0.0) +
++              mNd2(x1,x2,-0.5,-0.5,0.1,0.1,0.0) +
++              mNd2(x1,x2,0.0,0.0,0.1,0.1,0.0) +
++              mNd2(x1,x2,0.5,0.5,0.1,0.1,0.0) +
++              mNd2(x1,x2,1.0,1.0,0.1,0.1,0.0)))
++   
++   return(y)
++ }
+> biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,pop.size=5000,max=TRUE, unif.seed=812821, int.seed=53058)
+
+
+Sat Aug  4 00:00:04 2007
+Domains:
+ -2.000000e+01   <=  X1   <=    2.000000e+01 
+ -2.000000e+01   <=  X2   <=    2.000000e+01 
+
+Data Type: Floating Point
+Operators (code number, name, population) 
+	(1) Cloning........................... 	622
+	(2) Uniform Mutation.................. 	625
+	(3) Boundary Mutation................. 	625
+	(4) Non-Uniform Mutation.............. 	625
+	(5) Polytope Crossover................ 	625
+	(6) Simple Crossover.................. 	626
+	(7) Whole Non-Uniform Mutation........ 	625
+	(8) Heuristic Crossover............... 	626
+	(9) Local-Minimum Crossover........... 	0
+
+HARD Maximum Number of Generations: 100
+Maximum Nonchanging Generations: 10
+Population size       : 5000
+Convergence Tolerance: 1.000000e-03
+
+Using the BFGS Derivative Based Optimizer on the Best Individual Each Generation.
+Checking Gradients before Stopping.
+Using Out of Bounds Individuals.
+
+Maximization Problem.
+GENERATION: 0 (initializing the population)
+Fitness value... 1.047363e+00
+mean............ 1.471046e-03
+variance........ 7.796755e-04
+#unique......... 5000, #Total UniqueCount: 5000
+var 1:
+best............ -1.905197e+00
+mean............ 1.409425e-01
+variance........ 1.321320e+02
+var 2:
+best............ -1.998091e+00
+mean............ -5.043265e-02
+variance........ 1.356414e+02
+
+GENERATION: 1
+Fitness value... 1.671127e+00
+mean............ 2.130732e-01
+variance........ 1.506416e-01
+#unique......... 3168, #Total UniqueCount: 8168
+var 1:
+best............ -1.000000e-00
+mean............ -1.158994e+00
+variance........ 2.460511e+01
+var 2:
+best............ -1.000000e-00
+mean............ -1.224047e+00
+variance........ 2.601812e+01
+
+GENERATION: 2
+Fitness value... 1.671127e+00
+mean............ 6.974325e-01
+variance........ 4.972386e-01
+#unique......... 3672, #Total UniqueCount: 11840
+var 1:
+best............ -1.000000e+00
+mean............ -9.334842e-01
+variance........ 1.821226e+01
+var 2:
+best............ -1.000000e+00
+mean............ -9.040352e-01
+variance........ 1.910488e+01
+
+GENERATION: 3
+Fitness value... 1.671127e+00
+mean............ 9.169392e-01
+variance........ 6.741474e-01
+#unique......... 3568, #Total UniqueCount: 15408
+var 1:
+best............ -1.000000e-00
+mean............ -9.297066e-01
+variance........ 1.651237e+01
+var 2:
+best............ -1.000000e-00
+mean............ -8.832089e-01
+variance........ 1.741517e+01
+
+GENERATION: 4
+Fitness value... 1.671127e+00
+mean............ 9.790637e-01
+variance........ 6.692427e-01
+#unique......... 3508, #Total UniqueCount: 18916
+var 1:
+best............ -1.000000e-00
+mean............ -8.465080e-01
+variance........ 1.593070e+01
+var 2:
+best............ -1.000000e-00
+mean............ -9.399745e-01
+variance........ 1.662408e+01
+
+GENERATION: 5
+Fitness value... 1.671127e+00
+mean............ 9.009158e-01
+variance........ 6.819426e-01
+#unique......... 3100, #Total UniqueCount: 22016
+var 1:
+best............ -1.000000e-00
+mean............ -8.900749e-01
+variance........ 1.479605e+01
+var 2:
+best............ -1.000000e-00
+mean............ -8.900379e-01
+variance........ 1.480780e+01
+
+GENERATION: 6
+Fitness value... 1.671127e+00
+mean............ 8.907125e-01
+variance........ 6.822389e-01
+#unique......... 3053, #Total UniqueCount: 25069
+var 1:
+best............ -1.000000e-00
+mean............ -9.494307e-01
+variance........ 1.593671e+01
+var 2:
+best............ -1.000000e-00
+mean............ -8.983351e-01
+variance........ 1.438111e+01
+
+GENERATION: 7
+Fitness value... 1.671127e+00
+mean............ 8.909562e-01
+variance........ 6.838290e-01
+#unique......... 3046, #Total UniqueCount: 28115
+var 1:
+best............ -1.000000e-00
+mean............ -9.601499e-01
+variance........ 1.446039e+01
+var 2:
+best............ -1.000000e-00
+mean............ -8.644895e-01
+variance........ 1.419502e+01
+
+GENERATION: 8
+Fitness value... 1.671127e+00
+mean............ 9.078401e-01
+variance........ 6.823178e-01
+#unique......... 2974, #Total UniqueCount: 31089
+var 1:
+best............ -1.000000e-00
+mean............ -9.087238e-01
+variance........ 1.358253e+01
+var 2:
+best............ -1.000000e-00
+mean............ -9.161183e-01
+variance........ 1.372150e+01
+
+GENERATION: 9
+Fitness value... 1.671127e+00
+mean............ 8.819673e-01
+variance........ 6.829359e-01
+#unique......... 3026, #Total UniqueCount: 34115
+var 1:
+best............ -1.000000e-00
+mean............ -8.995221e-01
+variance........ 1.273050e+01
+var 2:
+best............ -1.000000e-00
+mean............ -1.064760e+00
+variance........ 1.297280e+01
+
+GENERATION: 10
+Fitness value... 1.671127e+00
+mean............ 8.800304e-01
+variance........ 6.824915e-01
+#unique......... 3044, #Total UniqueCount: 37159
+var 1:
+best............ -1.000000e-00
+mean............ -9.119620e-01
+variance........ 1.452697e+01
+var 2:
+best............ -1.000000e-00
+mean............ -9.225656e-01
+variance........ 1.362752e+01
+
+GENERATION: 11
+Fitness value... 1.671127e+00
+mean............ 8.748266e-01
+variance........ 6.816707e-01
+#unique......... 3061, #Total UniqueCount: 40220
+var 1:
+best............ -1.000000e-00
+mean............ -9.702209e-01
+variance........ 1.302461e+01
+var 2:
+best............ -1.000000e-00
+mean............ -9.547662e-01
+variance........ 1.359263e+01
+
+GENERATION: 12
+Fitness value... 1.671127e+00
+mean............ 8.698990e-01
+variance........ 6.811325e-01
+#unique......... 3056, #Total UniqueCount: 43276
+var 1:
+best............ -1.000000e-00
+mean............ -9.590765e-01
+variance........ 1.244424e+01
+var 2:
+best............ -1.000000e-00
+mean............ -9.350407e-01
+variance........ 1.290962e+01
+
+'wait.generations' limit reached.
+No significant improvement in 10 generations.
+
+Solution Fitness Value: 1.671127e+00
+
+Parameters at the Solution (parameter, gradient):
+
+ X[ 1] :	-1.000000e-00	G[ 1] :	2.320431e-08
+ X[ 2] :	-1.000000e-00	G[ 2] :	7.120539e-08
+
+Solution Found Generation 1
+Number of Generations Run 12
+
+Sat Aug  4 00:00:12 2007
+Total run time : 0 hours 0 minutes and 8 seconds
+> print(biclaw1)
+$value
+[1] 1.671127
+
+$par
+[1] -1 -1
+
+$gradients
+[1] 2.320431e-08 7.120539e-08
+
+$generations
+[1] 12
+
+$peakgeneration
+[1] 1
+
+$popsize
+[1] 5000
+
+$operators
+[1] 622 625 625 625 625 626 625 626   0
+
+> 
