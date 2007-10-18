@@ -12,8 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/genoud.cpp,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
-
+  August 27, 2007
 */
 
 #include "genoud.h"

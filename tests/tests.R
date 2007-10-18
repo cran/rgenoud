@@ -1,11 +1,11 @@
 library(rgenoud)
 
 #maximize the sin function
-sin1 <- genoud(sin, nvars=1, max=TRUE, unif.seed=812821, int.seed=53058)
+sin1 <- genoud(sin, nvars=1, max=TRUE, unif.seed=912821, int.seed=93058)
 print(sin1)
 
 #minimize the sin function
-sin2 <- genoud(sin, nvars=1, max=FALSE, unif.seed=812821, int.seed=53058)
+sin2 <- genoud(sin, nvars=1, max=FALSE, unif.seed=912821, int.seed=93058)
 print(sin2)
 
 #maximize a univariate normal mixture which looks like a claw
@@ -16,7 +16,7 @@ claw <- function(xx) {
         (7.0/300.0)*(dnorm(x,0.5,.07) + dnorm(x,1.0,.07) + dnorm(x,1.5,.07))) 
   return(y)
 }
-claw1   <- genoud(claw, nvars=1,pop.size=3000,max=TRUE, unif.seed=812821, int.seed=53058)
+claw1   <- genoud(claw, nvars=1,pop.size=3000,max=TRUE, unif.seed=912821, int.seed=93058)
 print(claw1)
 
 # Maximize a bivariate normal mixture which looks like a claw.
@@ -41,5 +41,5 @@ biclaw <- function(xx) {
   
   return(y)
 }
-biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,pop.size=5000,max=TRUE, unif.seed=812821, int.seed=53058)
+biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,pop.size=5000,max=TRUE, unif.seed=912821, int.seed=93058)
 print(biclaw1)

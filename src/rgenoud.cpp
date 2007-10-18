@@ -12,8 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/rgenoud.cpp,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
-
+  August 27, 2007
 */
 
 #include "genoud.h"
@@ -108,7 +107,7 @@ extern "C"
 	       SEXP fn_optim, 
 	       SEXP lexical, SEXP fnLexicalSort, SEXP fnMemoryMatrixEvaluate,
 	       SEXP RuserGradient, SEXP fnGR,
-	       SEXP RP9mix) 
+	       SEXP RP9mix, SEXP BFGSburnin) 
   {
 
     SEXP ret;
@@ -142,13 +141,12 @@ extern "C"
     int nStartingValues;
     nStartingValues = asInteger(n_starting_values);
     if (nStartingValues > 0) {
+      /* need to free a matrix of StaringValues below */
       StartingValues = (double **) malloc(nStartingValues*sizeof(double));
       for (i=0; i<nStartingValues; i++) {
 	StartingValues[i] = (double *) malloc(parameters*sizeof(double));
-      }
-
-      for(i=0; i<parameters; i++) {
-	StartingValues[0][i] = REAL(starting_values)[i];
+        for(j=0; j<parameters; j++) 
+	  StartingValues[i][j] = REAL(starting_values)[(i * parameters + j)];
       }
     }
 
@@ -229,6 +227,7 @@ extern "C"
 
     /* Operator Options */
     MainStructure->P9mix=asReal(RP9mix);
+    MainStructure->BFGSburnin=asInteger(BFGSburnin);
 
     genoud(MainStructure);
 
@@ -247,7 +246,8 @@ extern "C"
     free(FitValues);
 
     if (nStartingValues > 0) {
-      free(StartingValues[0]);
+      for (i=0; i<nStartingValues; i++) 
+	free(StartingValues[i]);
       free(StartingValues);
     }
 

@@ -12,23 +12,25 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  2007-08-04
+  October 18 27, 2007
+
 */
 
-#include <R.h>
+#include<R.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include<cmath>
 #include<time.h>
 #include<string.h>
 #include<stdarg.h>
-#include <Rdefines.h>
+#include<Rdefines.h>
 
 extern "C"
 {
-  void MyRprintf(FILE *foo, char *out, ...);
+  // Declaration not needed because it is an inlined function
+  // void MyRprintf(FILE *foo, const char *out, ...);
   
-  inline void MyRprintf(FILE *foo, char *out, ...)
+  inline void MyRprintf(FILE *foo, const char *out, ...)
   {
     extern void Rprintf(char*, ...);
     extern void Rvprintf(const char *format, va_list arg);
@@ -62,7 +64,7 @@ extern "C"
 #define MAXTHREADS 20
 #define MAXINSTANCES 20
 #define ERROR_CODE -99999
-#define MAX_OPER_UNIQUE_TRY 200
+#define MAX_OPER_UNIQUE_TRY 1000
 
 #define TRUE 1
 #define FALSE 0
@@ -160,7 +162,7 @@ struct GND_IOstructure
 
   /* Operator Options */
   double        P9mix;
-
+  int           BFGSburnin;
 };
 
 /* bfgs.c */

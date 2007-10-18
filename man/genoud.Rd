@@ -35,7 +35,7 @@
               print.level=2, share.type=0, instance.number=0,
               output.path="stdout", output.append=FALSE, project.path=NULL,
               P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
-              P9mix=NULL, BFGSfn=NULL, BFGShelp=NULL,
+              P9mix=NULL, BFGSburnin=0, BFGSfn=NULL, BFGShelp=NULL,
               cluster=FALSE, balance=FALSE, debug=FALSE, ...)
 }
 \arguments{
@@ -112,11 +112,12 @@
 
     Please see \code{MemoryMatrix} for some important interactions
     with memory management.}
-  \item{starting.values}{
-    This vector contains the starting values which \code{genoud} will use
-    at startup.  The \code{starting.values} vector is a way for the user
-    to insert \emph{one} individual into the starting population.
-    \code{genoud} will randomly create the other individuals.}
+  \item{starting.values}{A vector or matrix containing parameter values
+    which \code{genoud} will use at startup.  Using this option, the user
+    may insert one or more individuals into the starting population.  If a
+    matrix is provided, the columns should be the variables and the rows
+    the individuals. \code{genoud} will randomly create the other
+    individuals.}
   \item{MemoryMatrix}{
     This variable controls if \code{genoud} sets up a memory matrix.  Such a
     matrix ensures that \code{genoud} will request the fitness evaluation of a
@@ -248,21 +249,32 @@
     When this flag is set to \code{TRUE}, \code{genoud} will return the
     hessian matrix at the solution as part of its return list.  A user
     can use this matrix to calculate standard errors.}
-  \item{unif.seed}{This sets the seed for the floating-point random
-    number generator which \code{genoud} uses.  The default value of this
-    seed is 81282. \code{genoud} uses its own internal random number
-    generator (a Tausworthe-Lewis-Payne) to allow for recursive and
-    parallel calls to \code{genoud}.  \code{genoud} does not use the seed
-    set by \code{R}'s \code{\link{set.seed}} function. This will change in
-    the next version.}
-  \item{int.seed}{
-    This sets the seed for the integer random number generator which
-    \code{genoud} uses. The default value of this seed is
-    53058. \code{genoud} uses its own internal random number generator
-    (a Tausworthe-Lewis-Payne) to allow for recursive and parallel calls
-    to \code{genoud}.  \code{genoud} does not use the seed set by \code{R}'s
-    \code{\link{set.seed}} function. This will change in the next
-    version.}
+  \item{unif.seed}{This sets the seed for the floating-point
+    pseudorandom number generator \code{genoud} uses.  The default value of this
+    seed is 81282.  \code{genoud} uses its own internal pseudorandom number
+    generator (a Tausworthe-Lewis-Payne generator) to allow for recursive
+    and parallel calls to \code{genoud}.  Repeated invocations without specifying
+    this argument cause the program to continue drawing from its internal
+    pseudorandom number stream, which is preserved in a static structure
+    between invocations during the same R session, so the second
+    invocation does not use the same pseudorandom numbers as the first.
+    To produce exactly the same results in a subsequent invocation, one
+    must explicitly provide the same, nondefault value for this argument.
+    \code{genoud} does not use the seed set by R's
+    \code{\link{set.seed}} function. This will change in a subsequent version.}
+  \item{int.seed}{This sets the seed for the integer pseudorandom number
+    generator \code{genoud} uses. The default value of this seed is 53058. \code{genoud}
+    uses its own internal pseudorandom number generator (a
+    Tausworthe-Lewis-Payne generator) to allow for recursive and parallel
+    calls to \code{genoud}.  Repeated invocations without specifying this
+    argument cause the program to continue drawing from its internal
+    pseudorandom number stream, which is preserved in a static structure
+    between invocations during the same R session, so the second
+    invocation does not use the same pseudorandom numbers as the first.
+    To produce exactly the same results in a subsequent invocation, one
+    must explicitly provide the same, nondefault value for this argument.
+    \code{genoud} does not use the seed set by R's
+    \code{\link{set.seed}} function. This will change in a subsequent version.}
   \item{print.level}{
     This variable controls the level of printing that \code{genoud} does.  There
     are four possible levels: 0 (minimal printing), 1 (normal), 2
@@ -369,6 +381,12 @@
     The \code{P9mix} option allows the user to select this mixing
     parameter.  It may be any number greater than 0 and less than or
     equal to 1.  If 1, then the BFGS result is simply used.}
+  \item{BFGSburnin}{The number of generations which are run before the
+    BFGS is first used.  Premature use of the BFGS can lead to convergence
+    to a local minimum instead of the global one.  This option allows the
+    user to control how many generations are run before the BFGS is
+    started.  This option delays the use of both the BFGS on the best
+    individual and of the \code{P9} operator.}
   \item{BFGSfn}{This is a function for the BFGS optimizer to optimize,
     if one wants to make it distinct from the \code{fn} function.  This is
     useful when doing \code{lexical} optimization because otherwise a
@@ -530,7 +548,7 @@
   criterion. The optimal candidate is thus the one with the best fit on the
   second criterion among candidates that satisfy this restriction.}
 \references{
-  Walter, Mebane R. Jr. and Jasjeet Singh Sekhon.  2007.  ``Genetic
+  Mebane, Walter R. Jr. and Jasjeet Singh Sekhon.  2007.  ``Genetic
   Optimization Using Derivatives: The rgenoud package for R.''
   \url{http://sekhon.berkeley.edu/papers/rgenoudJSS.pdf} \cr
   
@@ -542,10 +560,14 @@
   Mebane, Walter R., Jr. and Jasjeet S. Sekhon. 2004. ``Robust
   Estimation and Outlier Detection for Overdispersed Multinomial Models
   of Count Data.''  \emph{American Journal of Political Science}, 48
-  (April): 391-410. \url{http://sekhon.berkeley.edu/multinom.pdf}
+  (April): 391-410. \url{http://sekhon.berkeley.edu/multinom.pdf} \cr
+
+  Bright, H. and R. Enison. 1979. Quasi-Random Number Sequences from a
+  Long-Period TLP Generator with Remarks on Application to
+  Cryptography. \emph{Computing Surveys}, 11(4): 357-370.
 }
-\author{Walter R. Mebane, Jr., Cornell University,
-  \email{wrm1@cornell.edu}, \url{http://macht.arts.cornell.edu/wrm1/} \cr
+  \author{Walter R. Mebane, Jr., University of Michigan,
+  \email{wmebane@umich.edu}, \url{http://www-personal.umich.edu/~wmebane/} \cr
 
   Jasjeet S. Sekhon, UC Berkeley, \email{sekhon@berkeley.edu},
   \url{http://sekhon.berkeley.edu/}}

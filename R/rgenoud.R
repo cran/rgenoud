@@ -1,5 +1,4 @@
 #
-#
 #  RGENOUD
 #
 #  Walter R. Mebane, Jr.
@@ -12,6 +11,7 @@
 #  http://sekhon.polisci.berkeley.edu
 #  <sekhon@berkeley.edu>
 #
+#  October 17, 2007
 #
 
 
@@ -23,7 +23,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                    print.level=2, share.type=0, instance.number=0,
                    output.path="stdout", output.append=FALSE, project.path=NULL,
                    P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
-                   P9mix=NULL, BFGSfn=NULL, BFGShelp = NULL,
+                   P9mix=NULL, BFGSburnin=0, BFGSfn=NULL, BFGShelp = NULL,
                    cluster=FALSE, balance=FALSE, debug=FALSE, ...)
 {
   if(!is.null(BFGShelp) && !is.function(BFGShelp)) stop("'BFGShelp' must be NULL or a function")
@@ -38,6 +38,12 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
         stop("'P9mix' must be NULL or a number between 0 and 1 (it may be equal to 1)")
     }
   }
+
+  if(BFGSburnin < 0)
+    {
+      BFGSburnin <- 0
+      warning("'BFGSburnin' must be a non-negative integer. Reseting to 0")
+    }
 
   if (max==FALSE)
     {
@@ -89,8 +95,29 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
   if (is.null(starting.values)) {
     nStartingValues <- 0;
   }
-  else {
+  else if(is.vector(starting.values)) {
     nStartingValues <- 1;
+
+    if(length(starting.values)!=nvars)
+      {
+        nStartingValues <- 0
+        warning("Ignoring 'starting.values' because length(staring.values)!=nvars")
+      }
+    else starting.values <- matrix(starting.values, nrow = 1)
+  }
+  else if(is.matrix(starting.values)) {
+    if(any(dim(starting.values) == nvars)) {
+       if(nrow(starting.values) == nvars) starting.values <- t(starting.values)
+       nStartingValues <- nrow(starting.values)
+       if(nStartingValues > pop.size) {
+         warning("increasing 'pop.size' because too many starting.values were provided")
+         pop.size <- nStartingValues
+       }
+    }
+    else {
+      warning("ignoring 'starting.values' because the wrong number of parameters was provided")
+      nStartingValues <- 0
+    }
   }
 
   #set output.type
@@ -119,7 +146,27 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
           Domains[i,1] <- -1*default.domains;
           Domains[i,2] <- default.domains;
         } # end of for loop
-    } # end of Domains if
+    } 
+  else if(nrow(Domains) != nvars) {
+    stop("number of rows in Domains must match 'nvars'")
+  }
+  else if(ncol(Domains) != 2) {
+    stop("number of cols in Domains must be 2")
+  }
+
+  if(!all(Domains[,1] <= Domains[,2])) {
+    stop("Domains[,1] must be less than or equal to Domains[,2]")
+  }
+  if(any(Domains[,1] == Domains[,2])) {
+    warning("some Domains[,1]==Domains[,2]")
+  }  
+
+  # BG: now check all starting values are sane
+  if(nStartingValues > 0 && boundary.enforcement != 0 && 
+     !all(apply(starting.values, 1, FUN = function(x) 
+               Domains[,1] <= x & x <= Domains[,2])) )
+        warning("'starting.values' which are outside of the bounds have been provided.
+           Continuing, but unexpected behavior can occur with 'boundary.enforcement!=0'")
 
   # has the user provided any seeds?
   if (unif.seed==812821 && int.seed==53058)
@@ -137,7 +184,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
     {
       if(nStartingValues)
         {
-          foo <- fn1(starting.values)          
+          foo <- fn1(starting.values[1:nvars])          
         } else {
           rfoo <- runif(nrow(Domains), Domains[,1], Domains[,2])
           if(data.type.int)
@@ -215,12 +262,12 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
   if(is.null(BFGSfn))
      {
        if(boundary.enforcement < 2) {
-       genoud.optim.wrapper101 <- function(foo.vals)
-         {
-           ret <- optim(foo.vals, fn=fn1, gr=gr1, method="BFGS",
-                        control=list(fnscale=g.scale));
-           return(c(ret$value,ret$par));
-         } # end of genoud.optim.wrapper101
+         genoud.optim.wrapper101 <- function(foo.vals)
+           {
+             ret <- optim(foo.vals, fn=fn1, gr=gr1, method="BFGS",
+                          control=list(fnscale=g.scale));
+             return(c(ret$value,ret$par));
+           } # end of genoud.optim.wrapper101
        }
        else {
          genoud.optim.wrapper101 <- function(foo.vals)
@@ -233,70 +280,72 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
        }
      } else {
        if(boundary.enforcement < 2) {
-       genoud.optim.wrapper101 <- function(foo.vals)
-         {
-	       if(print.level > 2) {
-      		 fit <- fn1(foo.vals)
-       		 cat("\nPre-BFGS Complete Lexical Fit:\n")
-		       print(fit)
-         }
-         if(is.null(BFGShelp)) {
-             ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="BFGS",
-                          control=list(fnscale=g.scale));
-         }
-         else {
-             ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="BFGS",
-                          control=list(fnscale=g.scale),
-                          helper = do.call(BFGShelp, args = list(initial = foo.vals), envir = environment(fn)) );
-         }
-
-         if(print.level > 2)
-             {
-               cat("BFGS Fit:",ret$value,"\n")
-
-               fit <- fn1(ret$par)
-               cat("Post-BFGS Complete Lexical Fit:\n")
+         genoud.optim.wrapper101 <- function(foo.vals)
+           {
+             if(print.level > 2) {
+               fit <- fn1(foo.vals)
+               cat("\nPre-BFGS Complete Lexical Fit:\n")
                print(fit)
-             }           
-           
-         foo <- c(ret$value,ret$par)
-         return(foo);
-         } # end of genoud.optim.wrapper101
-      } else { 
-       genoud.optim.wrapper101 <- function(foo.vals)
-         {
-	       if(print.level > 2) {
-      		 fit <- fn1(foo.vals)
-       		 cat("\nPre-BFGS Complete Lexical Fit:\n")
-		       print(fit)
-         }
-         if(is.null(BFGShelp)) {
-             ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
-                          lower = Domains[,1], upper = Domains[,2],
-                          control=list(fnscale=g.scale));
-         }
-         else {
-             ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
-                          lower = Domains[,1], upper = Domains[,2],
-                          control=list(fnscale=g.scale),
-                          helper = do.call(BFGShelp, args = list(initial = foo.vals), envir = environment(fn)) );
-         }
-
-         if(print.level > 2)
-             {
-               cat("BFGS Fit:",ret$value,"\n")
-
-               fit <- fn1(ret$par)
-               cat("Post-BFGS Complete Lexical Fit:\n")
+             }
+             if(is.null(BFGShelp)) {
+               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="BFGS",
+                            control=list(fnscale=g.scale));
+             }
+             else {
+               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="BFGS",
+                            control=list(fnscale=g.scale),
+                            helper = do.call(BFGShelp, args = list(initial = foo.vals), envir = environment(fn)) );
+             }
+             
+             if(print.level > 2)
+               {
+                 cat("BFGS Fit:",ret$value,"\n")
+                 
+                 fit <- fn1(ret$par)
+                 cat("Post-BFGS Complete Lexical Fit:\n")
+                 print(fit)
+               }           
+             
+             foo <- c(ret$value,ret$par)
+             return(foo);
+           } # end of genoud.optim.wrapper101
+       } else { 
+         genoud.optim.wrapper101 <- function(foo.vals)
+           {
+             if(print.level > 2) {
+               fit <- fn1(foo.vals)
+               cat("\nPre-BFGS Complete Lexical Fit:\n")
                print(fit)
-             }           
-           
-         foo <- c(ret$value,ret$par)
-         return(foo);
-         } # end of genoud.optim.wrapper101
+             }
+             if(is.null(BFGShelp)) {
+               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
+                            lower = Domains[,1],
+                            upper = Domains[,2],
+                            control=list(fnscale=g.scale));
+             }
+             else {
+               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
+                            lower = Domains[,1],
+                            upper = Domains[,2],
+                            control=list(fnscale=g.scale),
+                            helper = do.call(BFGShelp, args = list(initial = foo.vals), envir = environment(fn)) );
+             }
+             
+             if(print.level > 2)
+               {
+                 cat("BFGS Fit:",ret$value,"\n")
+                 
+                 fit <- fn1(ret$par)
+                 cat("Post-BFGS Complete Lexical Fit:\n")
+                 print(fit)
+               }           
+             
+             foo <- c(ret$value,ret$par)
+             return(foo);
+           } # end of genoud.optim.wrapper101
        } 
      }
-
+  
   # create the P vector
   P <- vector(length=9, mode="numeric");
   P[1] <- P1; P[2] <- P2; P[3] <- P3; P[4] <- P4;
@@ -335,7 +384,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
             NULL
           }
           for (name in list) {
-            clusterCall(cl, gets, name, get(name))
+            snow::clusterCall(cl, gets, name, get(name))
           }
         }
 
@@ -360,7 +409,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
         clustertrigger=2
         cluster <- as.vector(cluster)
         cat("Initializing Cluster\n")
-        cl <- makeSOCKcluster(cluster)
+        cl <- snow::makeSOCKcluster(cluster)
         GENclusterExport(cl, "fn")        
         GENclusterExport(cl, "fn1")
       }
@@ -377,7 +426,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                   lapply(list(1:nrow(x)), function(i) x[i, , drop = F])
                 }
               
-              docall(c, clusterApply(cl, splitRows(x, length(cl)), apply, 1,
+              snow::docall(c, snow::clusterApply(cl, splitRows(x, length(cl)), apply, 1,
                                      fun, ...))
             } #end of parRapply.1node
         }
@@ -439,26 +488,34 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
 
       mfunc <- function(pop,memory)
         {
-          return(row(memory)[match(pop,memory)])
+          f <- function(...) paste(..., sep=":")
+          a2 <- do.call("f", as.data.frame(pop))
+          b2 <- do.call("f", as.data.frame(memory))          
+          
+          return(match(a2,b2))
         }
 
       population.mat = matrix(population[,vars.indx], ncol=nvars)
       if (!FIRSTTIME)
         {
           Memory.mat = matrix(Memory[,vars.indx], ncol=nvars)
-          match.matrix.indx = matrix(mfunc(population.mat,Memory.mat),ncol=nvars)
+          match.matrix.indx <- mfunc(population.mat,Memory.mat)
 
           for (i in 1:pop.size)
             {
-              match.indx = match.matrix.indx[i,]
-              if (is.finite(sum(match.indx)))
+              match.indx = match.matrix.indx[i]
+              found.match <- FALSE
+              if ( is.finite(match.indx) )
                 {
-                  if (sum(match.indx==rep(match.indx[1],nvars))==nvars)
-                    {
-                      #found match
-                      population[i,] <- Memory[match.indx[1],]
-                    }
-                } else {
+                  #this is needed because mfunc truncates floats (by the call to paste) to 15 digits
+#                  if (all(population.mat[i,]==Memory.mat[match.indx,]))
+#                    {
+                      found.match <- TRUE
+                      population[i,] <- Memory[match.indx,]
+#                    }
+                }
+              if(!found.match)
+                {
                   if (population[i,nvars+2] != 0) {
                     population[i,nvars+2] = EVALUATE
                     nevaluate = nevaluate+1
@@ -486,7 +543,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
               if (balance==TRUE) {
                 in.mat = t(matrix(population.mat[eval.indx,], ncol=nvars))
                 cl.in <- as.list(as.data.frame(in.mat))
-                cl.out <- clusterApplyLB(cl, cl.in, fn1)
+                cl.out <- snow::clusterApplyLB(cl, cl.in, fn1)
                 try(ret <- matrix(t(data.frame(cl.out)), ncol=lexical), TRUE)
                 if (!is.matrix(ret)) {
                   if (!debug) {
@@ -501,7 +558,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                 in.mat = matrix(population.mat[eval.indx,], ncol=nvars)
                 if(length(cl) > 1 )
                   {
-                    cl.out = parRapply(cl, in.mat, fn1)
+                    cl.out = snow::parRapply(cl, in.mat, fn1)
                   } else {
                     cl.out = parRapply.1node(cl, in.mat, fn1)
                   } 
@@ -566,10 +623,13 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
       gradient.check=FALSE
     }
 
+  if(is.matrix(starting.values))
+    starting.values <- t(starting.values)
+
   gout <- .Call("rgenoud", as.function(fn1), new.env(),
                 as.integer(nvars), as.integer(pop.size), as.integer(max.generations),
                 as.integer(wait.generations),
-                as.integer(nStartingValues), as.vector(starting.values),
+                as.integer(nStartingValues), as.real(starting.values),
                 as.vector(P), as.matrix(Domains),
                 as.integer(max), as.integer(gradient.check), as.integer(boundary.enforcement),
                 as.double(solution.tolerance), as.integer(BFGS), as.integer(data.type.int),
@@ -581,6 +641,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                 as.function(genoud.optim.wrapper101), 
                 as.integer(lexical), as.function(fnLexicalSort), as.function(fnMemoryMatrixEvaluate),
                 as.integer(UserGradient), as.function(gr1func), as.real(P9mix),
+                as.integer(BFGSburnin),
                 PACKAGE="rgenoud");
 
   indx1 <- 4;
@@ -643,7 +704,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
     }
   
   if (clustertrigger==2)
-    stopCluster(cl)
+    snow::stopCluster(cl)
   
   return(ret)  
 } #end of genoud()

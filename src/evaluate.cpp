@@ -12,6 +12,8 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
+  October 18 27, 2007
+
 */
 
 #include "genoud.h"
@@ -759,10 +761,13 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 
       j1=j2=j3=j4=j5=j6=j7=j8=0;
 
+      /* This was causing a difference to appear between MemoryMatrix and !MemoryMatrix runs see oper5 and oper7
       UniquePairs= UniqueCount-OldUniqueCount;
       UniquePairs= (int) (0.5*(UniquePairs*UniquePairs-UniquePairs));
       if ( MAX_OPER_UNIQUE_TRY < UniquePairs)
 	UniquePairs = MAX_OPER_UNIQUE_TRY;
+      */
+      UniquePairs = MAX_OPER_UNIQUE_TRY;
 
       /* main operator loop */
       while(j1+j2+j3+j4+j4+j5+j5+j6+j7+j7+j8 < P)
@@ -889,8 +894,13 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			    break;
 
 			  for(i=1; i<=nvars; i++)
-			    if (population[first_live][i] != population[second_live][i])
-			      same = FALSE;
+			    {
+			      if (population[first_live][i] != population[second_live][i])
+				{
+				  same = FALSE;
+				  break;
+				}
+			    }
 			} /* end of while same==TRUE loop */
 			/* check that agents to replace are in range */
 			if (die_now < 3) {
@@ -971,8 +981,13 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			    break;
 
 			  for(i=1; i<=nvars; i++)
-			    if (population[first_live][i] != population[second_live][i])
-			      same = FALSE;
+			    {
+			      if (population[first_live][i] != population[second_live][i])
+				{
+				  same = FALSE;
+				  break;
+				}
+			    }
 			} /* end of while same==TRUE loop */
 			/* check that agents to replace are in range */
 			if (die_now < 3) {
@@ -1031,7 +1046,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
               case 8:
 		/* JS Description: Local-Minimum Crossover */
                      /*Applying the eighth operator, homotopy (BFGS) */
-                    if (j8 < P8)
+		if (j8 < P8 & (count_gener > Structure->BFGSburnin))
                       {
                         /*Find one parent for BFGS operator 1*/
                         first_live  = find_parent(live,pop_size);
@@ -1126,7 +1141,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	}
 
       /* apply the bfgs to the best individual */
-      if (UseBFGS != 0) {
+      if (UseBFGS != 0 & (count_gener > Structure->BFGSburnin)) {
 	for (i=1; i<=nvars; i++)
 	  {
 	    bfgsoutX[i-1]=population[1][i];
@@ -3067,10 +3082,13 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 
       j1=j2=j3=j4=j5=j6=j7=j8=0;
 
+      /* This was causing a difference to appear between MemoryMatrix and !MemoryMatrix runs see oper5 and oper7
       UniquePairs= UniqueCount-OldUniqueCount;
       UniquePairs= (int) (0.5*(UniquePairs*UniquePairs-UniquePairs));
       if ( MAX_OPER_UNIQUE_TRY < UniquePairs)
 	UniquePairs = MAX_OPER_UNIQUE_TRY;
+      */
+      UniquePairs = MAX_OPER_UNIQUE_TRY;
 
       /* main operator loop */
       while(j1+j2+j3+j4+j4+j5+j5+j6+j7+j7 < P)
@@ -3197,8 +3215,13 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		      break;
 
 		    for(i=1; i<=nvars; i++)
-		      if ((int) population[first_live][i] != (int) population[second_live][i])
-			same = FALSE;
+		      {
+			if ((int) population[first_live][i] != (int) population[second_live][i])
+			  {
+			    same = FALSE;
+			    break;
+			  }
+		      }
 		  } /* end of while same==TRUE loop */
 		  /* check that agents to replace are in range */
 		  if (die_now < 3) {
@@ -3278,8 +3301,13 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		      break;
 
 		    for(i=1; i<=nvars; i++)
-		      if (population[first_live][i] != population[second_live][i])
-			same = FALSE;
+		      {
+			if ((int) population[first_live][i] != (int) population[second_live][i])
+			  {
+			    same = FALSE;
+			    break;
+			  }
+		      }
 		  } /* end of while same==TRUE loop */
 		  /* check that agents to replace are in range */
 		  if (die_now < 3) {
