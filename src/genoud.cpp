@@ -19,18 +19,18 @@
 #include "unif.h"
 
 /* unif.h integer definition */
-long NewUnifSeed[MAXTHREADS];
-long RandIntSeed[MAXTHREADS];
-long ThreadNumber;
+int NewUnifSeed[MAXTHREADS];
+int RandIntSeed[MAXTHREADS];
+int ThreadNumber;
 
 extern double func4g(double *X);
 
 void genoud(struct GND_IOstructure *Structure)
 {
 
-  extern long NewUnifSeed[MAXTHREADS];
-  extern long RandIntSeed[MAXTHREADS];
-  extern long ThreadNumber;
+  extern int NewUnifSeed[MAXTHREADS];
+  extern int RandIntSeed[MAXTHREADS];
+  extern int ThreadNumber;
 
   MATRIX 
     domains,      /*Matrix for Domains*/

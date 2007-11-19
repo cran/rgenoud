@@ -69,7 +69,7 @@ double frange_ran(double llim, double ulim)
 unsigned int randint (void)
 {
   extern int RandIntSeed[MAXTHREADS];
-  extern long ThreadNumber;
+  extern int ThreadNumber;
   /*  static integer aux[TLPAUXSIZE], iseed = RANDINTSEED ; */
   static integer aux[TLPAUXSIZE];
   integer wrk;
