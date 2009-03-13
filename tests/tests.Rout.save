@@ -1,6 +1,6 @@
 
-R version 2.6.1 (2007-11-26)
-Copyright (C) 2007 The R Foundation for Statistical Computing
+R version 2.9.0 Under development (unstable) (2009-03-11 r48117)
+Copyright (C) 2009 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -16,14 +16,14 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 Type 'q()' to quit R.
 
 > library(rgenoud)
-##  rgenoud (Version 5.4-7, Build Date: 2007-01-04)
+##  rgenoud (Version 5.5-1, Build Date: 2009-03-13)
 ##  See http://sekhon.berkeley.edu/rgenoud for additional documentation.
 > 
 > #maximize the sin function
 > sin1 <- genoud(sin, nvars=1, max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Fri Jan  4 23:04:58 2008
+Fri Mar 13 01:14:37 2009
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -181,7 +181,7 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 11
 
-Fri Jan  4 23:05:01 2008
+Fri Mar 13 01:14:41 2009
 Total run time : 0 hours 0 minutes and 3 seconds
 > print(sin1)
 $value
@@ -210,7 +210,7 @@ $operators
 > sin2 <- genoud(sin, nvars=1, max=FALSE, unif.seed=912821, int.seed=93058)
 
 
-Fri Jan  4 23:05:01 2008
+Fri Mar 13 01:14:41 2009
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -368,7 +368,7 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 11
 
-Fri Jan  4 23:05:03 2008
+Fri Mar 13 01:14:45 2009
 Total run time : 0 hours 0 minutes and 2 seconds
 > print(sin2)
 $value
@@ -404,7 +404,7 @@ $operators
 > claw1   <- genoud(claw, nvars=1,pop.size=3000,max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Fri Jan  4 23:05:03 2008
+Fri Mar 13 01:14:45 2009
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -562,7 +562,7 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 11
 
-Fri Jan  4 23:05:06 2008
+Fri Mar 13 01:14:51 2009
 Total run time : 0 hours 0 minutes and 3 seconds
 > print(claw1)
 $value
@@ -612,7 +612,7 @@ $operators
 > biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,pop.size=5000,max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Fri Jan  4 23:05:06 2008
+Fri Mar 13 01:14:51 2009
 Domains:
  -2.000000e+01   <=  X1   <=    2.000000e+01 
  -2.000000e+01   <=  X2   <=    2.000000e+01 
@@ -687,7 +687,7 @@ mean............ 9.908482e-01
 variance........ 6.618397e-01
 #unique......... 3424, #Total UniqueCount: 15105
 var 1:
-best............ -1.000000e-00
+best............ -1.000000e+00
 mean............ -8.496201e-01
 variance........ 1.499378e+01
 var 2:
@@ -701,7 +701,7 @@ mean............ 9.876343e-01
 variance........ 6.651307e-01
 #unique......... 3644, #Total UniqueCount: 18749
 var 1:
-best............ -1.000000e-00
+best............ -1.000000e+00
 mean............ -9.384029e-01
 variance........ 1.481110e+01
 var 2:
@@ -715,7 +715,7 @@ mean............ 9.806229e-01
 variance........ 6.682968e-01
 #unique......... 3362, #Total UniqueCount: 22111
 var 1:
-best............ -1.000000e-00
+best............ -1.000000e+00
 mean............ -8.987182e-01
 variance........ 1.459533e+01
 var 2:
@@ -729,7 +729,7 @@ mean............ 9.919701e-01
 variance........ 6.650665e-01
 #unique......... 3036, #Total UniqueCount: 25147
 var 1:
-best............ -1.000000e-00
+best............ -1.000000e+00
 mean............ -8.717355e-01
 variance........ 1.478299e+01
 var 2:
@@ -743,7 +743,7 @@ mean............ 9.785551e-01
 variance........ 6.679199e-01
 #unique......... 3076, #Total UniqueCount: 28223
 var 1:
-best............ -1.000000e-00
+best............ -1.000000e+00
 mean............ -9.419792e-01
 variance........ 1.386377e+01
 var 2:
@@ -757,7 +757,7 @@ mean............ 9.839740e-01
 variance........ 6.656382e-01
 #unique......... 3060, #Total UniqueCount: 31283
 var 1:
-best............ -1.000000e-00
+best............ -1.000000e+00
 mean............ -8.969875e-01
 variance........ 1.451103e+01
 var 2:
@@ -771,7 +771,7 @@ mean............ 9.789811e-01
 variance........ 6.679682e-01
 #unique......... 3061, #Total UniqueCount: 34344
 var 1:
-best............ -1.000000e-00
+best............ -1.000000e+00
 mean............ -9.538414e-01
 variance........ 1.433291e+01
 var 2:
@@ -785,7 +785,7 @@ mean............ 9.875318e-01
 variance........ 6.633945e-01
 #unique......... 3038, #Total UniqueCount: 37382
 var 1:
-best............ -1.000000e-00
+best............ -1.000000e+00
 mean............ -9.461229e-01
 variance........ 1.291516e+01
 var 2:
@@ -799,7 +799,7 @@ mean............ 1.001984e+00
 variance........ 6.571237e-01
 #unique......... 3017, #Total UniqueCount: 40399
 var 1:
-best............ -1.000000e-00
+best............ -1.000000e+00
 mean............ -8.762315e-01
 variance........ 1.233993e+01
 var 2:
@@ -813,7 +813,7 @@ mean............ 9.897763e-01
 variance........ 6.618311e-01
 #unique......... 3042, #Total UniqueCount: 43441
 var 1:
-best............ -1.000000e-00
+best............ -1.000000e+00
 mean............ -9.666213e-01
 variance........ 1.173213e+01
 var 2:
@@ -828,13 +828,13 @@ Solution Fitness Value: 1.671127e+00
 
 Parameters at the Solution (parameter, gradient):
 
- X[ 1] :	-1.000000e-00	G[ 1] :	8.647865e-08
+ X[ 1] :	-1.000000e+00	G[ 1] :	8.647865e-08
  X[ 2] :	-1.000000e+00	G[ 2] :	-7.059874e-08
 
 Solution Found Generation 1
 Number of Generations Run 12
 
-Fri Jan  4 23:05:18 2008
+Fri Mar 13 01:15:14 2009
 Total run time : 0 hours 0 minutes and 12 seconds
 > print(biclaw1)
 $value

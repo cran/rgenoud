@@ -12,7 +12,7 @@
   http://sekhon.berkeley.edu
   <sekhon@berkeley.edu>
 
-  December 22, 2007
+  Friday March 13, 2009
 
 */
 
@@ -2310,7 +2310,7 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
   }
 
   /* Check to make sure that all operators (i.e., 5, 7) which have to be even numbers are */
-  if (fmod(*P5,2) > 0.0) {
+  if (fmod((long double) *P5, (long double) 2) > 0.0) {
     if(Structure->PrintLevel>2)
       {
 	fprintf(output,"\nNOTE: Operator 6 (Simple Crossover) may only be started\n");
@@ -2318,7 +2318,7 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
       }
     *P5=*P5+1;
   }
-  if (fmod(*P7,2) > 0.0) {
+  if (fmod((long double) *P7, (long double) 2) > 0.0) {
     if(Structure->PrintLevel>2)
       {
 	fprintf(output,"\nNOTE: Operator 8 (Heuristic Crossover) may only be started\n");
@@ -2336,7 +2336,7 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 	  fprintf(output,"\nNOTE: The total number of operators greater than population size\n");
 	}
 
-      if (fmod(*P+1,2) > 0.0) {
+      if (fmod((long double) *P+1, (long double) 2) > 0.0) {
 	*PopSize = *P+2;
 	if(Structure->PrintLevel>0)
 	  {
@@ -2357,7 +2357,7 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 	fprintf(output,"\nNOTE: The total number of operators equal to the population size\n");
       }
 
-      if (fmod(*P+1,2) > 0.0) {
+    if (fmod( (long double) *P+1, (long double) 2) > 0.0) {
 	*PopSize = *P+2;
 	if(Structure->PrintLevel>0)
 	  {
@@ -2373,7 +2373,7 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
       }
   }
 
-  if (fmod(*PopSize,2) > 0.0) {
+  if (fmod( (long double) *PopSize, (long double) 2) > 0.0) {
     if(Structure->PrintLevel>0)
       {
 	fprintf(output,"NOTE: population size is not an even number\n");

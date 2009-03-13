@@ -7,22 +7,7 @@
   \code{Genoud} is a function that combines evolutionary algorithm
   methods with a derivative-based (quasi-Newton) method to solve
   difficult optimization problems.  \code{Genoud} may also be used for
-  optimization problems for which derivatives do not exist.
-  \code{Genoud} solves problems that are nonlinear or perhaps even
-  discontinuous in the parameters of the function to be optimized.
-  When a statistical model's estimating function (for example, a
-  log-likelihood) is nonlinear in the model's parameters, the function
-  to be optimized will generally not be globally concave and may have
-  irregularities such as saddlepoints or discontinuities.
-  Optimization methods that rely on derivatives of the objective
-  function may be unable to find any optimum at all.  Multiple local
-  optima may exist, so that there is no guarantee that a
-  derivative-based method will converge to the global optimum. On the
-  other hand, algorithms that do not use derivative information (such
-  as pure genetic algorithms) are for many problems needlessly poor at
-  local hill climbing.  Most statistical problems are regular in a
-  neighborhood of the solution.  Therefore, for some portion of the
-  search space, derivative information is useful.  \code{Genoud}, via
+  optimization problems for which derivatives do not exist.  \code{Genoud}, via
   the \code{cluster} option, supports the use of multiple computers,
   CPUs or cores to perform parallel computations.
 }
@@ -109,7 +94,7 @@
     has improved within a given number of generations (determined by
     \code{wait.generations}) or if the gradients are not zero
     (determined by \code{gradient.check}). \cr
-
+    
     Please see \code{MemoryMatrix} for some important interactions
     with memory management.}
   \item{starting.values}{A vector or matrix containing parameter values
@@ -128,9 +113,9 @@
     \code{genoud} will no longer maintain a memory matrix of all evaluated
     individuals.  Therefore, \code{genoud} may request evaluations which it has
     already previously requested. \cr
-
+    
     Note that when \code{nvars} or \code{pop.size} are large, the memory
-    matrix consumes a large amount of RAM. \code{Genoud's} memory matrix will
+    matrix consumes a large amount of RAM. \code{Genoud}'s memory matrix will
     require somewhat less memory if the user sets
     \code{hard.generation.limit} equal to \code{TRUE}.}
   \item{Domains}{
@@ -320,155 +305,175 @@
     the same output file(s): see \code{output.path} and
     \code{project.path}. \cr
     
-    For the R version of \code{genoud} this variable is of limited use.
-    It is basically there in case a \code{genoud} run is being used to optimize
-    the result of another \code{genoud} run (i.e., a recursive
-    implementation).}
-  \item{output.path}{
-    This is the full (relative) path to where \code{genoud}'s output is to go.
-    If the value of \code{output.path}= ``stdout'', then \code{genoud}'s output
-    will go to standard output in UNIX and to the GUI console in Windows.
-    Also see \code{output.append} and \code{project.path}.}
-  \item{output.append}{
-    If output is being sent to a file (see \code{output.path}), this logical variable
-    tells \code{genoud} whether it should append to the file if it already
-    exists or if it should overwrite an existing file.}
-  \item{project.path}{
-    This is the path of the \code{genoud} project file. The project file
-    prints one individual per line with the fit value(s) printed first
-    and then the parameter values. By default \code{genoud} places its
-    output in a file called "genoud.pro" located in the temporary
-    directory provided by \code{\link{tempdir}}.  The behavior of the
-    project file depends on the \code{print.level} chosen.  If the
-    \code{print.level} variable is set to 1, then the project file is
-    rewritten after each generation.  Therefore, only the currently
-    fully completed generation is included in the file.  If the
-    \code{print.level} variable is set to 2, then each new generation is
-    simply appended to the project file.  For \code{print.level=0}, the
-    project file is not created.
-  }
-  \item{P1}{
-    This is the cloning operator.  \code{genoud} always clones the best
-    individual each generation.  But this operator clones others as
-    well.  Please see the Operators Section for details about operators
-    and how they are weighted.}
-  \item{P2}{
-    This is the uniform mutation operator.  One parameter of the parent is
-    mutated.  Please see the Operators Section for details about operators and how
-    they are weighted.}
-  \item{P3}{
-    This is the boundary mutation operator.  This operator finds a parent
-    and mutates one of its parameters towards the boundary.  Please see
-    the Operators Section for details about operators and how
-    they are weighted.}
-  \item{P4}{
-    Non-Uniform Mutation.  Please see the Operators Section for details
-    about operators and how they are weighted.}
-  \item{P5}{
-    This is the polytope crossover.  Please see the Operators Section
-    for details about operators and how they are weighted.}
-  \item{P6}{
-    Simple Crossover.  Please see the Operators Section
-    for details about operators and how they are weighted.}
-  \item{P7}{
-    Whole Non-Uniform Mutation.  Please see the Operators Section for
+    For the R version of \code{genoud} this variable is of limited
+    use.  It is basically there in case a \code{genoud} run is being
+    used to optimize the result of another \code{genoud} run (i.e., a
+    recursive implementation).}  
+  \item{output.path}{ This is the full
+    (relative) path to where \code{genoud}'s output is to go.  If the
+    value of \code{output.path}= ``stdout'', then \code{genoud}'s
+    output will go to standard output in UNIX and to the GUI console
+    in Windows.  Also see \code{output.append} and
+    \code{project.path}.}  
+  \item{output.append}{ If output is being
+    sent to a file (see \code{output.path}), this logical variable
+    tells \code{genoud} whether it should append to the file if it
+    already exists or if it should overwrite an existing file.}
+  \item{project.path}{ This is the path of the \code{genoud} project
+    file. The project file prints one individual per line with the fit
+    value(s) printed first and then the parameter values. By default
+    \code{genoud} places its output in a file called "genoud.pro"
+    located in the temporary directory provided by
+    \code{\link{tempdir}}.  The behavior of the project file depends
+    on the \code{print.level} chosen.  If the \code{print.level}
+    variable is set to 1, then the project file is rewritten after
+    each generation.  Therefore, only the currently fully completed
+    generation is included in the file.  If the \code{print.level}
+    variable is set to 2, then each new generation is simply appended
+    to the project file.  For \code{print.level=0}, the project file
+    is not created.  } 
+  \item{P1}{ This is the cloning operator.
+    \code{genoud} always clones the best individual each generation.
+    But this operator clones others as well.  Please see the Operators
+    Section for details about operators and how they are weighted.}
+  \item{P2}{ This is the uniform mutation operator.  One parameter
+    of the parent is mutated.  Please see the Operators Section for
     details about operators and how they are weighted.}  
-  \item{P8}{
-    Heuristic Crossover.  Please see the Operators Section for details
-    about operators and how they are weighted.}
-  \item{P9}{
-    Local-Minimum Crossover: BFGS.  This is rather CPU intensive,
-    and should be generally used less than the other operators.  Please
+  \item{P3}{
+    This is the boundary mutation operator.  This operator finds a
+    parent and mutates one of its parameters towards the boundary.
+    Please see the Operators Section for details about operators and
+    how they are weighted.}  
+  \item{P4}{ Non-Uniform Mutation.  Please
     see the Operators Section for details about operators and how they
-    are weighted.}
-  \item{P9mix}{This is a tuning parameter for the \code{P9} operator.
-    The local-minimum crossover operator by default takes the convex
-    combination of the result of a BFGS optimization and the parent
-    individual.  By default the mixing (weight) parameter for the convex
-    combination is chosen by a uniform random draw between 0 and 1.
-    The \code{P9mix} option allows the user to select this mixing
+    are weighted.}  
+  \item{P5}{ This is the polytope crossover.  Please
+    see the Operators Section for details about operators and how they
+    are weighted.}  
+  \item{P6}{ Simple Crossover.  Please see the
+    Operators Section for details about operators and how they are
+    weighted.}  
+  \item{P7}{ Whole Non-Uniform Mutation.  Please see the
+    Operators Section for details about operators and how they are
+    weighted.}  
+  \item{P8}{ Heuristic Crossover.  Please see the
+    Operators Section for details about operators and how they are
+    weighted.}  
+  \item{P9}{ Local-Minimum Crossover: BFGS.  This is
+    rather CPU intensive, and should be generally used less than the
+    other operators.  Please see the Operators Section for details
+    about operators and how they are weighted.}  
+  \item{P9mix}{This is
+    a tuning parameter for the \code{P9} operator.  The local-minimum
+    crossover operator by default takes the convex combination of the
+    result of a BFGS optimization and the parent individual.  By
+    default the mixing (weight) parameter for the convex combination
+    is chosen by a uniform random draw between 0 and 1.  The
+    \code{P9mix} option allows the user to select this mixing
     parameter.  It may be any number greater than 0 and less than or
     equal to 1.  If 1, then the BFGS result is simply used.}
-  \item{BFGSburnin}{The number of generations which are run before the
-    BFGS is first used.  Premature use of the BFGS can lead to convergence
-    to a local optimum instead of the global one.  This option allows the
-    user to control how many generations are run before the BFGS is
-    started and would logically be a non-negative integer. However, if
-    \code{BFGSburnin < 0}, the BFGS will be used if and when
-    \code{wait.generations} is doubled because at least one gradient is
-    too large, which can only occur when \code{gradient.check =
-      TRUE}. This option delays the use of both the BFGS on the best
-    individual and the \code{P9} operator. }
-  \item{BFGSfn}{This is a function for the BFGS optimizer to optimize,
-    if one wants to make it distinct from the \code{fn} function.  This is
-    useful when doing \code{lexical} optimization because otherwise a
-    derivative based optimizer cannot be used (since it requires a single
-    fit value).  It is suggested that if this functionality is being used,
-    both the \code{fn} and \code{BFGSfn} functions obtain all of the
-    arguments they need (except for the parameters being optimized) by
-    lexical scope instead of being passed in as arguments to the
-    functions.  Alternatively, one may use the \code{BFGShelp} option to
-    pass arguments to \code{BFGSfn}. If \code{print.level > 2}, the
-    results from the BFGS optimizer are printed every time it is called.}
+  \item{BFGSburnin}{The number of generations which are run before
+    the BFGS is first used.  Premature use of the BFGS can lead to
+    convergence to a local optimum instead of the global one.  This
+    option allows the user to control how many generations are run
+    before the BFGS is started and would logically be a non-negative
+    integer. However, if \code{BFGSburnin < 0}, the BFGS will be used
+    if and when \code{wait.generations} is doubled because at least
+    one gradient is too large, which can only occur when
+    \code{gradient.check = TRUE}. This option delays the use of both
+    the BFGS on the best individual and the \code{P9} operator. }
+  \item{BFGSfn}{This is a function for the BFGS optimizer to
+    optimize, if one wants to make it distinct from the \code{fn}
+    function.  This is useful when doing \code{lexical} optimization
+    because otherwise a derivative based optimizer cannot be used
+    (since it requires a single fit value).  It is suggested that if
+    this functionality is being used, both the \code{fn} and
+    \code{BFGSfn} functions obtain all of the arguments they need
+    (except for the parameters being optimized) by lexical scope
+    instead of being passed in as arguments to the functions.
+    Alternatively, one may use the \code{BFGShelp} option to pass
+    arguments to \code{BFGSfn}. If \code{print.level > 2}, the results
+    from the BFGS optimizer are printed every time it is called.}
   \item{BFGShelp}{An optional function to pass arguments to
-    \code{BFGSfn}.  This function should take an argument named `initial', an
-    argument named `done' that defaults to \code{FALSE}, or at least allow \code{...}
-    to be an argument. \code{BFGSfn} must have an argument named `helper' if
-    \code{BFGShelp} is used because the call to \code{optim} includes the
-    hard-coded expression \code{helper =
-      do.call(BFGShelp, args = list(initial = foo.vals), envir =
-      environment(fn)))}, which evaluates the \code{BFGShelp} function in
-    the environment of \code{BFGSfn} (\code{fn} is just a wrapper for
-    \code{BFGSfn}) at \code{par = foo.vals} where \code{foo.vals}
-    contains the starting values for the BFGS algorithm. The `done'
-    argument to \code{BFGSfn} is used if the
-    user requests that the Hessian be calculated at the \code{genoud}
-    solution.}
-  \item{cluster}{This can either be an object of the  'cluster' class
-    returned by one of the \code{\link[snow]{makeCluster}} commands in
-    the snow package or a vector of machine names so \code{genoud} can
-    setup the cluster automatically.  If it is the latter, the vector should
-    look like: \cr
-    \code{c("localhost","musil","musil","deckard")}.\cr
-    This vector would create a cluster with four nodes: one on the
+    \code{BFGSfn}.  This function should take an argument named
+    `initial', an argument named `done' that defaults to \code{FALSE},
+    or at least allow \code{...}  to be an argument. \code{BFGSfn}
+    must have an argument named `helper' if \code{BFGShelp} is used
+    because the call to \code{optim} includes the hard-coded
+    expression \code{helper = do.call(BFGShelp, args = list(initial =
+      foo.vals), envir = environment(fn)))}, which evaluates the
+    \code{BFGShelp} function in the environment of \code{BFGSfn}
+    (\code{fn} is just a wrapper for \code{BFGSfn}) at \code{par =
+      foo.vals} where \code{foo.vals} contains the starting values for
+    the BFGS algorithm. The `done' argument to \code{BFGSfn} is used
+    if the user requests that the Hessian be calculated at the
+    \code{genoud} solution.}  
+  \item{cluster}{This can either be an
+    object of the 'cluster' class returned by one of the
+    \code{\link[snow]{makeCluster}} commands in the snow package or a
+    vector of machine names so \code{genoud} can setup the cluster
+    automatically.  If it is the latter, the vector should look like:
+    \cr \code{c("localhost","musil","musil","deckard")}.\cr This
+    vector would create a cluster with four nodes: one on the
     localhost another on "deckard" and two on the machine named
-    "musil".  Two nodes on a given machine make sense if the machine has two or more
-    chips/cores.  \code{genoud} will setup a SOCK cluster by a call to
-    \code{\link[snow]{makeSOCKcluster}}.  This will require the user
-    to type in her password for each node as the cluster is by default
-    created via \code{ssh}.  One can add on usernames to the machine
-    name if it differs from the current shell: "username@musil".  Other
-    cluster types, such as PVM and MPI,
-    which do not require passwords can be created by directly calling
-    \code{\link[snow]{makeCluster}}, and then passing the returned
-    cluster object to \code{genoud}. For an example of how to manually setup up
-    a cluster with a direct call to \code{\link[snow]{makeCluster}} see
+    "musil".  Two nodes on a given machine make sense if the machine
+    has two or more chips/cores.  \code{genoud} will setup a SOCK
+    cluster by a call to \code{\link[snow]{makeSOCKcluster}}.  This
+    will require the user to type in her password for each node as the
+    cluster is by default created via \code{ssh}.  One can add on
+    usernames to the machine name if it differs from the current
+    shell: "username@musil".  Other cluster types, such as PVM and
+    MPI, which do not require passwords can be created by directly
+    calling \code{\link[snow]{makeCluster}}, and then passing the
+    returned cluster object to \code{genoud}. For an example of how to
+    manually setup up a cluster with a direct call to
+    \code{\link[snow]{makeCluster}} see
     \url{http://sekhon.berkeley.edu/rgenoud/R/genoud_cluster_manual.R}.
-    For an example of how to get around a firewall by ssh tunneling see:
+    For an example of how to get around a firewall by ssh tunneling
+    see:
     \url{http://sekhon.berkeley.edu/rgenoud/R/genoud_cluster_manual_tunnel.R}.}
-  \item{balance}{This logical flag controls if load balancing is done
-    across the cluster.  Load balancing can result in better cluster
-    utilization; however, increased communication can reduce
+  \item{balance}{This logical flag controls if load balancing is
+    done across the cluster.  Load balancing can result in better
+    cluster utilization; however, increased communication can reduce
     performance.  This option is best used if the function being
     optimized takes at least several minutes to calculate or if the
     nodes in the cluster vary significantly in their performance. If
-    cluster==FALSE, this option has no effect.}
-  \item{debug}{
-    This variable turns on some debugging information.  This variable may
-    be \code{TRUE} or \code{FALSE}.}
-  \item{control}{A list of control parameters that is passed to
-    \code{\link[stats]{optim}} if \code{BFGS = TRUE} or \code{P9 >
-      0}. Please see the \code{\link[stats]{optim}} documentation for
-    details. 
-  }
-  \item{...}{Further arguments to be passed to \code{fn} and \code{gr}.}
-  }
-  \value{
-  \code{genoud} returns a list with 7 objects.  8 objects are returned if the
-  user has requested the hessian to be calculated at the
-    solution.  Please see the \code{hessian} option.  The returned
-    objects are:
+    cluster==FALSE, this option has no effect.}  
+  \item{debug}{ This
+    variable turns on some debugging information.  This variable may
+    be \code{TRUE} or \code{FALSE}.}  
+  \item{control}{A list of control
+    parameters that is passed to \code{\link[stats]{optim}} if
+    \code{BFGS = TRUE} or \code{P9 > 0}. Please see the
+    \code{\link[stats]{optim}} documentation for details.  }
+  \item{...}{Further arguments to be passed to \code{fn} and
+    \code{gr}.}  } 
 
+\details{\code{Genoud} solves problems that are nonlinear or
+  perhaps even discontinuous in the parameters of the function to be
+  optimized.  When a statistical model's estimating function (for
+  example, a log-likelihood) is nonlinear in the model's parameters,
+  the function to be optimized will generally not be globally
+  concave and may have irregularities such as saddlepoints or
+  discontinuities.  Optimization methods that rely on derivatives of
+  the objective function may be unable to find any optimum at all.
+  Multiple local optima may exist, so that there is no guarantee
+  that a derivative-based method will converge to the global
+  optimum. On the other hand, algorithms that do not use derivative
+  information (such as pure genetic algorithms) are for many
+  problems needlessly poor at local hill climbing.  Most statistical
+  problems are regular in a neighborhood of the solution.
+  Therefore, for some portion of the search space, derivative
+  information is useful for such problems.  \code{Genoud} also works
+  well for problems that no derivative information exists. For
+  additional documentation and examples please see
+  \url{http://sekhon.berkeley.edu/rgenoud}.}
+
+\value{\code{genoud} returns a list
+  with 7 objects.  8 objects are returned if the user has requested
+  the hessian to be calculated at the solution.  Please see the
+  \code{hessian} option.  The returned objects are:
+  
   \item{value}{
     This variable contains the fitness value at the solution. If
     \code{lexical} optimization was requested, it is a vector.}
@@ -491,20 +496,20 @@
     \code{genoud} used.  Please see the Operators Section for details.}    
   \item{hessian}{
     If the user has requested the hessian
-      matrix to be returned (via the \code{hessian} flag), the hessian
-      at the solution will be returned.  The user may use this matrix to calculate standard
-      errors.}    
+    matrix to be returned (via the \code{hessian} flag), the hessian
+    at the solution will be returned.  The user may use this matrix to calculate standard
+    errors.}    
 }
 \section{Operators}{
   \code{Genoud} has nine operators that it uses.  The integer values which are
   assigned to each of these operators (P1\eqn{\cdots}{...}P9) are
   weights.
   \code{Genoud} calculates the sum of \eqn{s = P1+P2+\cdots+P9}{s =
-  P1+P2+...+P9}.  Each operator is
+    P1+P2+...+P9}.  Each operator is
   assigned a weight equal to \eqn{W_{n} = \frac{s}{P_{n}}}{W_n =
-  s/(P_n)}. The number of
+    s/(P_n)}. The number of
   times an operator is called usually equals \eqn{c_{n} = W_{n} \times
-  pop.size}{c_n = W_n * pop.size}. \cr
+    pop.size}{c_n = W_n * pop.size}. \cr
   
   Operators 6 (Simple Crossover) and 8 (Heuristic
   Crossover) require an even number of individuals to work on---i.e.,
@@ -546,7 +551,7 @@
   problem at hand.  Please pay particular attention to the search
   domains (\code{Domains} and \code{default.domains}). For more information
   please see the reference article. \cr
-
+  
   Linear and nonlinear constraints among the parameters can be
   introduced by users in their fit function.  For example, if
   the sum of parameters 1 and 2 must be less than 725, the following can
@@ -573,19 +578,19 @@
   Optimization Using Derivatives: Theory and Application to Nonlinear
   Models.'' \emph{Political Analysis}, 7: 187-210.
   \url{http://sekhon.berkeley.edu/genoud/genoud.pdf} \cr
-
+  
   Mebane, Walter R., Jr. and Jasjeet S. Sekhon. 2004. ``Robust
   Estimation and Outlier Detection for Overdispersed Multinomial Models
   of Count Data.''  \emph{American Journal of Political Science}, 48
   (April): 391-410. \url{http://sekhon.berkeley.edu/multinom.pdf} \cr
-
+  
   Bright, H. and R. Enison. 1979. Quasi-Random Number Sequences from a
   Long-Period TLP Generator with Remarks on Application to
   Cryptography. \emph{Computing Surveys}, 11(4): 357-370.
 }
-  \author{Walter R. Mebane, Jr., University of Michigan,
+\author{Walter R. Mebane, Jr., University of Michigan,
   \email{wmebane@umich.edu}, \url{http://www-personal.umich.edu/~wmebane/} \cr
-
+  
   Jasjeet S. Sekhon, UC Berkeley, \email{sekhon@berkeley.edu},
   \url{http://sekhon.berkeley.edu/}}
 \seealso{
