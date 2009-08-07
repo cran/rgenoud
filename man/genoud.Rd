@@ -4,12 +4,12 @@
   GENetic Optimization Using Derivatives
 }
 \description{
-  \code{Genoud} is a function that combines evolutionary algorithm
-  methods with a derivative-based (quasi-Newton) method to solve
-  difficult optimization problems.  \code{Genoud} may also be used for
-  optimization problems for which derivatives do not exist.  \code{Genoud}, via
-  the \code{cluster} option, supports the use of multiple computers,
-  CPUs or cores to perform parallel computations.
+  \code{Genoud} is a function that combines evolutionary search
+  algorithms with derivative-based (Newton or quasi-Newton) methods to
+  solve difficult optimization problems.  \code{Genoud} may also be
+  used for optimization problems for which derivatives do not exist.
+  \code{Genoud}, via the \code{cluster} option, supports the use of
+  multiple computers, CPUs or cores to perform parallel computations.
 }
 
 \usage{genoud(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wait.generations=10,
@@ -21,7 +21,8 @@
               output.path="stdout", output.append=FALSE, project.path=NULL,
               P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
               P9mix=NULL, BFGSburnin=0, BFGSfn=NULL, BFGShelp=NULL,
-              cluster=FALSE, balance=FALSE, debug=FALSE, control=list(), ...)
+              control=list(), optim.method=ifelse(boundary.enforcement < 2, "BFGS", "L-BFGS-B"), 
+	      transform=FALSE, debug=FALSE, cluster=FALSE, balance=FALSE, ...)
 }
 \arguments{
   \item{fn}{
@@ -201,10 +202,11 @@
     hit and the \code{hard.generation.limit} option has been set to
     \code{TRUE}. If \code{BFGSburnin < 0}, then it will be ignored unless
     \code{gradient.check = TRUE}. }
-  \item{BFGS}{
+\item{BFGS}{ 
     This variable denotes whether or not \code{genoud} applies a
     quasi-Newton derivative optimizer (BFGS) to the best individual at
-    the end of each generation after the initial one.  Setting BFGS to
+    the end of each generation after the initial one. See the
+    \code{optim.method} option to change the optimizer. Setting BFGS to
     \code{FALSE} does not mean that the BFGS will never be used.  In
     particular, if you want BFGS never to be used, \code{P9} (the
     Local-Minimum Crossover operator) must also be set to zero.}
@@ -231,12 +233,13 @@
     from 0 to 100 and divide by 100 to obtain a search grid of 0 to 1.0
     (by .1). \cr
     
-    Alternatively, one could use lexical optimization with floating point 
-    parameters and specify, for example, that the first criterion is a binary 
-    variable that equals 1.0 if and only if the parameters that should be 
-    ``integers'' are all sufficiently close to an integer so that rounding them to 
-    the nearest integer is tolerable for the purposes of calculating 
-    subsequent criteria. See also \code{BFGSfn}.}
+    Alternatively, the user could use floating point numbers and round
+    the appropriate parameters to the nearest integer inside \code{fn}
+    before the criterion (or criteria if \code{lexical = TRUE}) is
+    evaluated. In that case, the \code{transform} option can be used to
+    create the next generation from the current generation when the 
+    appropriate parameters are in the rounded state.
+    }
   \item{hessian}{
     When this flag is set to \code{TRUE}, \code{genoud} will return the
     hessian matrix at the solution as part of its return list.  A user
@@ -279,10 +282,11 @@
     runs may take a long time, it is important for the user to receive
     feedback.  Hence, print level 2 has been set as the default.}
   \item{share.type}{
-    If \code{share.type} is equal to 1, then \code{genoud}, at startup, checks
-    to see if there is an existing project file (see
+    If \code{share.type} is equal to 1, then \code{genoud}, at
+    startup, checks to see if there is an existing project file (see
     \code{project.path}).  If such a file exists, it initializes its
-    original population using it. \cr
+    original population using it. This option can be used neither with
+    the \code{lexical} nor the \code{transform} options.\cr
     
     If the project file contains a smaller population than the current
     \code{genoud} run, \code{genoud} will randomly create the necessary individuals.  If
@@ -399,7 +403,7 @@
     `initial', an argument named `done' that defaults to \code{FALSE},
     or at least allow \code{...}  to be an argument. \code{BFGSfn}
     must have an argument named `helper' if \code{BFGShelp} is used
-    because the call to \code{optim} includes the hard-coded
+    because the call to \code{\link[stats]{optim}} includes the hard-coded
     expression \code{helper = do.call(BFGShelp, args = list(initial =
       foo.vals), envir = environment(fn)))}, which evaluates the
     \code{BFGShelp} function in the environment of \code{BFGSfn}
@@ -408,6 +412,54 @@
     the BFGS algorithm. The `done' argument to \code{BFGSfn} is used
     if the user requests that the Hessian be calculated at the
     \code{genoud} solution.}  
+  \item{control}{A list of control
+    parameters that is passed to \code{\link[stats]{optim}} if
+    \code{BFGS = TRUE} or \code{P9 > 0}. Please see the
+    \code{\link[stats]{optim}} documentation for details.  }
+  \item{optim.method}{A character string among those that are admissible for the
+    \code{method} argument to the \code{\link{optim}} function, namely one of
+    \code{"BFGS"}, \code{"L-BFGS-B"}, \code{"Nelder-Mead"}, \code{"CG"}, or \code{"SANN"}.
+     By default, \code{optim.method} is \code{"BFGS"} if \code{boundary.enforcement < 2}
+     and is \code{"L-BFGS-B"} if \code{boundary.enforcement = 2}.  For discontinuous
+     objective functions, it may be advisable to select \code{"Nelder-Mead"} or \code{"SANN"}.
+     If selecting \code{"L-BFGS-B"} causes an error message, it may be advisable to
+     select another method or to adjust the \code{control} argument.  Note that the various 
+     arguments of \code{genoud} that involve the four letters \dQuote{BFGS} continue to
+     be passed to \code{\link[stats]{optim}} even if \code{optim.method != "BFGS"}.}
+  \item{transform}{A logical that defaults to \code{FALSE}. If \code{TRUE},
+    it signifies that \code{fn} will return a numeric vector that
+    contains the fit criterion (or fit criteria if \code{lexical = TRUE}),
+    followed by \emph{all} the parameters after they have been transformed.
+    In other words, if this option is used then \code{fn} should have this
+    general form in its body:\cr
+    \code{par <- myTransformation(par)}\cr
+    \code{criter <- myObjective(par)}\cr
+    \code{return( c(criter, par) )}\cr
+    This option is useful when parameter transformations are necessary
+    because the next generation of the population will be created from
+    the current generation in the transformed state, rather than the
+    original state. Thus, assuming the transformation makes the parameters
+    admissible or is fitness-enhancing, the next generation will be stronger 
+    in expectation if it is created from the current generation in the transformed state. 
+
+    There are some issues that should be kept in mind. This option cannot
+    be used when \code{data.type.int = TRUE}. Also, this option coerces
+    \code{MemoryMatrix} to be \code{FALSE}, implying that the \code{cluster}
+    option cannot be used. Also, unless \code{BFGSfn} is specified, this option coerces
+    \code{gradient.check} to \code{FALSE}, \code{BFGS} to \code{FALSE}, 
+    and \code{P9} to \code{0}. If \code{BFGSfn} is specified, that function should
+    perform the transformation but should only return a scalar fit criterion, for example:\cr
+    \code{par <- myTransformation(par)}\cr
+    \code{criter <- myCriterion(par)}\cr
+    \code{return(criter)}\cr
+    Finally, if \code{boundary.enforcement > 0}, care must be taken to
+    assure that the transformed parameters are within the \code{Domains},
+    otherwise unpredictable results could occur. In this case, the transformations are
+    checked for consistency with \code{Domains} but only in the initial generation
+    (to avoid an unacceptable loss in computational speed). }
+  \item{debug}{ This
+    variable turns on some debugging information.  This variable may
+    be \code{TRUE} or \code{FALSE}.}  
   \item{cluster}{This can either be an
     object of the 'cluster' class returned by one of the
     \code{\link[snow]{makeCluster}} commands in the snow package or a
@@ -439,13 +491,6 @@
     optimized takes at least several minutes to calculate or if the
     nodes in the cluster vary significantly in their performance. If
     cluster==FALSE, this option has no effect.}  
-  \item{debug}{ This
-    variable turns on some debugging information.  This variable may
-    be \code{TRUE} or \code{FALSE}.}  
-  \item{control}{A list of control
-    parameters that is passed to \code{\link[stats]{optim}} if
-    \code{BFGS = TRUE} or \code{P9 > 0}. Please see the
-    \code{\link[stats]{optim}} documentation for details.  }
   \item{...}{Further arguments to be passed to \code{fn} and
     \code{gr}.}  } 
 
@@ -594,7 +639,7 @@
   Jasjeet S. Sekhon, UC Berkeley, \email{sekhon@berkeley.edu},
   \url{http://sekhon.berkeley.edu/}}
 \seealso{
-  \code{\link{optim}}.
+  \code{\link[stats]{optim}}.
 }
 \examples{
 #maximize the sin function
@@ -653,3 +698,7 @@
 %  LocalWords:  frac url jasjeet RGENOUD PVM MPI parm Overdispersed UC dontrun
 %  LocalWords:  bivariate CPUs startup Genoud's GenMatch tempdir makeCluster
 %  LocalWords:  localhost musil deckard makeSOCKcluster usernames univariate
+% LocalWords:  SANN dQuote BFGSburnin BFGSfn BFGShelp myCriterion iff Mebane TLP
+% LocalWords:  Singh rgenoud Multinomial Enison dnorm pseudorandom Tausworthe
+% LocalWords:  nondefault args vals envir Nelder myTransformation criter
+% LocalWords:  myObjective

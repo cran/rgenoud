@@ -12,6 +12,8 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
+  August 4, 2009
+
 */
 
 #include "genoud.h"
@@ -615,8 +617,8 @@ void oper8(SEXP fn_optim, SEXP rho,
 	      {
 		if(PrintLevel > 1)
 		  {
-		    fprintf(output, "WARNING: killing out-of-bounds individual created by bfgs oper(9). fit:%10.8lf\n",bfgsfit);
-		    fprintf(output, "WARNING: oper(9) Parameter: %d \t Value: %e\n\n", i, work[i]);
+		    fprintf(output, "NOTE: killing out-of-bounds individual created by bfgs oper(9). fit:%10.8lf\n",bfgsfit);
+		    fprintf(output, "NOTE: oper(9) Parameter: %d \t Value: %e\n\n", i, work[i]);
 		  }
 		warning("killed out-of-bounds individual created by bfgs oper(9)");
 	      }

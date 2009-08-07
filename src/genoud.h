@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  October 18 27, 2007
+  August 3, 2009
 
 */
 
@@ -55,6 +55,8 @@ extern "C"
   double evaluate(SEXP fn, SEXP rho, double *X, long nvars, short int MinMax);
   void EvaluateLexical(SEXP fn, SEXP rho,
 		       double *X, long nvars, long lexical, short int MinMax, double *ret);
+  void EvaluateTransform(SEXP fn, SEXP rho,
+		       double *X, long nvars, long lexical, short int MinMax, double *ret);  
 } /*end of extern C */
 
 #define M(ROW,COL,NCOLS) (((ROW)*(NCOLS))+(COL))
@@ -163,6 +165,10 @@ struct GND_IOstructure
   /* Operator Options */
   double        P9mix;
   int           BFGSburnin;
+
+  /* Transform Related Variables */
+  short int     whichFUN;  /* 1, 2, or 3 corresponding to which evaluate function to call   */
+  short int     Transform; /* 0 or 1 indicating whether transformed parameters are returned */
 };
 
 /* bfgs.c */
@@ -284,7 +290,7 @@ void JaIntegerOper7(VECTOR p1, VECTOR p2, double **domains, int nvars);
 FLAG InBounds(VECTOR child, double **domains, int nvars);
 
 /*print_format.c */
-long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, FILE *fp);
+long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, FILE *fp, short PrintLevel);
 void print_domains(MATRIX equal, int t_equ, short DataType, FILE *output);
 void print_matrix(int lr, int ur, int lc, int uc, MATRIX mat, FILE *output);
 void print_population(long popsize, long nvars, long generation, long lexical, double **foo, FILE *out);

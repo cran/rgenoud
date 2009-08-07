@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/print_format.cpp,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
+  August 3, 2009
 
 */
 
@@ -29,10 +29,10 @@
 /*                                                                              */
 /********************************************************************************/
 
-long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, FILE *fp)
+long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, FILE *fp, short PrintLevel)
 {
   char ctmp[MAXPATH];
-  long generation, PopSize, nvars, UsePopSize;
+  long generation, PopSize, nvars, UsePopSize, FitVals;
   long i, j, ltmp;
   double **OldData;
   short trip=0;
@@ -45,23 +45,36 @@ long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, 
 
     fscanf(fp, "%s", ctmp);
     fscanf(fp, " %d", &generation);
-    fprintf(output, "Old PopFile:\n");
-    fprintf(output, "Generation: %d\n", generation);
+
+    if(PrintLevel>0)
+      fprintf(output, "Generation: %d\n", generation);
     /* This reads the "Population" name */
     fscanf(fp, "%s", ctmp);
     /* This reads the "Size:" name */
     fscanf(fp, "%s", ctmp);
     fscanf(fp, " %d", &PopSize);
-    fprintf(output, "Population Size: %d\n", PopSize); 
+
+    if(PrintLevel>0 & trip==0)
+      fprintf(output, "Population Size: %d\n", PopSize); 
+
+    fscanf(fp, "%s", ctmp);     /* reads "Fit" */
+    fscanf(fp, "%s", ctmp);     /* reads "Values:" */
+    fscanf(fp, "%d", &FitVals); /* reads number of fit values */
+
+    if(FitVals > 1)
+      warning("Reading an existing population file is not supported for Fit Values != 1");
+
     /* This reads the "Variables:" name */
     fscanf(fp, "%s", ctmp);
     fscanf(fp, " %d", &nvars);
-    fprintf(output, "Nvars: %d\n", nvars); 
+
+    if(PrintLevel>0 & trip==0)
+      fprintf(output, "Number of Variables: %d\n", nvars); 
 
     if (trip==0) {
-      OldData = JaMatrixAllocate(PopSize+2, nvars+2);
-
       if (nvars!=NewVars) return(0);
+
+      OldData = JaMatrixAllocate(PopSize+2, nvars+2);
       trip++;
     }
     
@@ -86,15 +99,19 @@ long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, 
   }
 
   /* let's print the population file */
-  fprintf(output, "\nRead in Population: UsePopSize: %d\n", UsePopSize); 
-  for (i=1; i<=UsePopSize; i++) {
-    fprintf(output, "%d \t", i); 
-    for (j=0; j<=nvars; j++) {
-      fprintf(output, "%e \t", Data[i][j]);
+  if(PrintLevel>1)
+    {
+      fprintf(output, "\nRead in Population. Used Population Size: %d\n", UsePopSize); 
+      for (i=1; i<=UsePopSize; i++) {
+	fprintf(output, "%d \t", i); 
+	for (j=0; j<=nvars; j++) {
+	  fprintf(output, "%e \t", Data[i][j]);
+	}
+	fprintf(output, "\n");
+      }
+      fprintf(output, "\n");
+      fflush(output);
     }
-    fprintf(output, "\n");
-  }
-  fflush(output);
 
   JaMatrixFree(OldData, PopSize);
   return(PopSize);

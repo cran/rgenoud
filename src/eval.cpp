@@ -12,7 +12,7 @@
   http://sekhon.berkeley.edu
   <sekhon@berkeley.edu>
 
-  December 22, 2007
+  August 3, 2009
 
 */
 
@@ -81,12 +81,7 @@ extern "C"
 
     for (i=0; i<lexical; i++)
       {
-	ret[i] =  REAL(Rret)[i];
-      }
-    UNPROTECT(2);
-
-    for (i=0; i<lexical; i++)
-      {
+        ret[i] =  REAL(Rret)[i];
 	isFinite = R_finite(ret[i]);  
 	if (!isFinite)
 	  {
@@ -100,8 +95,50 @@ extern "C"
 	      }
 	  }  
       }
+    UNPROTECT(2);
   } /*   void EvaluateLexical(SEXP fn, SEXP rho */
   
+
+  void EvaluateTransform(SEXP fn, SEXP rho,
+                       double *X, long nvars, long lexical, short int MinMax, double *ret)
+  {
+    SEXP R_fcall, Rx, Rret;
+    long i;
+    int isFinite=0;
+
+    PROTECT(Rx = allocVector(REALSXP, nvars));
+
+    for (i=0; i<nvars; i++)
+      {
+        REAL(Rx)[i] = X[i+1];
+      }
+
+    PROTECT(R_fcall = lang2(fn, R_NilValue));
+    SETCADR(R_fcall, Rx);
+    Rret = eval(R_fcall, rho);
+
+    for (i=0; i<lexical; i++)
+      {
+        ret[i] =  REAL(Rret)[i];
+        isFinite = R_finite(ret[i]);
+        if (!isFinite)
+          {
+            if (MinMax)
+              {
+                ret[i]=(-1*DOUBLEMAX);
+              }
+            else
+              {
+                ret[i]=(DOUBLEMAX);
+              }
+          }
+      }
+    for(i=0; i<nvars; i++) // this is the only part that differs from EvaluateLexical
+      {
+        X[(i+1)] = REAL(Rret)[(i+lexical)];
+      }
+    UNPROTECT(2);
+  } /*   void EvaluateTransform(SEXP fn, SEXP rho */
 
   void userGradientfn(SEXP fnGR, SEXP rho, double *parms, double *grad, long nvars)
   {

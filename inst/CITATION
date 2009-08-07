@@ -1,0 +1,19 @@
+citHeader("To cite rgenoud in publications use:")
+
+citEntry(entry = "Article",
+  title        = "Genetic Optimization Using Derivatives: The {rgenoud} Package for {R}",
+  author       = personList(person("Walter", "Mebane, Jr.", "R."),
+                   as.person("Jr."),
+                   as.person("Jasjeet S. Sekhon")),
+  journal      = "Journal of Statistical Software",
+  year         = "2009",
+  note         = "Forthcoming",
+  url          = "http://www.jstatsoft.org/",
+
+  textVersion  =
+  paste("Walter R. Mebane, Jr., Jasjeet S. Sekhon (2009).",
+        "Genetic Optimization Using Derivatives: The rgenoud Package for R.",
+        "Journal of Statistical Software, Forthcoming.",
+        "URL http://www.jstatsoft.org/.")
+)
+

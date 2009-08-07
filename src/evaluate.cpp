@@ -12,7 +12,7 @@
   http://sekhon.berkeley.edu
   <sekhon@berkeley.edu>
 
-  Friday March 13, 2009
+  August 6, 2009
 
 */
 
@@ -255,7 +255,8 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
   VECTOR LexicalReturn;
   VECTOR oldfitvalueVEC;
   short int LexicalFitsImproving;
-  if(Structure->Lexical > 1)
+  /* Transform is logically similar to Lexical even if there is only one fit criterion */
+  if(Structure->Lexical > 1 || Structure->Transform == 1)
     {
       LexicalReturn = (double *)  malloc(Structure->Lexical*sizeof(double));  
       oldfitvalueVEC = (double *)  malloc(Structure->Lexical*sizeof(double));  
@@ -324,28 +325,23 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
   if (Structure->ShareType == 1 || Structure->ShareType == 3) {
 
     if(PrintLevel>0)
-      fprintf(output, "Using old population file to initialize new population\n");
+      fprintf(output, "Using old population file to initialize new population.\n");
 
     if((popout = fopen(Structure->ProjectPath, "r")) == NULL) {
-      fprintf(output,"WARNING: Unable to open the old project file: %s\n", 
-	      Structure->ProjectPath);
       fprintf(output,"         Generating new population\n");
       warning("Unable to open the old project file: %s", Structure->ProjectPath);
     }
     else {
-      pop_size_old=ReadPopulation(population, pop_size, nvars, output, popout);
+      pop_size_old=ReadPopulation(population, pop_size, nvars, output, popout, PrintLevel);
       fclose(popout);
       if (pop_size_old<2) {
-	fprintf(output,
-		"WARNING: The old population file appears to be from the run of a different model.\n");
-	warning("The old population file appears to be from the run of a different model.");
+	warning("The old population file appears to be from a different genoud specification.");
 	pop_size_old=0;
       }
     }
     if (PrintLevel>1) {
       if((popout = fopen(Structure->ProjectPath, "a")) == NULL) {
-	fprintf(output,"Unable to open the project file: %s", 
-		Structure->ProjectPath);
+	warning("Unable to open the project file: %s", Structure->ProjectPath);
 	
 	/* free populationstats stuff */
 	free(mean);
@@ -373,7 +369,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	free_ivector(live, 1);
 	free_ivector(parents, 1);
 
-	if(Structure->Lexical > 1)
+        if(Structure->Lexical > 1 || Structure->Transform == 1)
 	  {
 	    free(LexicalReturn);
 	    free(oldfitvalueVEC);
@@ -416,7 +412,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	free_ivector(live, 1);
 	free_ivector(parents, 1);
 
-	if(Structure->Lexical > 1)
+        if(Structure->Lexical > 1 || Structure->Transform == 1)
 	  {
 	    free(LexicalReturn);
 	    free(oldfitvalueVEC);
@@ -431,8 +427,15 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
   /* The new initial value matrix: setting a new initial value for every individual */
   if (ExternStructure->nStartingValues > 0) 
     {
+      /* Adjust old starting values (from ReadPopulation) so we have enough room for our 
+	 starting.values */
+      pop_size_old = pop_size_old-ExternStructure->nStartingValues-1;
+      if (pop_size_old < 0)
+	pop_size_old = 0;
+      
       // seed the starting values until we run out of population or starting values!
       j = pop_size_old;
+      
       for(s=0; s<ExternStructure->nStartingValues; s++) {
 	j++;
 	for(i=1; i<=nvars; i++) {
@@ -475,7 +478,6 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
       if ( (UniqueCount+pop_size) >= MemorySize )
 	{
 	  Structure->MemoryUsage=0;
-	  fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
 	  warning("Turned Off MemoryMatrix because memory usage was too great.");
 	} /* end of if */
     } // end of Memory based evaluation
@@ -488,11 +490,11 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      for(j=1; j<=nvars; j++)
 		X[j] = population[i][j];
 	      
-	      if (Structure->Lexical < 2)
+              if (Structure->whichFUN == 1) // neither Lexical, nor Transform
 		{
 		  population[i][0] = evaluate(Structure->fn, Structure->rho, X, nvars, MinMax);
 		} 
-	      else 
+              else if(Structure->whichFUN == 2) // Lexical but not Transform
 		{
 		  EvaluateLexical(Structure->fn, Structure->rho, 
 				  X, nvars, Structure->Lexical, MinMax, LexicalReturn);
@@ -504,7 +506,55 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 		      count++;
 		      population[i][j] = LexicalReturn[count];
 		    }		      
-		} // else
+                }  // else if
+              else // Transform
+                {
+                  EvaluateTransform(Structure->fn, Structure->rho,
+				    X, nvars, Structure->Lexical, MinMax, LexicalReturn);
+		  
+                  population[i][0] = LexicalReturn[0];
+                  count = 0;
+                  if(Structure->Lexical > 1) 
+		    for(j=(nvars+2);j<lexical_end;j++)
+		      {
+			count++;
+			population[i][j] = LexicalReturn[count];
+		      }
+                  if (BoundaryEnforcement==0) 
+		    for(j=1; j<=nvars; j++)
+		      {
+			population[i][j] = X[j];
+		      }
+                  else 
+		    for(j=1; j<=nvars; j++)
+		      {
+			if(X[j] < domains[j][1])
+			  {
+			    if(PrintLevel>0)
+			      {
+				fprintf(output,
+					"\nNOTE: Transformed individual below lower bound.\n");
+				fprintf(output,"NOTE: Generation: %d \t Parameter: %d \t Value: %e \t Bound: %e\n\n",
+					count_gener, j, X[j], domains[j][1]);
+			      }
+			    warning("Transformed individual below lower bound. Generation: %d; Parameter: %d; Value: %e; Bound: %e",
+				    count_gener, j, X[j], domains[j][1]);
+			  }
+			if(X[j] > domains[j][3])
+			  {
+			    if(PrintLevel>0)
+			      {
+				fprintf(output,
+					"\nNOTE: Transformed individual above upper bound.\n");
+				fprintf(output,"NOTE: Generation: %d \t Parameter: %d \t Value: %e \t Bound: %e\n\n",
+					count_gener, j, X[j], domains[j][3]);
+			      }
+			    warning("Transformed individual above upper bound. Generation: %d; Parameter: %d; Value: %e; Bound: %e",
+				    count_gener, j, X[j], domains[j][3]);
+			  }
+			population[i][j] = X[j]; // put the transformation in anyway
+		      }//end for
+                }//end Transform
 	    }
 	} //end of i loop
     } // end of default evaluation
@@ -677,7 +727,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
       free_ivector(live, 1);
       free_ivector(parents, 1);
 
-      if(Structure->Lexical > 1)
+      if(Structure->Lexical > 1 || Structure->Transform == 1)
 	{
 	  free(LexicalReturn);
 	  free(oldfitvalueVEC);
@@ -719,7 +769,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
       free_ivector(live, 1);
       free_ivector(parents, 1);
 
-      if(Structure->Lexical > 1)
+      if(Structure->Lexical > 1 || Structure->Transform == 1)
 	{
 	  free(LexicalReturn);
 	  free(oldfitvalueVEC);
@@ -1095,7 +1145,6 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  if ( (UniqueCount+pop_size) >= MemorySize )
 	    {
 	      Structure->MemoryUsage=0;
-	      fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
 	      warning("Turned Off MemoryMatrix because memory usage was too great.");
 	    } /* end of if */
 	} // end of MemoryUsage==1
@@ -1108,11 +1157,11 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 		  for(j=1; j<=nvars; j++)
 		    X[j] = population[i][j];
 		  
-		  if (Structure->Lexical < 2)
+                  if (Structure->whichFUN == 1) // neither Lexical, nor Transform
 		    {
 		      population[i][0] = evaluate(Structure->fn, Structure->rho, X, nvars, MinMax);
 		    } 
-		  else 
+                  else if(Structure->whichFUN == 2) // Lexical but not Transform
 		    {
 		      EvaluateLexical(Structure->fn, Structure->rho, 
 				      X, nvars, Structure->Lexical, MinMax, LexicalReturn);
@@ -1125,6 +1174,23 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			  population[i][j] = LexicalReturn[count];
 			}		      			  
 		    }
+                  else // Transform
+                    {
+                      EvaluateTransform(Structure->fn, Structure->rho,
+                                      X, nvars, Structure->Lexical, MinMax, LexicalReturn);
+
+                      population[i][0] = LexicalReturn[0];
+                      count = 0;
+                      if(Structure->Lexical > 1) for(j=(nvars+2);j<lexical_end;j++)
+                        {
+                          count++;
+                          population[i][j] = LexicalReturn[count];
+                        }
+                      for(j=1; j<=nvars; j++)
+                        {
+                          population[i][j] = X[j];
+                        }
+                    }
 		}
 	    } //end of i loop	  
 	} //end of default evaluation scheme
@@ -1153,8 +1219,8 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  }
 
 	bfgsfit = genoud_optim(Structure->fn_optim, Structure->rho, bfgsoutX, nvars);
-	
-	if (Structure->Lexical < 2)
+
+        if (Structure->whichFUN == 1) // neither Lexical, nor Transform
 	  {
 	    switch(MinMax) {
 	    case 0:
@@ -1169,10 +1235,10 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 		      if (PrintLevel>1)
 			{
 			  fprintf(output,
-				  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
-			  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
+				  "\nNOTE: BFGS hit on best individual produced Out of Boundary individual.\n");
+			  fprintf(output,"NOTE: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
 				  count_gener, i+1, bfgsoutX[i]);
-			  fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
+			  fprintf(output,"NOTE: Fit: %e\n\n", bfgsfit);
 			}
 		      warning("BFGS hit on best individual produced Out of Boundary individual.");
 		    }
@@ -1181,10 +1247,10 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 		      if (PrintLevel>1)
 			{
 			  fprintf(output,
-				  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
-			  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n", 
+				  "\nNOTE: BFGS hit on best individual produced Out of Boundary individual.\n");
+			  fprintf(output,"NOTE: Generation: %d \t Parameter: %d \t Value: %e\n", 
 				  count_gener, i+1, bfgsoutX[i]);
-			  fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
+			  fprintf(output,"NOTE: Fit: %e\n\n", bfgsfit);
 			}
 		      warning("BFGS hit on best individual produced Out of Boundary individual.");
 		    }
@@ -1219,8 +1285,8 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 		      if (PrintLevel>1)
 			{
 			  fprintf(output,
-				  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
-			  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
+				  "\nNOTE: BFGS hit on best individual produced Out of Boundary individual.\n");
+			  fprintf(output,"NOTE: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
 				  count_gener, i+1, bfgsoutX[i]);
 			}
 		      warning("BFGS hit on best individual produced Out of Boundary individual.");
@@ -1230,8 +1296,8 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 		      if (PrintLevel>1)
 			{
 			  fprintf(output,
-				  "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
-			  fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
+				  "\nNOTE: BFGS hit on best individual produced Out of Boundary individual.\n");
+			  fprintf(output,"NOTE: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
 				  count_gener, i+1, bfgsoutX[i]);
 			}
 		      warning("BFGS hit on best individual produced Out of Boundary individual.");
@@ -1257,7 +1323,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 		} /* end if (population[1][0] < bfgsfit) */
 	    } /* end switch */
 	  }/*end of NOT lexical bfgs hit */
-	else 
+        else if(Structure->whichFUN == 2) // Lexical but not Transform
 	  {
 	    /* is the BFGS individual in the bounds? */
 	    BoundaryTrigger=0; /* outside of bounds ? */
@@ -1268,10 +1334,10 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 		if (PrintLevel>1)
 		  {
 		    fprintf(output,
-			    "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
-		    fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
+			    "\nNOTE: BFGS hit on best individual produced Out of Boundary individual.\n");
+		    fprintf(output,"NOTE: Generation: %d \t Parameter: %d \t Value: %e\n\n", 
 			    count_gener, i+1, bfgsoutX[i]);
-		    fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
+		    fprintf(output,"NOTE: Fit: %e\n\n", bfgsfit);
 		  }
 		warning("BFGS hit on best individual produced Out of Boundary individual.");
 	      }
@@ -1280,10 +1346,10 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 		if (PrintLevel>1)
 		  {
 		    fprintf(output,
-			    "\nWARNING: BFGS hit on best individual produced Out of Boundary individual.\n");
-		    fprintf(output,"WARNING: Generation: %d \t Parameter: %d \t Value: %e\n", 
+			    "\nNOTE: BFGS hit on best individual produced Out of Boundary individual.\n");
+		    fprintf(output,"NOTE: Generation: %d \t Parameter: %d \t Value: %e\n", 
 			    count_gener, i+1, bfgsoutX[i]);
-		    fprintf(output,"WARNING: Fit: %e\n\n", bfgsfit);
+		    fprintf(output,"NOTE: Fit: %e\n\n", bfgsfit);
 		  }
 		warning("BFGS hit on best individual produced Out of Boundary individual.");
 	      }
@@ -1335,6 +1401,78 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			   MinMax, pop_size, nvars, lexical_end, 1);
 	    }
 	  } /*end of LEXICAL bfgs hit */
+        else // Transform
+          {
+            for(j=1; j<=nvars; j++)
+              {
+                X[j] = bfgsoutX[(j-1)];
+              }
+            // Call EvaluateTransform now to transform X
+            EvaluateTransform(Structure->fn, Structure->rho,
+                              X, nvars, Structure->Lexical, MinMax, LexicalReturn);
+
+            /* is the BFGS individual in the bounds? */
+            BoundaryTrigger=0; /* outside of bounds ? */
+            for (j=1; i<=nvars; i++) {
+              if (X[j] < domains[j][1]) {
+                BoundaryTrigger=1;
+                if (PrintLevel>1)
+                  {
+                    fprintf(output,
+                            "\nNOTE: BFGS hit on best individual produced Out of Boundary individual.\n");
+                    fprintf(output,"NOTE: Generation: %d \t Parameter: %d \t Value: %e\n\n",
+                            count_gener, j, X[j]);
+                    fprintf(output,"NOTE: Fit: %e\n\n", bfgsfit);
+                  }
+                warning("BFGS hit on best individual produced Out of Boundary individual.");
+              }
+              if (X[j] > domains[j][3]) {
+                BoundaryTrigger=1;
+                if (PrintLevel>1)
+                  {
+                    fprintf(output,
+                            "\nNOTE: BFGS hit on best individual produced Out of Boundary individual.\n");
+                    fprintf(output,"NOTE: Generation: %d \t Parameter: %d \t Value: %e\n",
+                            count_gener, j, X[j]);
+                    fprintf(output,"NOTE: Fit: %e\n\n", bfgsfit);
+                  }
+                warning("BFGS hit on best individual produced Out of Boundary individual.");
+              }
+            } /* end for loop */
+
+            /* if we use out of bounds individuals then proceed */
+            /* 0=anything goes, 1: regular; 2: no trespassing! */
+            /* Figure out why BoundaryEnforcement==0 and BoundaryTrigerr==0 are separate above */
+            if (BoundaryEnforcement == 0 || BoundaryTrigger == 0) {
+              if(Structure->Lexical < 2) // Transform but not Lexical
+                {
+                  for(i=1; i<=nvars; i++)
+                    {
+                      population[1][i] = X[i];
+                    }
+                  population[1][0] = LexicalReturn[0]; // from ~45 lines above
+                }
+              else /* Add new individual to the END because we are doing Transform and Lexical */
+                {
+                  for(i=1;i<=nvars;i++)
+                    {
+                      population[(pop_size-1)][i] = X[i];
+                    }
+                  population[(pop_size-1)][0] = LexicalReturn[0]; // from ~55 lines above
+                  count = 0;
+                  for(i=(nvars+2);i<lexical_end;i++)
+                    {
+                      count++;
+                      population[(pop_size-1)][i] = LexicalReturn[count];
+                    }
+
+                    /* REDO SORT.  This is inefficient becase we only changed 1 individual*/
+                    RlexicalSort(Structure->fnLexicalSort, Structure->rho,
+                                 population,
+                                 MinMax, pop_size, nvars, lexical_end, 1);
+                }
+            } /* end of boundary enforcment */
+          } /*end of TRANSFORM bfgs hit */
       } /* end of UseBFGS */  
 
       /* check to see if fit is improving */
@@ -1537,7 +1675,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free_ivector(live, 1);
 	  free_ivector(parents, 1);
 
-	  if(Structure->Lexical > 1)
+          if(Structure->Lexical > 1 || Structure->Transform == 1)
 	    {
 	      free(LexicalReturn);
 	      free(oldfitvalueVEC);
@@ -1579,7 +1717,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free_ivector(live, 1);
 	  free_ivector(parents, 1);
 
-	  if(Structure->Lexical > 1)
+          if(Structure->Lexical > 1 || Structure->Transform == 1)
 	    {
 	      free(LexicalReturn);
 	      free(oldfitvalueVEC);
@@ -1673,8 +1811,8 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      warning("Stopped because hard maximum generation limit was hit.\nAt least one gradient is too large.");
 	      if(PrintLevel>0)	  
 		{
-		  fprintf(output,"\nWARNING: HARD MAXIMUM GENERATION LIMIT HIT\n");
-		  fprintf(output,"         At least one gradient is too large\n");
+		  fprintf(output,"\nNOTE: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		  fprintf(output,"        At least one gradient is too large\n");
 		}
 	    } // else
 	} // if ( (count_gener == MaxGenerations) && (GradientTrigger==1) ) 
@@ -1714,7 +1852,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 		warning("Stopped because hard maximum generation limit was hit.");
 		if(PrintLevel>0)	  
 		  {
-		    fprintf(output,"\nWARNING: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		    fprintf(output,"\nNOTE: HARD MAXIMUM GENERATION LIMIT HIT\n");
 		  }
 	      } /* end of if HardMax */
 	  }
@@ -1827,7 +1965,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
   free_ivector(live, 1);
   free_ivector(parents, 1);
 
-  if(Structure->Lexical > 1)
+  if(Structure->Lexical > 1 || Structure->Transform == 1)
     {
       free(LexicalReturn);
       free(oldfitvalueVEC);
@@ -2204,54 +2342,38 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 
   /* Check to make sure that all operators are positve numbers! */
   if (Structure->P[0] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 1 (Cloning) was Assigned an Illegal Value: %d\n", 
-	    Structure->P[0]);
     warning("Operator 1 (Cloning) was Assigned an Illegal Value: %d.", Structure->P[0]);
     Structure->P[0]=0.0;
   }
   if (Structure->P[1] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 2 (Uniform Mutation) was Assigned an Illegal Value: %d\n", 
-	    Structure->P[1]);
     warning("Operator 1 (Uniform Mutation) was Assigned an Illegal Value: %d.", Structure->P[1]);
     Structure->P[1]=0.0;
   }
   if (Structure->P[2] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 3 (Boundary Mutation) was Assigned an Illegal Value: %d\n", 
-	    Structure->P[2]);
     warning("Operator 3 (Boundary Mutation) was Assigned an Illegal Value: %d.", Structure->P[2]);
     Structure->P[2]=0;
   }
   if (Structure->P[3] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 4 (Non-Uniform Mutation) was Assigned an Illegal Value: %d\n", 
-	    Structure->P[3]);
     warning("Operator 4 (Non-Uniform Mutation) was Assigned an Illegal Value: %d.", 
 	    Structure->P[3]);
     Structure->P[3]=0;
   }
   if (Structure->P[4] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 5 (Polytope Crossover) was Assigned an Illegal Value: %d\n", 
-	    Structure->P[4]);
     warning("Operator 5 (Polytope Crossover) was Assigned an Illegal Value: %d.", 
 	    Structure->P[4]);
     Structure->P[4]=0;
   }
   if (Structure->P[5] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 6 (Simple Crossover) was Assigned an Illegal Value: %d\n", 
-	    Structure->P[5]);
     warning("Operator 6 (Simple Crossover) was Assigned an Illegal Value: %d.", 
 	    Structure->P[5]);
     Structure->P[5]=0;
   }
   if (Structure->P[6] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 7 (Whole Non-Uniform Mutation) was Assigned an Illegal Value: %d\n", 
-	    Structure->P[6]);
     warning("Operator 7 (Whole Non-Uniform Mutation) was Assigned an Illegal Value: %d.", 
 	    Structure->P[6]);
     Structure->P[6]=0;
   }
   if (Structure->P[7] < 0 ) {
-    fprintf(output,"\n\nWARNING: Operator 8 (Heuristic Crossover) was Assigned an Illegal Value: %d\n", 
-	    Structure->P[7]);
     warning("Operator 8 (Heuristic Crossover) was Assigned an Illegal Value: %d.", 
 	    Structure->P[7]);
     Structure->P[7]=0;
@@ -2263,8 +2385,6 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
     *GradientCheck=0;
 
     if (Structure->P[8] > 0) {
-      fprintf(output,"\n\nWARNING: Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %d\nThis is an illegal value because we are working with integer data\n", 
-	      Structure->P[8]);
       warning("Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %d\nThis is an illegal value because we are working with integer data.", 
 	      Structure->P[8]);
       Structure->P[8]=0;
@@ -2272,8 +2392,6 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
   }
   else {
     if (Structure->P[8] < 0 ) {
-      fprintf(output,"\n\nWARNING: Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %d\n", 
-	      Structure->P[8]);
       warning("Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %d.", 
 	      Structure->P[8]);
       Structure->P[8]=0;
@@ -2650,13 +2768,11 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       fprintf(output, "Using old population file to initialize new population\n");
 
     if((popout = fopen(Structure->ProjectPath, "r")) == NULL) {
-      fprintf(output,"WARNING: Unable to open the old project file: %s\n", 
-	      Structure->ProjectPath);
       fprintf(output,"         Generating new population\n");
       warning("Unable to open the old project file: %s", Structure->ProjectPath);
     }
     else {
-      pop_size_old=ReadPopulation(population, pop_size, nvars, output, popout);
+      pop_size_old=ReadPopulation(population, pop_size, nvars, output, popout, PrintLevel);
       fclose(popout);
 
       for (i=1; i<=pop_size_old; i++) {
@@ -2666,16 +2782,13 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  }
 
       if (pop_size_old<2) {
-	fprintf(output,
-		"WARNING: The old population file appears to be from the run of a different model.\n");
-	warning("The old population file appears to be from the run of a different model.");
+	warning("The old population file appears to be from a different genoud specification.");
 	pop_size_old=0;
       }
     }
     if (PrintLevel>1) {
       if((popout = fopen(Structure->ProjectPath, "a")) == NULL) {
-	fprintf(output,"Unable to open the project file: %s", 
-		Structure->ProjectPath);
+	warning("Unable to open the project file: %s", Structure->ProjectPath);
 
 	/* free populationstats stuff */
 	free(mean);
@@ -2716,8 +2829,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   else {
     if (PrintLevel>1) {
       if((popout = fopen(Structure->ProjectPath, "w")) == NULL) {
-	fprintf(output,"Unable to open the project file: %s", 
-		Structure->ProjectPath);
+	warning("Unable to open the project file: %s", Structure->ProjectPath);
 	
 	/* free populationstats stuff */
 	free(mean);
@@ -2759,8 +2871,15 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   /* The new initial value matrix: setting a new initial value for every individual */
   if (ExternStructure->nStartingValues > 0) 
     {
+      /* Adjust old starting values (from ReadPopulation) so we have enough room for our 
+	 starting.values */
+      pop_size_old = pop_size_old-ExternStructure->nStartingValues-1;
+      if (pop_size_old < 0)
+	pop_size_old = 0;
+      
       // seed the starting values until we run out of population or starting values!
       j = pop_size_old;
+
       for(s=0; s<ExternStructure->nStartingValues; s++) {
 	j++;
 	for(i=1; i<=nvars; i++) {
@@ -2804,7 +2923,6 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       if ( (UniqueCount+pop_size) >= MemorySize )
 	{
 	  Structure->MemoryUsage=0;
-	  fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
 	  warning("Turned Off MemoryMatrix because memory usage was too great.");
 	} /* end of if */
     } // end of Memory based evaluation
@@ -3393,7 +3511,6 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  if ( (UniqueCount+pop_size) >= MemorySize )
 	    {
 	      Structure->MemoryUsage=0;
-	      fprintf(output,"\nWARNING: Turning Off MemoryMatrix because memory usage is too great.\n\n");
 	      warning("Turned Off MemoryMatrix because memory usage was too great.");
 	    } /* end of if */
 	} // end of MemoryUsage==1
@@ -3776,8 +3893,8 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	      warning("Stopped because hard maximum generation limit was hit.\nAt least one gradient is too large.");
 	      if(PrintLevel>0)	  
 		{
-		  fprintf(output,"\nWARNING: HARD MAXIMUM GENERATION LIMIT HIT\n");
-		  fprintf(output,"         At least one gradient is too large\n");
+		  fprintf(output,"\nNOTE: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		  fprintf(output,"        At least one gradient is too large\n");
 		}
 	    } // else
 	} // if ( (count_gener == MaxGenerations) && (GradientTrigger==1) ) 
@@ -3817,7 +3934,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		warning("Stopped because hard maximum generation limit was hit.");
 		if(PrintLevel>0)	  
 		  {
-		    fprintf(output,"\nWARNING: HARD MAXIMUM GENERATION LIMIT HIT\n");
+		    fprintf(output,"\nNOTE: HARD MAXIMUM GENERATION LIMIT HIT\n");
 		  }
 	      } /* end of if HardMax */		
 	  }

@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  August 27, 2007
+  August 3, 2009
 */
 
 #include "genoud.h"
@@ -107,7 +107,7 @@ extern "C"
 	       SEXP fn_optim, 
 	       SEXP lexical, SEXP fnLexicalSort, SEXP fnMemoryMatrixEvaluate,
 	       SEXP RuserGradient, SEXP fnGR,
-	       SEXP RP9mix, SEXP BFGSburnin) 
+               SEXP RP9mix, SEXP BFGSburnin, SEXP transform)
   {
 
     SEXP ret;
@@ -228,6 +228,18 @@ extern "C"
     /* Operator Options */
     MainStructure->P9mix=asReal(RP9mix);
     MainStructure->BFGSburnin=asInteger(BFGSburnin);
+
+    /* Transform Related Variables */
+    /* whichFUN == 3 implies EvaluateTransform should be called */
+    /* whichFUN == 2 implies EvaluateLexical should be called */
+    /* whichFUN == 1 implies evaluate should be called */
+    MainStructure->Transform=asInteger(transform);
+    if(MainStructure->Transform == 1)
+        MainStructure->whichFUN = 3;
+    else if(MainStructure->Lexical > 1)
+        MainStructure->whichFUN = 2;
+    else
+        MainStructure->whichFUN = 1;
 
     genoud(MainStructure);
 
