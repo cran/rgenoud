@@ -1,6 +1,10 @@
 	Note: 5.6-x is a major revision from 5.5-1 (the previous version
 	on CRAN).  See major changes from 5.6-1 onwards.
 
+2009-08-14  Version: 5.6-6
+
+	* rgenoud.Rd: Improved the documentation of the 'transform' option.
+
 2009-08-07  Version: 5.6-5
 
 	* rgenoud.Rnw: created vignette file to generate rgenoud.pdf,
@@ -16,10 +20,10 @@
 
 2009-08-06  Version: 5.6-4 
 
-	* evaluate.cpp: Adds boundary checking when the 'transform'
-	option (which was added in 5.6-1) is used and
-	boundary.enforcement>0.  Only checks bounds in generation 0
-	because of computational efficiency concerns. 
+	* evaluate.cpp: Adds boundary checking for the parameters returned
+	by the 'transform' option.  For the transform option, only checks
+	bounds in generation 0 because of computational efficiency
+	concerns. The standard bounds checking remains unchanged.
 
 	* genoud.Rd: Documentation updated to reflect above.
 

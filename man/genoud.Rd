@@ -426,32 +426,33 @@
      select another method or to adjust the \code{control} argument.  Note that the various 
      arguments of \code{genoud} that involve the four letters \dQuote{BFGS} continue to
      be passed to \code{\link[stats]{optim}} even if \code{optim.method != "BFGS"}.}
-  \item{transform}{A logical that defaults to \code{FALSE}. If \code{TRUE},
-    it signifies that \code{fn} will return a numeric vector that
-    contains the fit criterion (or fit criteria if \code{lexical = TRUE}),
-    followed by \emph{all} the parameters after they have been transformed.
-    In other words, if this option is used then \code{fn} should have this
-    general form in its body:\cr
+  \item{transform}{A logical that defaults to \code{FALSE}.  If
+    \code{TRUE}, it signifies that \code{fn} will return a numeric
+    vector that contains the fit criterion (or fit criteria if
+    \code{lexical = TRUE}), followed by the parameters. If this option
+    is used, \code{fn} should have the following general form in
+    its body:\cr
     \code{par <- myTransformation(par)}\cr
     \code{criter <- myObjective(par)}\cr
     \code{return( c(criter, par) )}\cr
     This option is useful when parameter transformations are necessary
     because the next generation of the population will be created from
     the current generation in the transformed state, rather than the
-    original state. Thus, assuming the transformation makes the parameters
-    admissible or is fitness-enhancing, the next generation will be stronger 
-    in expectation if it is created from the current generation in the transformed state. 
-
+    original state.  This option can be used by users to implement their
+    own operators. \cr
+    
     There are some issues that should be kept in mind. This option cannot
-    be used when \code{data.type.int = TRUE}. Also, this option coerces
+    be used when \code{data.type.int = TRUE}.  Also, this option coerces
     \code{MemoryMatrix} to be \code{FALSE}, implying that the \code{cluster}
-    option cannot be used. Also, unless \code{BFGSfn} is specified, this option coerces
+    option cannot be used.  And, unless \code{BFGSfn} is specified, this option coerces
     \code{gradient.check} to \code{FALSE}, \code{BFGS} to \code{FALSE}, 
-    and \code{P9} to \code{0}. If \code{BFGSfn} is specified, that function should
-    perform the transformation but should only return a scalar fit criterion, for example:\cr
+    and \code{P9} to \code{0}.  If \code{BFGSfn} is specified, that function should
+    perform the transformation but should only return a scalar fit criterion, 
+    for example:\cr
     \code{par <- myTransformation(par)}\cr
     \code{criter <- myCriterion(par)}\cr
     \code{return(criter)}\cr
+    
     Finally, if \code{boundary.enforcement > 0}, care must be taken to
     assure that the transformed parameters are within the \code{Domains},
     otherwise unpredictable results could occur. In this case, the transformations are
