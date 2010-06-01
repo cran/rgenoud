@@ -11,7 +11,7 @@
 #  http://sekhon.berkeley.edu
 #  <sekhon@berkeley.edu>
 #
-#  August 4, 2009
+#  June 1, 2010
 #
 
 
@@ -34,10 +34,10 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
       transform <- FALSE
     }
   if(transform) {
-    mc <- match.call(expand.dots = TRUE)
-    mc[[1]] <- as.name("genoud_transform")
-    out <- eval(mc)
-    return(out)
+    return(do.call(what  = genoud_transform,
+                   args  = as.list(match.call())[-1],
+                   quote = FALSE,
+                   envir = parent.frame()))
   }
 
   if(!is.null(BFGShelp) && !is.function(BFGShelp)) stop("'BFGShelp' must be NULL or a function")

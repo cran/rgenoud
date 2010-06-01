@@ -1,6 +1,6 @@
 Package: rgenoud
-Version: 5.6-6
-Date: 2009-08-10
+Version: 5.6-7
+Date: 2010-06-01
 Title: R version of GENetic Optimization Using Derivatives
 Author: Walter R. Mebane, Jr. <wmebane@umich.edu>, Jasjeet Singh Sekhon
         <sekhon@berkeley.edu>
@@ -10,6 +10,6 @@ Suggests: snow (>= 0.2-1)
 Description: A genetic algorithm plus derivative optimizer
 License: GPL-3
 URL: http://sekhon.berkeley.edu/rgenoud/
-Packaged: 2009-08-11 01:55:26 UTC; sekhon
+Packaged: 2010-06-01 08:15:20 UTC; sekhon
 Repository: CRAN
-Date/Publication: 2009-08-13 08:59:27
+Date/Publication: 2010-06-01 08:42:59

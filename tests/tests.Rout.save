@@ -1,6 +1,6 @@
 
-R version 2.9.0 (2009-04-17)
-Copyright (C) 2009 The R Foundation for Statistical Computing
+R version 2.11.0 (2010-04-22)
+Copyright (C) 2010 The R Foundation for Statistical Computing
 ISBN 3-900051-07-0
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -16,14 +16,14 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 Type 'q()' to quit R.
 
 > library(rgenoud)
-##  rgenoud (Version 5.6-6, Build Date: 2009-08-10)
+##  rgenoud (Version 5.6-7, Build Date: 2010-06-01)
 ##  See http://sekhon.berkeley.edu/rgenoud for additional documentation.
 > 
 > #maximize the sin function
 > sin1 <- genoud(sin, nvars=1, max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Mon Aug 10 18:52:39 2009
+Tue Jun  1 01:11:40 2010
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -181,7 +181,7 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 11
 
-Mon Aug 10 18:52:41 2009
+Tue Jun  1 01:11:42 2010
 Total run time : 0 hours 0 minutes and 2 seconds
 > print(sin1)
 $value
@@ -210,7 +210,7 @@ $operators
 > sin2 <- genoud(sin, nvars=1, max=FALSE, unif.seed=912821, int.seed=93058)
 
 
-Mon Aug 10 18:52:41 2009
+Tue Jun  1 01:11:42 2010
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -368,8 +368,8 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 11
 
-Mon Aug 10 18:52:44 2009
-Total run time : 0 hours 0 minutes and 3 seconds
+Tue Jun  1 01:11:44 2010
+Total run time : 0 hours 0 minutes and 2 seconds
 > print(sin2)
 $value
 [1] -1
@@ -404,7 +404,7 @@ $operators
 > claw1   <- genoud(claw, nvars=1,pop.size=3000,max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Mon Aug 10 18:52:44 2009
+Tue Jun  1 01:11:44 2010
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -562,8 +562,8 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 11
 
-Mon Aug 10 18:52:46 2009
-Total run time : 0 hours 0 minutes and 2 seconds
+Tue Jun  1 01:11:47 2010
+Total run time : 0 hours 0 minutes and 3 seconds
 > print(claw1)
 $value
 [1] 0.4113123
@@ -612,7 +612,7 @@ $operators
 > biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,pop.size=5000,max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Mon Aug 10 18:52:46 2009
+Tue Jun  1 01:11:47 2010
 Domains:
  -2.000000e+01   <=  X1   <=    2.000000e+01 
  -2.000000e+01   <=  X2   <=    2.000000e+01 
@@ -769,7 +769,7 @@ GENERATION: 9
 Fitness value... 1.671127e+00
 mean............ 9.789811e-01
 variance........ 6.679682e-01
-#unique......... 3061, #Total UniqueCount: 34344
+#unique......... 3060, #Total UniqueCount: 34343
 var 1:
 best............ -1.000000e+00
 mean............ -9.538414e-01
@@ -783,7 +783,7 @@ GENERATION: 10
 Fitness value... 1.671127e+00
 mean............ 9.875318e-01
 variance........ 6.633945e-01
-#unique......... 3038, #Total UniqueCount: 37382
+#unique......... 3038, #Total UniqueCount: 37381
 var 1:
 best............ -1.000000e+00
 mean............ -9.461229e-01
@@ -797,7 +797,7 @@ GENERATION: 11
 Fitness value... 1.671127e+00
 mean............ 1.001984e+00
 variance........ 6.571237e-01
-#unique......... 3017, #Total UniqueCount: 40399
+#unique......... 3017, #Total UniqueCount: 40398
 var 1:
 best............ -1.000000e+00
 mean............ -8.762315e-01
@@ -811,7 +811,7 @@ GENERATION: 12
 Fitness value... 1.671127e+00
 mean............ 9.897763e-01
 variance........ 6.618311e-01
-#unique......... 3042, #Total UniqueCount: 43441
+#unique......... 3042, #Total UniqueCount: 43440
 var 1:
 best............ -1.000000e+00
 mean............ -9.666213e-01
@@ -834,8 +834,8 @@ Parameters at the Solution (parameter, gradient):
 Solution Found Generation 1
 Number of Generations Run 12
 
-Mon Aug 10 18:52:58 2009
-Total run time : 0 hours 0 minutes and 12 seconds
+Tue Jun  1 01:11:58 2010
+Total run time : 0 hours 0 minutes and 11 seconds
 > print(biclaw1)
 $value
 [1] 1.671127

@@ -3,16 +3,16 @@
   RGENOUD
 
   Walter R. Mebane, Jr.
-  Cornell University
-  http://macht.arts.cornell.edu/wrm1
-  <wrm1@macht.arts.cornell.edu>
+  University of Michigan
+  http://www-personal.umich.edu/~wmebane/
+  <wmebane@umich.edu>
 
   Jasjeet Singh Sekhon 
   UC Berkeley
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  August 4, 2009
+  July 1, 2010
 
 */
 
@@ -830,11 +830,13 @@ void JaIntegeroper4(MATRIX p, int p2use, int nvars)
     sum = p[1][i] * A[1];
     for (k=2; k<=p2use; k++)
       sum += p[k][i] * A[k];
-    p[1][i] = sum;
+    p[1][i] = (int) sum;
   }
 
-  for(i=1; i<=nvars; i++) 
-    p[1][i] = (int) sum;
+  /* Commented out in 5.6-60001 (June 1, 2010) and "(int)" moved to line -3 above
+     for(i=1; i<=nvars; i++) 
+     p[1][i] = (int) sum;
+  */
 
   free(A);
 }
