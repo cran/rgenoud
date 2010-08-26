@@ -1,10 +1,17 @@
 	Note: 5.6-x is a major revision from 5.5-1 (the previous version
 	on CRAN).  See major changes from 5.6-1 onwards.
 
+2010-08-26 Version: 5.7-1
+
+	* operators.cpp: Fixed boundary issue for integer optimization (when 'data.type.int=TRUE') created by changes in the GNU CC compiler, operators P3,P4,P5,P7 were affected.
+	* evaluate.cpp: See above and corrected printing of population means and variances when doing integer optimization.
+	* genound.h: See above
+	* print_format.cpp: Changed longs to ints to prevent warnings produced by the call to fscanf() in the ReadPopulation() file.
+
 2010-06-01  Version: 5.6-7
 
-	* rgenoud.R: Improved handling of the parent environment when the 'transform' option is used.	
-	* operators.ccp: Fixed boundary issue for the integer version of the Polytope Crossover operator (P5 and function JaIntegeroper4).
+	* rgenoud.R: Improved handling of the parent environment when 	the 'transform' option is used.	
+	* operators.ccp: Fixed boundary issue for the integer version 	of the Polytope Crossover operator (P5 and function JaIntegeroper4).
 
 2009-08-14  Version: 5.6-6
 
@@ -26,8 +33,7 @@
 2009-08-06  Version: 5.6-4 
 
 	* evaluate.cpp: Adds boundary checking for the parameters returned
-	by the 'transform' option.  For the transform option, only checks
-	bounds in generation 0 because of computational efficiency
+	by the 'transform' option.  For the transform option, only         checks bounds in generation 0 because of computational efficiency
 	concerns. The standard bounds checking remains unchanged.
 
 	* genoud.Rd: Documentation updated to reflect above.
@@ -46,19 +52,16 @@
 	using the 'optim.method' option: namely one of "BFGS", "L-BFGS-B",
 	"Nelder-Mead", "CG", or "SANN".
 
-	* rgenoud.R: The error checking of user provided starting values
-	has been improved.
+	* rgenoud.R: The error checking of user provided starting 	values has been improved.
 
 2009-08-03  Version: 5.6-1 
 
-	* multiple files: Major revision. Adds the transform option which
-	is required by the FAiR package by Ben Goodrich
+	* multiple files: Major revision. Adds the transform option 	which is required by the FAiR package by Ben Goodrich
 	<goodrich@fas.harvard.edu>.  
 
 	* pint_format.cpp: share.type=1 works correctly again.  
 
-	* multiple files: Printing is cleaning up when share.type=1, and
-	relevant warning messages are improved.
+	* multiple files: Printing is cleaning up when share.type=1, 	and relevant warning messages are improved.
 
 2009-03-13  Version: 5.5-1 
 

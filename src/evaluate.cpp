@@ -12,7 +12,7 @@
   http://sekhon.berkeley.edu
   <sekhon@berkeley.edu>
 
-  August 6, 2009
+  August 26, 2010
 
 */
 
@@ -3057,8 +3057,8 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     else
       {
 	fprintf(output, "Fitness value... %e\n", population[1][0]);
-	fprintf(output, "mean............ %e\n", mean[i]);
-	fprintf(output, "variance........ %e\n", var[i]);
+	fprintf(output, "mean............ %e\n", mean[0]);
+	fprintf(output, "variance........ %e\n", var[0]);
 	/*
 	  fprintf(output, "skewness........ %e\n", skew[i]);
 	  fprintf(output, "kurtosis........ %e\n", kur[i]);
@@ -3318,7 +3318,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		  for(j=1; j<=p2use; j++)
 		    for(i=1; i<=nvars; i++)
 		      temp[j][i] = population[parents[j]][i];
-		  JaIntegeroper4(temp,p2use,nvars);
+		  JaIntegeroper4(temp,p2use,nvars,domains);
 		  for(i=1; i<=nvars; i++)
 		    new_genera[die_now][i]  = temp[1][i];
 		  die_now--;
@@ -3693,8 +3693,8 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	else
 	  {
 	    fprintf(output, "Fitness value... %e\n", population[1][0]);
-	    fprintf(output, "mean............ %e\n", mean[i]);
-	    fprintf(output, "variance........ %e\n", var[i]);
+	    fprintf(output, "mean............ %e\n", mean[0]);
+	    fprintf(output, "variance........ %e\n", var[0]);
 	    /*
 	      fprintf(output, "skewness........ %e\n", skew[i]);
 	      fprintf(output, "kurtosis........ %e\n", kur[i]);

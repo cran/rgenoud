@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  August 3, 2009
+  August 26, 2010
 
 */
 
@@ -278,12 +278,13 @@ void oper8(SEXP fn, SEXP rho,
 	   short BoundaryEnforcement, 
 	   FILE *output, short PrintLevel, double mix);
 void find_range(double *llim, double *ulim, int comp, double **domains, int nvars, VECTOR parent);
+void find_rangeInt(int *llim, int *ulim, int comp, double **domains, int nvars, VECTOR parent);
 int irange_ran(int llim, int ulim);
 double get_F(int T, int t, double y, int B);
 void JaIntegerOper1(VECTOR parent, double **domains, int nvars);
 void JaIntegerOper2(VECTOR parent, double **domains, int nvars);
 void JaIntegerOper3(VECTOR parent, double **domains, int nvars, int T, int t, int B);
-void JaIntegeroper4(MATRIX p, int p2use, int nvars);
+void JaIntegeroper4(MATRIX p, int p2use, int nvars, double **domains);
 void JaIntegerOper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars);
 void JaIntegerOper6(VECTOR parent, double **domains, int nvars, int T, int t, int B);
 void JaIntegerOper7(VECTOR p1, VECTOR p2, double **domains, int nvars);

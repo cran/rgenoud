@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  August 3, 2009
+  August 26, 2010
 
 */
 
@@ -32,8 +32,8 @@
 long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, FILE *fp, short PrintLevel)
 {
   char ctmp[MAXPATH];
-  long generation, PopSize, nvars, UsePopSize, FitVals;
-  long i, j, ltmp;
+  int generation, PopSize, nvars, UsePopSize, FitVals;
+  int i, j, ltmp;
   double **OldData;
   short trip=0;
 

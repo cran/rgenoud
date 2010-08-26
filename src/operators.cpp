@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  July 1, 2010
+  August 26, 2010
 
 */
 
@@ -503,6 +503,43 @@ void find_range(double *llim, double *ulim, int comp, double **domains, int nvar
 
 /********************************************************************************/
 /*                                                                              */
+/*           FUNCTION NAME     :   find_rangeInt()                                 */
+/*                                                                              */
+/*           SYNOPSIS          :   void find_range(llim,ulim,domains,nvars,     */
+/*                                                 parent                       */
+/*                                                                              */
+/*           DESCRIPTION       :   This function finds the upper and lower      */
+/*                                  limits, within which the mutation should    */
+/*                                  occur.                                      */
+/*                                                                              */
+/********************************************************************************/
+
+void find_rangeInt(int *llim, int *ulim, int comp, double **domains, int nvars, VECTOR parent)
+     /* int *llim,*ulim; Upper and lower limits*/
+     /* int comp;           Component of the vector to be mutated*/
+     /* VECTOR parent;      The vector with the values of the variables*/
+{
+  double A, B;
+
+  A = frange_ran(0.0,1.0);
+  B = 1.0 - A;
+
+  *llim = (int) ( (A*domains[comp][1]) + B* parent[comp]);
+  if( (int) domains[comp][1] > *llim)
+    *llim = (int) domains[comp][1];
+
+  A = frange_ran(0.0,1.0);
+  B = 1.0 - A;
+
+  *ulim = (int) ( B * parent[comp] + (A*domains[comp][3]) );
+  if( (int) domains[comp][3] < *ulim)
+    *ulim = (int) domains[comp][3];
+
+}
+
+
+/********************************************************************************/
+/*                                                                              */
 /*           FUNCTION NAME     :   irange_ran()                                 */
 /*                                                                              */
 /*           SYNOPSIS          :   int irange_ran(llim,ulim)                    */
@@ -667,9 +704,9 @@ void JaIntegerOper1(VECTOR parent, double **domains, int nvars)
      /* INDEX rc;       Row and column of the final matrix*/
 {
   long comp;
-  double llim,ulim;/*Lower and Upper limits of the value to be mutated*/
+  int llim,ulim;/*Lower and Upper limits of the value to be mutated*/
   FLAG SAME;
-  double tmp;
+  int tmp;
   long count;
 
   count=0;
@@ -681,11 +718,11 @@ void JaIntegerOper1(VECTOR parent, double **domains, int nvars)
       comp = irange_ran(1,nvars);
         
       /*Finding the lower and upper limits between which the values are to be mutated*/
-      find_range(&llim,&ulim,comp,domains,nvars,parent);
+      find_rangeInt(&llim,&ulim,comp,domains,nvars,parent);
       
       /*Find a random value between the lower and the upper limits, to substitute*/
       /*for the old value*/
-      tmp =  (int) frange_ran(llim,ulim);
+      tmp =  irange_ran(llim,ulim);
 
       if ( (int) parent[comp] != (int) tmp)
 	SAME=FALSE;
@@ -712,10 +749,10 @@ void JaIntegerOper2(VECTOR parent, double **domains, int nvars)
      /* INDEX rc;       Row and column of the final matrix*/
 {
   int comp;
-  double llim,ulim;/*Lower and Upper limits of the value to be mutated*/
+  int llim,ulim;/*Lower and Upper limits of the value to be mutated*/
 
   FLAG SAME;
-  double tmp;
+  int tmp;
   long count;
 
   count=0;
@@ -727,7 +764,7 @@ void JaIntegerOper2(VECTOR parent, double **domains, int nvars)
       comp = irange_ran(1,nvars);
       
       /*Finding the lower and upper limits between which the values are to be mutated*/
-      find_range(&llim,&ulim,comp,domains,nvars,parent);
+      find_rangeInt(&llim,&ulim,comp,domains,nvars,parent);
       
       /*Replace either the lower limit or the upper limit at random,*/
       /*for the old value*/
@@ -765,10 +802,10 @@ void JaIntegerOper3(VECTOR parent, double **domains, int nvars, int T, int t, in
      /* int B; */
 {
   int comp;
-  double llim,ulim;
+  int llim,ulim;
 
   FLAG SAME;
-  double tmp;
+  int tmp;
   long count;
 
   count=0;
@@ -777,8 +814,8 @@ void JaIntegerOper3(VECTOR parent, double **domains, int nvars, int T, int t, in
   while (SAME==TRUE) {
     count++;
     comp = irange_ran(1,nvars);
- 
-    find_range(&llim,&ulim,comp,domains,nvars,parent);
+
+    find_rangeInt(&llim,&ulim,comp,domains,nvars,parent);
 
     /*From the current value of the component to be mutated, chooose at random*/
     /*whether to mutate with a lesser value or a greater value*/
@@ -804,7 +841,7 @@ void JaIntegerOper3(VECTOR parent, double **domains, int nvars, int T, int t, in
 /*                                                                              */
 /********************************************************************************/
 
-void JaIntegeroper4(MATRIX p, int p2use, int nvars)
+void JaIntegeroper4(MATRIX p, int p2use, int nvars, double **domains)
   /* int p The parents chosen for crossover */
   /* p2use;     number of parents (rows) in p */
   /* int nvars Length of the parameter vector (cols in p) */
@@ -830,13 +867,14 @@ void JaIntegeroper4(MATRIX p, int p2use, int nvars)
     sum = p[1][i] * A[1];
     for (k=2; k<=p2use; k++)
       sum += p[k][i] * A[k];
-    p[1][i] = (int) sum;
-  }
 
-  /* Commented out in 5.6-60001 (June 1, 2010) and "(int)" moved to line -3 above
-     for(i=1; i<=nvars; i++) 
-     p[1][i] = (int) sum;
-  */
+    p[1][i] = (int) sum;
+
+    if( (int) domains[i][1] > (int) p[1][i])
+      p[1][i] = (int) domains[i][1];
+    if( (int) domains[i][3] < (int) p[1][i])
+      p[1][i] = (int) domains[i][3];
+  }
 
   free(A);
 }
@@ -1012,12 +1050,12 @@ void JaIntegerOper6(VECTOR parent, double **domains, int nvars, int T, int t, in
 	int B; */
 {
   int  i;
-  double llim,ulim;
+  int llim,ulim;
 
   /* unique check variables */
   FLAG SAME;
   long count;
-  double tmp=0;
+  int tmp;
 
   count=0;
   SAME=TRUE;
@@ -1027,7 +1065,7 @@ void JaIntegerOper6(VECTOR parent, double **domains, int nvars, int T, int t, in
       for (i=1; i<=nvars; i++)
 	{
 	  count++;
-	  find_range(&llim,&ulim,i,domains,nvars,parent);
+	  find_rangeInt(&llim,&ulim,i,domains,nvars,parent);
 	  
 	  /*From the current value of the component to be mutated, chooose at random*/
 	  /*whether to mutate with a lesser value or a greater value*/
