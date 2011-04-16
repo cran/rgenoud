@@ -1,6 +1,10 @@
 	Note: 5.6-x is a major revision from 5.5-1 (the previous version
 	on CRAN).  See major changes from 5.6-1 onwards.
 
+2011-04-16 Version: 5.7-2
+
+	* inst/CITATION: Updated for Journal of Statistical Software
+
 2010-08-26 Version: 5.7-1
 
 	* operators.cpp: Fixed boundary issue for integer optimization (when 'data.type.int=TRUE') created by changes in the GNU CC compiler, operators P3,P4,P5,P7 were affected.
@@ -10,8 +14,8 @@
 
 2010-06-01  Version: 5.6-7
 
-	* rgenoud.R: Improved handling of the parent environment when 	the 'transform' option is used.	
-	* operators.ccp: Fixed boundary issue for the integer version 	of the Polytope Crossover operator (P5 and function JaIntegeroper4).
+	* rgenoud.R: Improved handling of the parent environment when 	the 'transform' option is used	
+	* operators.ccp: Fixed boundary issue for the integer version of the Polytope Crossover operator (P5 and function JaIntegeroper4).
 
 2009-08-14  Version: 5.6-6
 
@@ -39,7 +43,7 @@
 	* genoud.Rd: Documentation updated to reflect above.
 
 2009-08-04  Version: 5.6-3 
-	
+
 	* print_format.cpp: Corrects issue when 'share.type=1' and
 	'starting.values' are provided. 
 

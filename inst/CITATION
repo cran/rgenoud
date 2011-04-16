@@ -6,14 +6,13 @@ citEntry(entry = "Article",
                    as.person("Jr."),
                    as.person("Jasjeet S. Sekhon")),
   journal      = "Journal of Statistical Software",
-  year         = "2009",
+  year         = "2011",
   note         = "Forthcoming",
   url          = "http://www.jstatsoft.org/",
 
   textVersion  =
-  paste("Walter R. Mebane, Jr., Jasjeet S. Sekhon (2009).",
+  paste("Walter R. Mebane, Jr., Jasjeet S. Sekhon (2011).",
         "Genetic Optimization Using Derivatives: The rgenoud Package for R.",
         "Journal of Statistical Software, Forthcoming.",
         "URL http://www.jstatsoft.org/.")
 )
-

@@ -32,28 +32,29 @@
 
 %% an abstract and keywords
 \Abstract{ This introduction to the \proglang{R} package \pkg{rgenoud}
-  is a modified version of \cite{Mebane+Jr.+Sekhon:2009}, published in
+  is a modified version of \cite{MebaneJr.+Sekhon:2011}, published in
   the \textit{Journal of Statistical Software}.  That version of the
   introduction contains higher resolution figures.
   
-  Genoud is an \proglang{R} that combines evolutionary search
-  algorithms with derivative-based (Newton or quasi-Newton) methods to
-  solve difficult optimization problems. Genoud may also be used for
-  optimization problems for which derivatives do not exist.  Genoud
-  solves problems that are nonlinear or perhaps even discontinuous in
-  the parameters of the function to be optimized.  When the function
-  to be optimized (for example, a log-likelihood) is nonlinear in the
-  model's parameters, the function will generally not be globally
-  concave and may have irregularities such as saddlepoints or
-  discontinuities.  Optimization methods that rely on derivatives of
-  the objective function may be unable to find any optimum at all.
-  Multiple local optima may exist, so that there is no guarantee that
-  a derivative-based method will converge to the global optimum.  On
-  the other hand, algorithms that do not use derivative information
-  (such as pure genetic algorithms) are for many problems needlessly
-  poor at local hill climbing.  Most statistical problems are regular
-  in a neighborhood of the solution.  Therefore, for some portion of
-  the search space, derivative information is useful.  The function
+  \code{genoud} is an \proglang{R} function that combines
+  evolutionary algorithm methods with a derivative-based
+  (quasi-Newton) method to solve difficult optimization problems.
+  \code{genoud} may also be used for optimization problems for which
+  derivatives do not exist.  \code{genoud} solves problems that are nonlinear
+  or perhaps even discontinuous in the parameters of the function to
+  be optimized.  When the function to be optimized (for
+  example, a log-likelihood) is nonlinear in the model's parameters,
+  the function will generally not be globally concave
+  and may have irregularities such as saddlepoints or discontinuities.
+  Optimization methods that rely on derivatives of the objective
+  function may be unable to find any optimum at all.  Multiple local
+  optima may exist, so that there is no guarantee that a
+  derivative-based method will converge to the global optimum.  On the
+  other hand, algorithms that do not use derivative information (such
+  as pure genetic algorithms) are for many problems needlessly poor at
+  local hill climbing.  Most statistical problems are regular in a
+  neighborhood of the solution.  Therefore, for some portion of the
+  search space, derivative information is useful.  The function
   supports parallel processing on multiple CPUs on a single machine or
   a cluster of computers.}
 
@@ -64,10 +65,10 @@
 %% publication information
 %% NOTE: This needs to filled out ONLY IF THE PAPER WAS ACCEPTED.
 %% If it was not (yet) accepted, leave them commented.
-\Volume{13}
-\Issue{9}
-\Month{September}
-\Year{2009}
+%\Volume{13}
+%\Issue{9}
+%\Month{September}
+\Year{2011}
 \Submitdate{2007-02-11}
 \Acceptdate{2007-11-21}
 
@@ -85,10 +86,9 @@
 
   Jasjeet S. Sekhon\\
   Department of Political Science\\
-  Survey Research Center\\
-  2538 Channing Way\\
+ 210 Barrows Hall \#1950\\
   UC Berkeley\\
-  Berkeley, CA 94720-5100\\
+ Berkeley, CA 94720-1950\\
   E-mail: \email{sekhon@berkeley.edu}\\
   URL: \url{http://sekhon.berkeley.edu}
 }
@@ -145,18 +145,21 @@ used for optimization in problems of statistical estimation are
 entirely based on derivatives.
 
 The \pkg{rgenoud} package has been used by wide variety of users and
-developers.  Nine \proglang{R} packages currently rely upon
-\pkg{rgenoud}: 
+developers.  More than twelve \proglang{R} packages currently rely upon
+\pkg{rgenoud} including:  
 \pkg{anchors} \citep[analyzing survey data with
-anchoring vignettes,][]{Wand+King:2009,WandKingLau2007,KingWand2007};
+anchoring vignettes,][]{Wand+King:2011,WandKingLau2007,KingWand2007};
+\pkg{BARD} \citep[automated redistricting,][]{Altman+McDonald:2011};
 \pkg{boolean} \citep[boolean binary response models,][]{braumoeller2003,BraumoellerGoodrichKline2006}; 
-\pkg{BARD} \citep[automated redistricting,][]{Altman+McDonald:2009};
+\pkg{DiceOptim} \citep[kriging-based optimization for computer experiments,][]{DiceOptim}; 
 \pkg{FAiR} \citep[factor analysis,][]{goodrich.fair}; 
+\pkg{JOP} \citep[simultaneous optimization of multiple responses,][]{JOP}; 
+\pkg{KrigInv} \citep[kriging-based inversion,][]{KrigInv}; 
 \pkg{PKfit} \citep[data analysis in pharmacokinetics,][]{LeeLee2006};
-\pkg{Matching} \citep[propensity score and multivariate matching,][]{Sekhon:2009,SekhonMatching}; 
+\pkg{Matching} \citep[propensity score and multivariate matching,][]{SekhonMatching,Sekhon:2011}; 
 \pkg{ivivc} \citep[in vitro-in vivo correlation modeling,][]{ivivc};
 \pkg{multinomRob} \citep[robust multinomial models,][]{MebaneSekhon.multinomRob,MebaneSekhon2004}; and
-\pkg{Synth} \citep[synthetic control group method for comparative case studies,][]{AbadieGardeazabal2003,synth2008}.
+\pkg{Synth} \citep[synthetic control group method for comparative case studies,][]{AbadieGardeazabal2003,synth2008,Abadie+Diamond+Hainmueller:2011}.
 
 We present in Section \ref{sec:examples} an example using benchmark functions
 taken from \citet{yao.liu.lin1999}, followed by an example motivated by the
@@ -170,7 +173,7 @@ continuous, but the parameter space is finely partitioned by nondifferentiable
 boundaries.
 
 In another paper in this volume, the \pkg{Matching} package and its
-use of \pkg{rgenoud} are described in detail \citep{Sekhon:2009}.
+use of \pkg{rgenoud} are described in detail \citep{Sekhon:2011}.
 \pkg{Matching} provides functions for multivariate and propensity
 score matching and for finding optimal covariate balance based on a
 genetic search algorithm implemented in \pkg{rgenoud}.  The search
@@ -183,7 +186,7 @@ optimization which is a unique feature implemented in
   multiple fitness criteria; the parameters are chosen so as to
   maximize fitness values in lexical order---i.e., the second fit criterion
   is only considered if the parameters have the same fit for the
-  first.  See the \code{lexical} option and \citet{Sekhon:2009} for
+ first.  See the \code{lexical} option and \citet{Sekhon:2011} for
   details.  All of \code{genoud}'s options are described in the
   \proglang{R} help file for the function.}
 
@@ -240,7 +243,7 @@ optimizer's default settings.  Our program does not eliminate the need for
 judgment, testing and patience.
 
 As Gill, Murray and Wright observe, ``there is no guaranteed strategy that
-will resolve every difficulty'' (1981, 285).  In this article, we very briefly
+will resolve every difficulty'' \citep[285]{GillMurrayWright1981}.  In this article, we very briefly
 review the theory of random search algorithms that supports the assertion that
 \pkg{rgenoud} has a high probability of finding the global optimum when such
 exists.  And we present three examples of how to use the \code{genoud}
@@ -318,8 +321,8 @@ chain.\footnote{\citet[][372--419]{feller1970} and
 irreducible, finite Markov chain converges at an exponential rate to a unique
 stationary distribution \citep[][128]{billingsley1986}.  This means that the
 probability that each population occurs rapidly converges to a constant,
-positive value.  Nix and Vose (\citeyear{NixVose1992}; Vose
-\citeyear{vose1993}) use a Markov chain model to show that in a GA where the
+positive value.  \citet{NixVose1992} and 
+\citet{vose1993} use a Markov chain model to show that in a GA where the
 probability that each code-string is selected to reproduce is proportional to
 its observed fitness, the stationary distribution strongly emphasizes
 populations that contain code-strings that have high fitness values.  They
@@ -483,10 +486,10 @@ simply climb up the hill closest to the starting value.
 To optimize this normal mixture we must first create a function for it
 <<eval=true,results=hide>>= 
     claw <- function(xx) {
-      x <- xx[1];
+     x <- xx[1]
       y <- (0.46*(dnorm(x,-1.0,2.0/3.0) + dnorm(x,1.0,2.0/3.0)) +
       (1.0/300.0)*(dnorm(x,-0.5,.01) + dnorm(x,-1.0,.01) + dnorm(x,-1.5,.01)) +
-      (7.0/300.0)*(dnorm(x,0.5,.07) + dnorm(x,1.0,.07) + dnorm(x,1.5,.07))) ;
+     (7.0/300.0)*(dnorm(x,0.5,.07) + dnorm(x,1.0,.07) + dnorm(x,1.5,.07))) 
       return(y)
     }
 @ 
@@ -731,7 +734,7 @@ supplemental file.
   \begin{center}
     \line(1,0){450}
   \end{center}  
-  \begin{tabular}{LLLL}
+ \begin{tabular}{LLLL}
 \text{func.} & \text{definition} & n & \text{minimum}^a \\
  1 & \sum_{i=1}^n x_i^2 & 30 & 0 \\
  2 & \sum_{i=1}^n |x_i| + \prod_{i=1}^n |x_i| & 30 & 0 \\
@@ -844,14 +847,20 @@ We use \code{genoud} to minimize the 23 functions using two values for
 \citet{yao.liu.lin1999}, we replicate each optimization 50 times.  The
 following code describes the computations.  The list \code{testfuncs},
 vector \code{testNparms} and list \code{testbounds} are defined in the
-supplemental \proglang{R} file.  The vector \code{gradcheck} is true
-for all elements except the one corresponding to function
-6.\footnote{Also \code{gradcheck[7]==FALSE}.}
+supplemental \proglang{R} file, and it is assume that this file is
+loaded with the \code{source("supplemental.R")} command.  The vector
+\code{gradcheck} is true for all elements except the ones corresponding
+to functions 6 and 7.
 <<eval=false>>= 
-sizeset <- c(5000,10000);
-genset <- c(30,100);
-nreps <- 50;
-gsarray <- array(NA, dim=c(length(sizeset), length(genset), 23, nreps));
+source("supplemental.R")
+gradcheck <- rep(TRUE,23)
+gradcheck[6:7] <- FALSE
+sizeset <- c(5000,10000)
+genset <- c(30,100)
+nreps <- 50
+gsarray <- array(NA, dim=c(length(sizeset), length(genset), 23, nreps))
+asc <- function(x) { as.character(x) }
+dimnames(gsarray) <- list(asc(sizeset), asc(genset), NULL, NULL);
 for (gsize in sizeset) {
   for (ngens in genset) {
     for (i in 1:23) {
@@ -860,7 +869,7 @@ for (gsize in sizeset) {
           genoud(testfuncs[[i]], nvars=testNparms[i], pop.size=gsize,
                max.gen=ngens, hard.gen=TRUE, Domains=testbounds[[i]],
                solution.tol=1e-6, boundary=1, gradient.check=gradcheck[i],
-               print=0)$value;
+              print=0)$value
       }
     }
   }
@@ -898,7 +907,7 @@ have competitive means, several of the means are not good at all.
   \begin{center}
     \line(1,0){450}
   \end{center}    
-  \begin{tabular}{llllll}
+ \begin{tabular}{llllll}
  & \multicolumn{4}{c}{\code{genoud}} & \\ \cline{2-5}
  & \multicolumn{2}{c}{\code{pop.size=5000}$^a$} & \multicolumn{2}{c}{\code{pop.size=10000}$^a$} & \\
 \text{func.} & \code{max=30} & \code{max=100} & \code{max=30} & \code{max=100} & \text{FEP}$^b$ \\
@@ -952,7 +961,7 @@ than the solutions with \code{pop.size=5000}.
 \begin{table}
 \begin{center}
   \line(1,0){450}
-\end{center}      
+\end{center}  
   \begin{tabular}{llllll}
  & \multicolumn{4}{c}{\code{genoud}} & \\ \cline{2-5}
  & \multicolumn{2}{c}{\code{pop.size=5000}$^a$} & \multicolumn{2}{c}{\code{pop.size=10000}$^a$} & \\
@@ -1013,18 +1022,19 @@ LQDxmpl <- function(b) {
   sIQR <- function(y, yhat, n) {
     IQR((y-yhat)/sqrt(yhat*(n-yhat)), na.rm=TRUE)
   }
-  sIQR(y, m*logistic(x %*% b), m);
+ sIQR(y, m*logistic(x %*% b), m)
 }
 @ 
 For this example we define \code{LQDxmpl} after we compute the simulated data,
 so the data vector \code{y}, matrix \code{x} and scalar \code{m} are in scope
 to evaluate to have the values we simulate:
 <<eval=false>>= 
-m <- 100;
-x <- cbind(1,rnorm(1000),rnorm(1000));
-b1 <- c(.5, 1, -1);
-b2 <- c(0, -1, 1);
-y <- rbinom(1000, m, logistic(c(x[1:900,] %*% b1, x[901:1000,] %*% b2)));
+m <- 100
+x <- cbind(1,rnorm(1000),rnorm(1000))
+b1 <- c(.5, 1, -1)
+b2 <- c(0, -1, 1)
+logistic <- function(x) { 1/(1+exp(-x)) }
+y <- rbinom(1000, m, logistic(c(x[1:900,] %*% b1, x[901:1000,] %*% b2)))
 @ 
 The data simulate substantial contamination.  The first 900 observations are
 generated by one binomial regression model while the last 100 observations
@@ -1034,7 +1044,7 @@ Presuming we are interested in the model that generated the bulk of the data,
 ignoring the contamination in a generalized linear model with the binomial
 family produces very poor results:
 <<eval=false>>= 
-summary(glm1 <- glm(cbind(y,m-y) ~ x[,2] + x[,3], family="binomial"));
+summary(glm1 <- glm(cbind(y,m-y) ~ x[,2] + x[,3], family="binomial"))
 @
 \begin{CodeChunk}
   \begin{CodeOutput}
@@ -1057,8 +1067,8 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 Of course, if we knew which observations to omit the results would be much
 better:
 <<eval=false>>= 
-suby <- y[1:900];
-subx <- x[1:900,];
+suby <- y[1:900]
+subx <- x[1:900,]
 summary(glm2 <- glm(cbind(suby,m-suby) ~ subx[,2] + subx[,3], family="binomial"))
 @ 
 \begin{CodeChunk}
@@ -1092,7 +1102,7 @@ differentiable.  In general, at every point in the parameter space
 where the identity of the first or third quartile point changes, the
 function is not differentiable.  Figure~\ref{fig:lqd1} illustrates
 this.  A higher resolution version of this figure is available in
-\cite{Mebane+Jr.+Sekhon:2009}---also see
+\cite{MebaneJr.+Sekhon:2011}---also see
 \url{http://sekhon.berkeley.edu/papers/rgenoudJSS.pdf}.
 
 The IQR clearly has a minimum in the vicinity of the coefficient
@@ -1103,19 +1113,19 @@ The function we use to evaluate this numerical derivative is defined
 as follows.
 <<eval=false>>= 
 dLQDxmpl <- function(b) {
-  eps <- 1e-10;
+ eps <- 1e-10
   logistic <- function(x) { 1/(1+exp(-x)) }
   sIQR <- function(y, yhat, n) {
     IQR((y-yhat)/sqrt(yhat*(n-yhat)), na.rm=TRUE)
   }
-  dsIQR <- vector();
+ dsIQR <- vector()
   for (i in 1:length(b)) {
-    beps <- b;
+   beps <- b
     beps[i] <- b[i]+eps
     dsIQR <-
       c(dsIQR,
         (sIQR(y, m*logistic(x %*% beps), m)-
-           sIQR(y, m*logistic(x %*% b), m))/eps);
+          sIQR(y, m*logistic(x %*% b), m))/eps)
   }
   return(dsIQR)
 }
@@ -1123,19 +1133,19 @@ dLQDxmpl <- function(b) {
 Setting the intercept equal to 0.5, the code to generate the plotted values is
 %  -rw-rw---- 1 wrm1 research    1878 Feb 10  2007 lqdxmpl2plotB.R
 <<eval=false>>= 
-blen <- 3;
-lenbseq <- length(bseq <- seq(-2,2,length=200));
-bseq3 <- seq(-1.2,-.9,length=200);
-bseq2 <- seq(.89,1.1,length=200);
-IQRarr <- IQRarrA <- array(NA, dim=c((1+blen), lenbseq, lenbseq));
-dimnames(IQRarrA) <- list(NULL, as.character(bseq), as.character(bseq));
-dimnames(IQRarr) <- list(NULL, as.character(bseq2), as.character(bseq3));
+blen <- 3
+lenbseq <- length(bseq <- seq(-2,2,length=200))
+bseq3 <- seq(-1.2,-.9,length=200)
+bseq2 <- seq(.89,1.1,length=200)
+IQRarr <- IQRarrA <- array(NA, dim=c((1+blen), lenbseq, lenbseq))
+dimnames(IQRarrA) <- list(NULL, as.character(bseq), as.character(bseq))
+dimnames(IQRarr) <- list(NULL, as.character(bseq2), as.character(bseq3))
 for (i in 1:lenbseq) {
   for (j in 1:lenbseq) {
-    IQRarrA[1,i,j] <- LQDxmpl(c(.5, bseq[i], bseq[j]));
-    IQRarrA[-1,i,j] <- dLQDxmpl(c(.5, bseq[i], bseq[j]));
-    IQRarr[1,i,j] <- LQDxmpl(c(.5, bseq2[i], bseq3[j]));
-    IQRarr[-1,i,j] <- dLQDxmpl(c(.5, bseq2[i], bseq3[j]));
+   IQRarrA[1,i,j] <- LQDxmpl(c(.5, bseq[i], bseq[j]))
+    IQRarrA[-1,i,j] <- dLQDxmpl(c(.5, bseq[i], bseq[j]))
+    IQRarr[1,i,j] <- LQDxmpl(c(.5, bseq2[i], bseq3[j]))
+    IQRarr[-1,i,j] <- dLQDxmpl(c(.5, bseq2[i], bseq3[j]))
   }
 }
 @ 
@@ -1183,7 +1193,7 @@ right plot shows the intricacy in fact replicates at the finer grain
 of the more detailed evaluations (to see this it is probably necessary
 to magnify the plot while viewing online the \textit{Journal of
   Statistical Software} version of this
-documentation).\footnote{Please see \cite{Mebane+Jr.+Sekhon:2009} or
+documentation).\footnote{Please see \cite{MebaneJr.+Sekhon:2011} or
   \url{http://sekhon.berkeley.edu/papers/rgenoudJSS.pdf}.}  Within
 this smaller domain the sign of the derivative changes even more
 frequently than it does over the domain $[-2,2]^2$: the derivative is
@@ -1210,7 +1220,7 @@ solution has been found.
 <<eval=false>>= 
 LQD1  <-
   genoud(LQDxmpl, nvars=3, max=FALSE, pop.size=2000, max.generations=300,
-         wait.generations=100, gradient.check=FALSE, print=1);
+        wait.generations=100, gradient.check=FALSE, print=1)
 @ 
 This invocation of the \code{LQDxmpl} function matches the behavior of
 \code{multinomRob} in that it produces an estimate for the intercept parameter
@@ -1281,7 +1291,7 @@ using a larger population and larger specified number of generations:
 <<eval=false>>= 
 LQD1  <-
   genoud(LQDxmpl, nvars=3, max=FALSE, pop.size=10000, max.generations=1000,
-         wait.generations=300, gradient.check=FALSE, print=1);
+        wait.generations=300, gradient.check=FALSE, print=1)
 @ 
 At the price of a greatly increased running time (from four minutes up to
 one hour 53 minutes), the results are better than the
