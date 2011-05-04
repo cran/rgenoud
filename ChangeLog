@@ -1,6 +1,11 @@
 	Note: 5.6-x is a major revision from 5.5-1 (the previous version
 	on CRAN).  See major changes from 5.6-1 onwards.
 
+2011-05-04 Version: 5.7-3
+
+	* rgenoud.Rd: Update for Journal of Statistical Software
+	* inst/CITATION: Final update for Journal of Statistical Software
+
 2011-04-16 Version: 5.7-2
 
 	* inst/CITATION: Updated for Journal of Statistical Software

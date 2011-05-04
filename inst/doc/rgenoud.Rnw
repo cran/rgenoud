@@ -65,8 +65,8 @@
 %% publication information
 %% NOTE: This needs to filled out ONLY IF THE PAPER WAS ACCEPTED.
 %% If it was not (yet) accepted, leave them commented.
-%\Volume{13}
-%\Issue{9}
+\Volume{42}
+\Issue{11}
 %\Month{September}
 \Year{2011}
 \Submitdate{2007-02-11}

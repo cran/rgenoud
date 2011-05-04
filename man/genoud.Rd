@@ -616,9 +616,11 @@
   criterion. The optimal candidate is thus the one with the best fit on the
   second criterion among candidates that satisfy this restriction.}
 \references{
-  Mebane, Walter R. Jr. and Jasjeet Singh Sekhon.  2007.  ``Genetic
-  Optimization Using Derivatives: The rgenoud package for R.''
-  \url{http://sekhon.berkeley.edu/papers/rgenoudJSS.pdf} \cr
+
+  Mebane, Walter R., Jr. and Jasjeet S. Sekhon.  2011.  "Genetic
+  Optimization Using Derivatives: The rgenoud Package for R."
+  \emph{Journal of Statistical Software}, 42(11):  1-26. 
+  \url{http://www.jstatsoft.org/v42/i11/} \cr
   
   Sekhon, Jasjeet Singh and Walter R. Mebane, Jr. 1998.  ``Genetic
   Optimization Using Derivatives: Theory and Application to Nonlinear
