@@ -1,5 +1,30 @@
-	Note: 5.6-x is a major revision from 5.5-1 (the previous version
-	on CRAN).  See major changes from 5.6-1 onwards.
+2012-06-03 Version: 5.7-8
+	* rgenoud.R: Added the following options back in for backward compatibility, but a warning is printed if they are used: output.path and output.append. Please use 'sink' instead.
+
+2012-06-03 Version: 5.7-7
+	* rgenoud.R: Call to optimHess() now explicitly names the arguments to be matched.
+
+2012-06-03 Version: 5.7-6
+	* evaluate.cpp: output streams are no longer flushed because of
+	R's rules about calling stdout.
+	* rgenoud.pdf: has been compacted to save space.
+	* .Rinstignore: new file has been added to sure that
+	inst/doc/Figures are not installed to save space.
+
+2012-06-03 Version: 5.7-5
+
+	* rgenoud.R: Because of the switch to Rprintf (see below), the
+	'output.path' and 'output.append' options have been removed.
+	* evaluate.cpp: Routed printing calls through Rprintf rather than
+	fprintf. Made sure all error handling is done by R's error()
+	function. Many cpp files affected: genoud.cpp, genoud.h,
+	gradient.cpp, operators.cpp, math.cpp, numerics.cpp,
+	print_format.cpp.
+
+2012-06-02 Version: 5.7-4
+
+	* rgenoud.R: Removes calls to .Internal(optimhess). Now calls optimHess().
+	* zzz.R: Now uses packageStartupMessage() to display .onAttach message.
 
 2011-05-04 Version: 5.7-3
 
@@ -12,7 +37,9 @@
 
 2010-08-26 Version: 5.7-1
 
-	* operators.cpp: Fixed boundary issue for integer optimization (when 'data.type.int=TRUE') created by changes in the GNU CC compiler, operators P3,P4,P5,P7 were affected.
+	* operators.cpp: Fixed boundary issue for integer optimization
+	(when 'data.type.int=TRUE') created by changes in the GNU CC
+	compiler, operators P3,P4,P5,P7 were affected.
 	* evaluate.cpp: See above and corrected printing of population means and variances when doing integer optimization.
 	* genound.h: See above
 	* print_format.cpp: Changed longs to ints to prevent warnings produced by the call to fscanf() in the ReadPopulation() file.
@@ -204,7 +231,7 @@
 	* multiple files: simplified printing
 
 
-	Copyright 1997-2009 Walter R. Mebane, Jr. and Jasjeet S. Sekhon.
+	Copyright 1997-2012 Walter R. Mebane, Jr. and Jasjeet S. Sekhon.
 	Copying and distribution of this file, without modification, are
 	permitted provided the copyright notice and this notice are
 	preserved.

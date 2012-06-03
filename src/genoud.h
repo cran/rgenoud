@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  August 26, 2010
+  June 3, 2012
 
 */
 
@@ -27,30 +27,6 @@
 
 extern "C"
 {
-  // Declaration not needed because it is an inlined function
-  // void MyRprintf(FILE *foo, const char *out, ...);
-  
-  inline void MyRprintf(FILE *foo, const char *out, ...)
-  {
-    extern void Rprintf(char*, ...);
-    extern void Rvprintf(const char *format, va_list arg);
-    
-    va_list(ap); /*will point to each unnamed argument in turn*/
-    va_start(ap, out);
-    if (foo == stdout) {
-      Rvprintf(out,ap); 
-    }
-    else if (foo == stderr) {
-      Rvprintf(out,ap); 
-    }
-    else {
-      vfprintf(foo, out, ap); 
-    }
-    va_end(ap); 
-  } // end of MyRprintf
-  
-#define fprintf MyRprintf  
-
   /* function definitions */
   double evaluate(SEXP fn, SEXP rho, double *X, long nvars, short int MinMax);
   void EvaluateLexical(SEXP fn, SEXP rho,
@@ -193,7 +169,7 @@ void find_final_mat3(MATRIX orgin, int r, int c, int finr, MATRIX finmat);
 
 /* evaluate.c */
 void optimization(struct GND_IOstructure *Structure, VECTOR X, 
-		    MATRIX domains, FILE *output);
+		    MATRIX domains);
 void sort(short int MinMax, MATRIX  population, int pop_size,
 	  long nvar);
 void swap(double **x, double **y);
@@ -210,9 +186,9 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 			  double *SolutionTolerance,
 			  long *InstanceNumber, long *P, long *P0, long *P1, long *P2, long *P3, long *P4, long *P5, 
 			  long *P6, long *P7, long *P8, short *PrintLevel, 
-			  short *HardGenerationLimit, FILE *output);
+			  short *HardGenerationLimit);
 void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X, 
-			     MATRIX domains, FILE *output);
+			     MATRIX domains);
 void JaIntegerSort(double **InMatrix, long n, long k);
 int JaIntegerCMP(double **a, double **b) ;
 void JaDoubleSort(double **InMatrix, long n, long k);
@@ -229,8 +205,7 @@ unsigned int newrand(void);
 void add(double *in1, double *in2, double *out, int row, int col);
 void copy(double *in, double *target, int row, int col);
 void multi(double *in1, double *in2, double *out,
-	   int row1, int col1, int row2, int col2, int outrowcol[2],
-	   FILE *output);
+	   int row1, int col1, int row2, int col2, int outrowcol[2]);
 void scalarmulti(double scalar, double *in1, double *out, int row, int col) ;
 void scalarmultioffdiag(double scalar, double *in1, double *out, int row, int col) ;
 void subtract(double *in1, double *in2, double *out, int row, int col);
@@ -239,7 +214,7 @@ void transpose(double *orig_matrix, double *t_matrix, int orig_rows, int orig_co
 void copy_matrix(MATRIX mat1, MATRIX mat2, int lr, int ur, int lc, int uc);
 int Iround(double in);
 void samplestats(double **obsdata, int numobsv, int novarsv, int weightflag, 
-		 double *weightdata, FILE *output);
+		 double *weightdata);
 void populationstats(double **popdata, int numobsv, int novarsv, 
 		     double *mean, double *var, double *skew, double *kur,
 		     long *tobs);
@@ -276,7 +251,7 @@ void oper8(SEXP fn, SEXP rho,
 	   VECTOR parent, MATRIX domains, 
 	   double SolutionTolerance, long nvars, 
 	   short BoundaryEnforcement, 
-	   FILE *output, short PrintLevel, double mix);
+	   short PrintLevel, double mix);
 void find_range(double *llim, double *ulim, int comp, double **domains, int nvars, VECTOR parent);
 void find_rangeInt(int *llim, int *ulim, int comp, double **domains, int nvars, VECTOR parent);
 int irange_ran(int llim, int ulim);
@@ -291,9 +266,9 @@ void JaIntegerOper7(VECTOR p1, VECTOR p2, double **domains, int nvars);
 FLAG InBounds(VECTOR child, double **domains, int nvars);
 
 /*print_format.c */
-long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, FILE *fp, short PrintLevel);
-void print_domains(MATRIX equal, int t_equ, short DataType, FILE *output);
-void print_matrix(int lr, int ur, int lc, int uc, MATRIX mat, FILE *output);
-void print_population(long popsize, long nvars, long generation, long lexical, double **foo, FILE *out);
-void print_vector(VECTOR arr, int l, int u, FILE *output);
-void print_ivector(IVECTOR arr, int l, int u, FILE *output);
+long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *fp, short PrintLevel);
+void print_domains(MATRIX equal, int t_equ, short DataType);
+void print_population(int popsize, int nvars, int generation, int
+		      lexical, double **foo, FILE *out);
+
+

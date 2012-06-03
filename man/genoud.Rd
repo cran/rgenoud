@@ -17,7 +17,7 @@
               Domains=NULL, default.domains=10, solution.tolerance=0.001,
               gr=NULL, boundary.enforcement=0, lexical=FALSE, gradient.check=TRUE, BFGS=TRUE,
               data.type.int=FALSE, hessian=FALSE, unif.seed=812821, int.seed=53058,
-              print.level=2, share.type=0, instance.number=0,
+              print.level=2, share.type=0, instance.number=0, 
               output.path="stdout", output.append=FALSE, project.path=NULL,
               P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
               P9mix=NULL, BFGSburnin=0, BFGSfn=NULL, BFGShelp=NULL,
@@ -306,23 +306,19 @@
     do not interfere with each other.  It is
     up to the user to make certain that the different instances of
     \code{genoud} are not writing to
-    the same output file(s): see \code{output.path} and
-    \code{project.path}. \cr
+    the same output file(s): see \code{project.path}. \cr
     
     For the R version of \code{genoud} this variable is of limited
     use.  It is basically there in case a \code{genoud} run is being
     used to optimize the result of another \code{genoud} run (i.e., a
     recursive implementation).}  
-  \item{output.path}{ This is the full
-    (relative) path to where \code{genoud}'s output is to go.  If the
-    value of \code{output.path}= ``stdout'', then \code{genoud}'s
-    output will go to standard output in UNIX and to the GUI console
-    in Windows.  Also see \code{output.append} and
-    \code{project.path}.}  
-  \item{output.append}{ If output is being
-    sent to a file (see \code{output.path}), this logical variable
-    tells \code{genoud} whether it should append to the file if it
-    already exists or if it should overwrite an existing file.}
+  \item{output.path}{This option is no longer supported. It used to
+    allow one to redirect the output. Now please use
+    \code{\link{sink}}. The option remains in order to provide
+    backward compatibility for the API.}
+  \item{output.append}{This option is no longer supported. Please see
+    \code{\link{sink}}. The option remains in order to provide
+    backward compatibility for the API.}
   \item{project.path}{ This is the path of the \code{genoud} project
     file. The project file prints one individual per line with the fit
     value(s) printed first and then the parameter values. By default

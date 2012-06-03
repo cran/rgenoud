@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  August 26, 2010
+  June 3, 2012
 
 */
 
@@ -607,7 +607,7 @@ void oper8(SEXP fn_optim, SEXP rho,
 	   VECTOR parent, MATRIX domains, 
 	   double SolutionTolerance, long nvars, 
 	   short BoundaryEnforcement, 
-	   FILE *output, short PrintLevel,
+	   short PrintLevel,
 	   double mix)
 {
 
@@ -654,8 +654,8 @@ void oper8(SEXP fn_optim, SEXP rho,
 	      {
 		if(PrintLevel > 1)
 		  {
-		    fprintf(output, "NOTE: killing out-of-bounds individual created by bfgs oper(9). fit:%10.8lf\n",bfgsfit);
-		    fprintf(output, "NOTE: oper(9) Parameter: %d \t Value: %e\n\n", i, work[i]);
+		    Rprintf("NOTE: killing out-of-bounds individual created by bfgs oper(9). fit:%10.8lf\n",bfgsfit);
+		    Rprintf("NOTE: oper(9) Parameter: %d \t Value: %e\n\n", i, work[i]);
 		  }
 		warning("killed out-of-bounds individual created by bfgs oper(9)");
 	      }

@@ -11,7 +11,7 @@
 #  http://sekhon.berkeley.edu
 #  <sekhon@berkeley.edu>
 #
-#  June 1, 2010
+#  June 3, 2012
 #
 
 
@@ -21,7 +21,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                    gr=NULL, boundary.enforcement=0, lexical=FALSE, gradient.check=TRUE, BFGS=TRUE, 
                    data.type.int=FALSE, hessian=FALSE, unif.seed=812821, int.seed=53058,
                    print.level=2, share.type=0, instance.number=0,
-                   output.path="stdout", output.append=FALSE, project.path=NULL,
+                   output.path="stdout", output.append=FALSE, project.path=NULL, 
                    P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
                    P9mix=NULL, BFGSburnin=0, BFGSfn=NULL, BFGShelp = NULL,
                    control = list(), optim.method=ifelse(boundary.enforcement < 2, "BFGS", "L-BFGS-B"),
@@ -42,6 +42,19 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
 
   if(!is.null(BFGShelp) && !is.function(BFGShelp)) stop("'BFGShelp' must be NULL or a function")
 
+  #These used to be option. From >5.7-3, they are no longer available
+  #because R CMD check complains about calls to 'stdout'
+  if (output.path!="stdout")
+    {
+      output.path <- "stdout"              
+      warning("'output.path' can no longer be changed. Please use 'sink'. Option is only provided for backward compatibility of the API.")
+    }
+  if(output.append!=FALSE)
+    {
+      output.append <- FALSE
+      warning("'output.append' can no longer be changed. Please use 'sink'. Option is only provided for backward compatibility of the API.")      
+    }
+  
   if(!is.null(P9mix) && !is.real(P9mix))  {
     stop("'P9mix' must be NULL or a number between 0 and 1")
   } else {
@@ -307,9 +320,9 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                     return(fit)
                   }  # end of gr.fn1.bfgs               
                  genoud.wrapper101.env <- new.env()
-                 assign("x", par, env = genoud.wrapper101.env)
-                 assign("helper", helper, env = genoud.wrapper101.env)
-                 assign("FiniteBadFitValue", FiniteBadFitValue, env = genoud.wrapper101.env)
+                 assign("x", par, envir = genoud.wrapper101.env)
+                 assign("helper", helper, envir = genoud.wrapper101.env)
+                 assign("FiniteBadFitValue", FiniteBadFitValue, envir = genoud.wrapper101.env)
                  foo <- as.real(attr(numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
                  return(foo)
                } #end of gr
@@ -758,13 +771,13 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
       
       if(lexical == 1) {
         hess.fn <- function(par) fn1(par, ...)
-        hess <- .Internal(optimhess(gout[5:(nvars+4)], fn1, gr1, con))
+        hess <- optimHess(par=gout[5:(nvars+4)], fn=fn1, gr=gr1, control=con)
       }
       else {
         help.stuff <- do.call(BFGShelp, args = list(initial = gout[5:(nvars+4)], done = TRUE), 
                               envir = environment(fn))
         hess.fn <- function(par, helper = help.stuff) fn1.bfgs(par, helper, ...)
-        hess <- .Internal(optimhess(gout[5:(nvars+4)], hess.fn, NULL, con))
+        hess <- optimHess(par=gout[5:(nvars+4)], fn=hess.fn, gr=NULL, control=con)
       }
       
       hes <- 0.5 * (hess + t(hess))
@@ -1056,9 +1069,9 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
                     return(fit)
                   }  # end of gr.fn1.bfgs
                  genoud.wrapper101.env <- new.env()
-                 assign("x", par, env = genoud.wrapper101.env)
-                 assign("helper", helper, env = genoud.wrapper101.env)
-                 assign("FiniteBadFitValue", FiniteBadFitValue, env = genoud.wrapper101.env)
+                 assign("x", par, envir = genoud.wrapper101.env)
+                 assign("helper", helper, envir = genoud.wrapper101.env)
+                 assign("FiniteBadFitValue", FiniteBadFitValue, envir = genoud.wrapper101.env)
                  foo <- as.real(attr(numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
                  return(foo)
                } #end of gr
@@ -1508,13 +1521,13 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
 
 #       if(lexical == 1) {
 #         hess.fn <- function(par) fn1(par, ...)
-#         hess <- .Internal(optimhess(gout[5:(nvars+4)], fn1, gr1, con))
+#         hess <- optimHess(par=gout[5:(nvars+4)], fn=fn1, gr=gr1, control=con)
 #       }
 #       else {
         help.stuff <- do.call(BFGShelp, args = list(initial = gout[5:(nvars+4)], done = TRUE),
                               envir = environment(fn))
         hess.fn <- function(par, helper = help.stuff) fn1.bfgs(par, helper, ...)
-        hess <- .Internal(optimhess(gout[5:(nvars+4)], hess.fn, NULL, con))
+        hess <- optimHess(par=gout[5:(nvars+4)], fn=hess.fn, gr=NULL, control=con)
 #       }
 
       hes <- 0.5 * (hess + t(hess))

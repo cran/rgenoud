@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/gradient.cpp,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
+  June 2, 2012
 
 */
 
@@ -739,23 +739,23 @@ void estoptint(SEXP fn, SEXP rho,
   }
 
 #ifdef NEVERDEFINED
-  printf("accuracy estimates:\n");
+  Rprintf("accuracy estimates:\n");
   for (i=0; i<nparms; i++) {
-    printf("parm = %d\n", i+1);
+    Rprintf("parm = %d\n", i+1);
     for (j=0; j<ndiffs; j++) {
-      printf(" %14.7e", wrk[i*ndiffs+j]);
+      Rprintf(" %14.7e", wrk[i*ndiffs+j]);
     }
-    printf("\n");
+    Rprintf("\n");
   }
 
-  printf("difference table:\n");
+  Rprintf("difference table:\n");
   for (i=0; i<nparms; i++) {
-    printf("parm = %d\n", i+1);
+    Rprintf("parm = %d\n", i+1);
     for (j=0; j<=ndiffs; j++) {
       for (k=0; k<=ndiffs; k++) {
-	printf(" %14.7e", table[j][i*nsteps+k]);
+	Rprintf(" %14.7e", table[j][i*nsteps+k]);
       }
-      printf("\n");
+      Rprintf("\n");
     }
   }
 #endif
@@ -764,15 +764,15 @@ void estoptint(SEXP fn, SEXP rho,
 		     BoundaryEnforcement, Domains);
 
   if (pflag==1) {
-    printf("err   interval          f'                fc'               f''               errorbound\n");
+    Rprintf("err   interval          f'                fc'               f''               errorbound\n");
     for (i=0; i<nparms; i++) {
-      printf(" %d  ", estructure->errors[i]);
-      printf(" %17.10e", estructure->hf[i]);
-      printf(" %17.10e", estructure->phi[i]);
-      printf(" %17.10e", estructure->phic[i]);
-      printf(" %17.10e", estructure->phi2[i]);
-      printf(" %17.10e", estructure->ef[i]);
-      printf("\n");
+      Rprintf(" %d  ", estructure->errors[i]);
+      Rprintf(" %17.10e", estructure->hf[i]);
+      Rprintf(" %17.10e", estructure->phi[i]);
+      Rprintf(" %17.10e", estructure->phic[i]);
+      Rprintf(" %17.10e", estructure->phi2[i]);
+      Rprintf(" %17.10e", estructure->ef[i]);
+      Rprintf("\n");
     }
   }
 
@@ -819,50 +819,50 @@ void dohessians(SEXP fn, SEXP rho,
 #ifdef NEVERDEFINED
   /* numerical hessian, using forward differences for off-diagonal elements */
   numhessian(estructure, invals, wrk, func);
-  printf("numerical hessian, forward differences:\n");
+  Rprintf("numerical hessian, forward differences:\n");
   for (i=0; i<nparms; i++) {
     for (j=0; j<nparms; j++) {
       if (i==j)
-	printf(" %19.12e", estructure->phi2[i] / 2.0);
+	Rprintf(" %19.12e", estructure->phi2[i] / 2.0);
       else if (i>j)
-	printf(" %19.12e", estructure->hessian[(i*(i-1))/2 + j] / 2.0);
+	Rprintf(" %19.12e", estructure->hessian[(i*(i-1))/2 + j] / 2.0);
       else if (j>i)
-	printf(" %19.12e", estructure->hessian[(j*(j-1))/2 + i] / 2.0);
+	Rprintf(" %19.12e", estructure->hessian[(j*(j-1))/2 + i] / 2.0);
     }
-    printf("\n");
+    Rprintf("\n");
   }
-  fflush(stdout);
+  /* fflush(stdout); */
 #endif
 
   /* numerical hessian, using central differences */
   numhessianc(fn, rho, estructure, invals, wrk, func, MinMax, BoundaryEnforcement, 
 	      Domains);
 
-  printf("numerical hessian, central differences:\n");
+  Rprintf("numerical hessian, central differences:\n");
   for (i=0; i<nparms; i++) {
     for (j=0; j<nparms; j++) {
       if (i==j)
-	printf(" %19.12e", estructure->phi2[i] / 2.0);
+	Rprintf(" %19.12e", estructure->phi2[i] / 2.0);
       else if (i>j)
-	printf(" %19.12e", estructure->hessian[(i*(i-1))/2 + j] / 2.0);
+	Rprintf(" %19.12e", estructure->hessian[(i*(i-1))/2 + j] / 2.0);
       else if (j>i)
-	printf(" %19.12e", estructure->hessian[(j*(j-1))/2 + i] / 2.0);
+	Rprintf(" %19.12e", estructure->hessian[(j*(j-1))/2 + i] / 2.0);
     }
-    printf("\n");
+    Rprintf("\n");
   }
-  fflush(stdout);
+  /* fflush(stdout); */
 
 #ifdef NEVERDEFINED
   /* numerical outer product of gradients, using central differences */
   if (funco != NULL) {
     opg = numopgc(nparms, nobs, invals, opg, wrk, funco);
-    printf("numerical outer product of gradients, central differences:\n");
+    Rprintf("numerical outer product of gradients, central differences:\n");
     for (i=0; i<nparms; i++) {
       for (j=0; j<nparms; j++)
-	printf(" %19.12e", opg[i*nparms+j] / 2.0);
-      printf("\n");
+	Rprintf(" %19.12e", opg[i*nparms+j] / 2.0);
+      Rprintf("\n");
     }
-    fflush(stdout);
+    /* fflush(stdout); */
   }
 #endif 
 

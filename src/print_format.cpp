@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  August 26, 2010
+  June 3, 2012
 
 */
 
@@ -29,11 +29,11 @@
 /*                                                                              */
 /********************************************************************************/
 
-long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, FILE *fp, short PrintLevel)
+long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *fp, short PrintLevel)
 {
   char ctmp[MAXPATH];
   int generation, PopSize, nvars, UsePopSize, FitVals;
-  int i, j, ltmp;
+  int i, j, ltmp, fint;
   double **OldData;
   short trip=0;
 
@@ -43,33 +43,33 @@ long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, 
 
     /* pos = ftell(fp); */
 
-    fscanf(fp, "%s", ctmp);
-    fscanf(fp, " %d", &generation);
+    fint = fscanf(fp, "%s", ctmp);
+    fint = fscanf(fp, " %d", &generation);
 
     if(PrintLevel>0)
-      fprintf(output, "Generation: %d\n", generation);
+      Rprintf( "Generation: %d\n", generation);
     /* This reads the "Population" name */
-    fscanf(fp, "%s", ctmp);
+    fint = fscanf(fp, "%s", ctmp);
     /* This reads the "Size:" name */
-    fscanf(fp, "%s", ctmp);
-    fscanf(fp, " %d", &PopSize);
+    fint = fscanf(fp, "%s", ctmp);
+    fint = fscanf(fp, " %d", &PopSize);
 
     if(PrintLevel>0 & trip==0)
-      fprintf(output, "Population Size: %d\n", PopSize); 
+      Rprintf( "Population Size: %d\n", PopSize); 
 
-    fscanf(fp, "%s", ctmp);     /* reads "Fit" */
-    fscanf(fp, "%s", ctmp);     /* reads "Values:" */
-    fscanf(fp, "%d", &FitVals); /* reads number of fit values */
+    fint = fscanf(fp, "%s", ctmp);     /* reads "Fit" */
+    fint = fscanf(fp, "%s", ctmp);     /* reads "Values:" */
+    fint = fscanf(fp, "%d", &FitVals); /* reads number of fit values */
 
     if(FitVals > 1)
       warning("Reading an existing population file is not supported for Fit Values != 1");
 
     /* This reads the "Variables:" name */
-    fscanf(fp, "%s", ctmp);
-    fscanf(fp, " %d", &nvars);
+    fint = fscanf(fp, "%s", ctmp);
+    fint = fscanf(fp, " %d", &nvars);
 
     if(PrintLevel>0 & trip==0)
-      fprintf(output, "Number of Variables: %d\n", nvars); 
+      Rprintf( "Number of Variables: %d\n", nvars); 
 
     if (trip==0) {
       if (nvars!=NewVars) return(0);
@@ -80,9 +80,9 @@ long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, 
     
     /* loop over the main data part */
     for (i=1; i<=PopSize; i++) {
-      fscanf(fp,"%d",&ltmp);
+      fint = fscanf(fp,"%d",&ltmp);
       for (j=0; j<=nvars; j++) {
-	fscanf(fp,"%lf", &OldData[i][j]);
+	fint = fscanf(fp,"%lf", &OldData[i][j]);
       }
     }
 
@@ -101,16 +101,16 @@ long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, 
   /* let's print the population file */
   if(PrintLevel>1)
     {
-      fprintf(output, "\nRead in Population. Used Population Size: %d\n", UsePopSize); 
+      Rprintf( "\nRead in Population. Used Population Size: %d\n", UsePopSize); 
       for (i=1; i<=UsePopSize; i++) {
-	fprintf(output, "%d \t", i); 
+	Rprintf( "%d \t", i); 
 	for (j=0; j<=nvars; j++) {
-	  fprintf(output, "%e \t", Data[i][j]);
+	  Rprintf( "%e \t", Data[i][j]);
 	}
-	fprintf(output, "\n");
+	Rprintf( "\n");
       }
-      fprintf(output, "\n");
-      fflush(output);
+      Rprintf( "\n");
+      /* fflush(output); */
     }
 
   JaMatrixFree(OldData, PopSize);
@@ -143,7 +143,7 @@ long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *output, 
 
 
 
-void print_domains(MATRIX equal, int t_equ, short DataType, FILE *output)
+void print_domains(MATRIX equal, int t_equ, short DataType)
      /*
        MATRIX equal;   the domains matrix, with the upper and lower limits
        int t_equ;      *the total number of domains
@@ -151,7 +151,7 @@ void print_domains(MATRIX equal, int t_equ, short DataType, FILE *output)
 {
   int i,j;
 
-  fprintf(output,"Domains:\n");
+  Rprintf("Domains:\n");
   //Integer
   if (DataType==1) 
   {
@@ -160,11 +160,11 @@ void print_domains(MATRIX equal, int t_equ, short DataType, FILE *output)
 	  for(j=1; j<=3; j++)
 	  {
 	      if(j == 2)
-		  fprintf(output,"  <=  X%-2d  <=   ",(int)equal[i][j]);
+		  Rprintf("  <=  X%-2d  <=   ",(int)equal[i][j]);
 	      else
-		  fprintf(output," %d ",(int) equal[i][j]);
+		  Rprintf(" %d ",(int) equal[i][j]);
 	  }
-	  fprintf(output,"\n");
+	  Rprintf("\n");
       }
   } else {
       for(i=1; i<=t_equ; i++)
@@ -172,51 +172,13 @@ void print_domains(MATRIX equal, int t_equ, short DataType, FILE *output)
 	  for(j=1; j<=3; j++)
 	  {
 	      if(j == 2)
-		  fprintf(output,"  <=  X%-2d  <=   ",(int)equal[i][j]);
+		  Rprintf("  <=  X%-2d  <=   ",(int)equal[i][j]);
 	      else
-		  fprintf(output," %e ",equal[i][j]);
+		  Rprintf(" %e ",equal[i][j]);
 	  }
-	  fprintf(output,"\n");
+	  Rprintf("\n");
       }
   }
-}
-
-/********************************************************************************/
-/*                                                                              */
-/*           FUNCTION NAME     :   print_matrix()                               */
-/*                                                                              */
-/*           SYNOPSIS          :   void print_matrix(lr,ur,lc,uc,mat)           */
-/*                                                                              */
-/*           DESCRIPTION       :   This function prints a given double matrix,   */
-/*                                  on to the standard output                   */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   None                                         */
-/*                                                                              */
-/*           CALLING FUNCITONS :   main(),                                      */
-/*                                 optimization().                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
-/*                                                                              */
-/********************************************************************************/
-
-
-void print_matrix(int lr, int ur, int lc, int uc, MATRIX mat, FILE *output)
-     /*
-       int lr,ur,lc,uc;
-       MATRIX mat;
-     */
-{
-  int i,j;
-
-  for(i=lr; i<=ur; i++)
-    {
-      fprintf(output,"\n");
-      for(j=lc; j<=uc; j++)
-        fprintf(output,"%5.2f\t",mat[i][j]);
-    }
-  fprintf(output,"\n\n");
 }
 
 /********************************************************************************/
@@ -225,9 +187,9 @@ void print_matrix(int lr, int ur, int lc, int uc, MATRIX mat, FILE *output)
 /*                                                                              */
 /********************************************************************************/
 
-void print_population(long popsize, long nvars, long generation, long lexical, double **foo, FILE *out)
+void print_population(int popsize, int nvars, int generation, int lexical, double **foo, FILE *out)
 {
-  long i,j;
+  int i,j;
 
   if (lexical < 2)
     {
@@ -272,71 +234,4 @@ void print_population(long popsize, long nvars, long generation, long lexical, d
     }
 } /* end */
 
-
-/********************************************************************************/
-/*                                                                              */
-/*           FUNCTION NAME     :   print_vector()                               */
-/*                                                                              */
-/*           SYNOPSIS          :   void print_vector(arr,l,u)                   */
-/*                                                                              */
-/*           DESCRIPTION       :   This function prints a given double vector,   */
-/*                                  on to the standard output                   */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   None                                         */
-/*                                                                              */
-/*           CALLING FUNCITONS :   main()                                       */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
-/*                                                                              */
-/********************************************************************************/
-
-void print_vector(VECTOR arr, int l, int u, FILE *output)
-     /*
-       VECTOR arr;
-       int l,u;
-     */
-{
-  int i;
-
-  for(i=l; i<=u; i++)
-    fprintf(output,"%5.2f\t",arr[i]);
-}
-
-
-/********************************************************************************/
-/*                                                                              */
-/*           FUNCTION NAME     :   print_ivector()                              */
-/*                                                                              */
-/*           SYNOPSIS          :   void print_ivector(arr,l,u)                  */
-/*                                                                              */
-/*           DESCRIPTION       :   This function prints a given integer vector, */
-/*                                  on to the standard output                   */
-/*                                                                              */
-/*           FUNCTIONS CALLED  :   None                                         */
-/*                                                                              */
-/*           CALLING FUNCITONS :                                                */
-/*                                                                              */
-/*                                                                              */
-/*           REV            DATE            BY           DESCRIPTION            */
-/*           ---            ----            --           -----------            */
-/*                                                                              */
-/*                                                                              */
-/********************************************************************************/
-
-
-void print_ivector(IVECTOR arr, int l, int u, FILE *output)
-     /*
-       int l,u;
-       IVECTOR arr;
-     */
-{
-  int i;
-
-  for(i=l; i<=u; i++)
-    fprintf(output,"%d\t",arr[i]);
-  fprintf(output,"\n\n");
-}
 

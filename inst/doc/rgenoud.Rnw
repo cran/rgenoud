@@ -86,6 +86,7 @@
 
   Jasjeet S. Sekhon\\
   Department of Political Science\\
+  Department of Statistics\\  
  210 Barrows Hall \#1950\\
   UC Berkeley\\
  Berkeley, CA 94720-1950\\
@@ -1175,7 +1176,7 @@ evaluated, it is positive at 12,460 points and negative at 27,540 points.
   \caption{Contour Plots of the LQD Fitness Function and of its Partial Derivatives}
   \label{fig:lqd1}
   \begin{center}
-    \includegraphics{lqdxmpl2B.png}
+    \includegraphics{lqdxmpl2B.pdf}
 %  -rw-rw---- 1 wrm1 research    2745 Feb 10 23:15 lqdxmpl2plotB.Rout
   \end{center}
   \vspace{-.3in}

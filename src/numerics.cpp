@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/numerics.cpp,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
+  June 2, 2012
 
 */
 
@@ -95,10 +95,7 @@ void JaShortMatrixFree(double **M, long nobs)
 /* Dated GENOUD Memory run-time error */
 void nrerror(char error_text[])
 {
-        fprintf(output,"Dated GENOUD Memory run-time error...\n");
-        fprintf(output,"%s\n",error_text);
-        fprintf(output,"...now exiting to system...\n");
-        exit(1);
+  error("Dated GENOUD Memory run-time error...\n %s.\n ...now exiting to system...\n",error_text);
 }
 #endif
 
@@ -106,12 +103,8 @@ void nrerror(char error_text[])
 #ifdef NEVERDEFINED
 void nrerror(char error_text[])
 {
-        fprintf(output,"Dated GENOUD Memory run-time error...\n");
-        fprintf(output,"%s\n",error_text);
-        fprintf(output,
-		"I SHOULD exit the system, but I will not because of ");
-	fprintf(output, "cheap fault tolerance.\n");
-        return;
+  warning("Dated GENOUD Memory run-time error...\n %s.\n I SHOULD exit the system, but I will not because of cheap fault tolerance.\n",error_text);
+  return;
 }
 #endif
 

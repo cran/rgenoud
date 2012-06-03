@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  August 27, 2007
+  June 3, 2012
 */
 
 #include "genoud.h"
@@ -58,7 +58,7 @@ void genoud(struct GND_IOstructure *Structure)
     BaseRandIntSeed=53058;
   static short firsttime=1;
 
-  FILE *output;
+  /* FILE *output; */
 
   /* Lamarck Child Test Variables */
   // char LVMchar[1000];
@@ -74,34 +74,18 @@ void genoud(struct GND_IOstructure *Structure)
   if (Structure->MinMax > 0) Structure->MinMax=1;
   else Structure->MinMax=0;
 
-  if (Structure->OutputType==0) {
+  if (Structure->OutputType!=0) {
+    error("output path/type must be the 'R' default");
+  } /* else {
     output=stdout;
-  }
-  else if (Structure->OutputType==1) {
-    if((output = fopen(Structure->OutputPath, "w")) == NULL) {
-      fprintf(output,"%s", Structure->OutputPath);
-
-      return;
-    }
-  }
-  else if (Structure->OutputType==2) {
-    if((output = fopen(Structure->OutputPath, "a")) == NULL) {
-      fprintf(output,"%s", Structure->OutputPath);
-
-      return;
-    }
-  }
-  else {
-    return;
-  }
+    } */
 
   if(Structure->PrintLevel>0)
-    fprintf(output,"\n\n%s",time_str);
+    Rprintf("\n\n%s",time_str);
 
   ThreadNumber=Structure->ThreadNumber;
   if (ThreadNumber > MAXTHREADS) {
-    fprintf(output,"\nERROR: NO MORE THAN %d THREADS ALLOWED\n\n", MAXTHREADS);
-    return;
+    error("No more than %d threads allowed\n\n", MAXTHREADS);
   }
   if (Structure->ProvideSeeds == 1) {
     /*
@@ -157,13 +141,13 @@ void genoud(struct GND_IOstructure *Structure)
 
   /*Initialization*/
   if(Structure->PrintLevel>0)
-    print_domains(domains,nvars,Structure->DataType, output);
+    print_domains(domains,nvars,Structure->DataType);
 
   if (Structure->DataType==1) {
-    JaIntegerOptimization(Structure, X, domains, output);
+    JaIntegerOptimization(Structure, X, domains);
   }
   else {
-    optimization(Structure, X, domains, output);
+    optimization(Structure, X, domains);
   }
 
   /* free memory */
@@ -176,15 +160,15 @@ void genoud(struct GND_IOstructure *Structure)
   /* print final numbers and the time this has taken */
   if(Structure->PrintLevel>0)
     {
-      fprintf(output, "\n");
-      fprintf(output, "Solution Found Generation %d\n", Structure->oPeakGeneration);
-      fprintf(output, "Number of Generations Run %d\n", Structure->oGenerations);
+      Rprintf( "\n");
+      Rprintf( "Solution Found Generation %d\n", Structure->oPeakGeneration);
+      Rprintf( "Number of Generations Run %d\n", Structure->oGenerations);
     }
   time(&stop_time);
 
   strcpy(time_str, ctime(&stop_time));
   if(Structure->PrintLevel>0)
-    fprintf(output,"\n%s",time_str);
+    Rprintf("\n%s",time_str);
 
   delta_time = difftime(stop_time, start_time);
   hours   = (int) (delta_time/3600);
@@ -193,11 +177,12 @@ void genoud(struct GND_IOstructure *Structure)
   
   if(Structure->PrintLevel>0)
     {
-      fprintf(output,"Total run time : %d hours %d minutes and %d seconds\n", 
+      Rprintf("Total run time : %d hours %d minutes and %d seconds\n", 
 	      hours, minutes, seconds);
-      fflush(output);
+      /* fflush(output); */
     }
 
-  if (Structure->OutputType==1) fclose(output);
+  /* no longer allowed */
+  /* if (Structure->OutputType==1) fclose(output); */
 }
 

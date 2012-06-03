@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  $Header: /home/jsekhon/xchg/genoud/rgenoud.distribution/sources/RCS/math.cpp,v 2.15 2005/10/29 06:14:44 jsekhon Exp jsekhon $
+  June 3, 2012
 
 */
 
@@ -51,8 +51,7 @@ void multi(double *in1, double *in2, double *out,
   int oi, oj, i;
 
 if (col1!=row2) {
-  fprintf(output,"\nTHE MATRICES ARE NOT CONFORMABLE FOR MULIPLICATION\n");
-  return;
+  error("The matrices are not conformable for muliplication\n");
 }
 
 outrowcol[0]=row1;
@@ -231,11 +230,11 @@ void samplestats(double **obsdata, int numobsv, int novarsv, int weightflag,
       kur[j] = rkur[j] * x2;
       skew[j] = rskew[j] * sqrt(x2/x1);
       
-      fprintf(output,"var %d:\n", j+1);
-      fprintf(output,"sample mean = %f\n", mean[j]);
-      fprintf(output,"sample var = %f\n", var[j]);
-      fprintf(output,"sample skewness = %f\n", skew[j]);
-      fprintf(output,"sample kurtosis = %f\n", kur[j]);
+      Rprintf("var %d:\n", j+1);
+      Rprintf("sample mean = %f\n", mean[j]);
+      Rprintf("sample var = %f\n", var[j]);
+      Rprintf("sample skewness = %f\n", skew[j]);
+      Rprintf("sample kurtosis = %f\n", kur[j]);
     }
   }
   else if (weightflag==1) {
@@ -272,15 +271,13 @@ void samplestats(double **obsdata, int numobsv, int novarsv, int weightflag,
       kur[j] = rkur[j] * x2;
 	skew[j] = rskew[j] * sqrt(x2/x1);
 	
-	fprintf(output,"var %d:\n", j+1);
-	fprintf(output,"sample mean = %f\n", mean[j]);
-	fprintf(output,"sample var = %f\n", var[j]);
-	fprintf(output,"sample skewness = %f\n", skew[j]);
-	fprintf(output,"sample kurtosis = %f\n", kur[j]);
+	Rprintf("var %d:\n", j+1);
+	Rprintf("sample mean = %f\n", mean[j]);
+	Rprintf("sample var = %f\n", var[j]);
+	Rprintf("sample skewness = %f\n", skew[j]);
+	Rprintf("sample kurtosis = %f\n", kur[j]);
       }
   }
-
-  fflush(output);
 
   /* free data and work storage */
   free(rkur);
