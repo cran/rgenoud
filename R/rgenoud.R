@@ -55,7 +55,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
       warning("'output.append' can no longer be changed. Please use 'sink'. Option is only provided for backward compatibility of the API.")      
     }
   
-  if(!is.null(P9mix) && !is.real(P9mix))  {
+  if(!is.null(P9mix) && !is.double(P9mix))  {
     stop("'P9mix' must be NULL or a number between 0 and 1")
   } else {
     if(is.null(P9mix)) {
@@ -323,7 +323,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                  assign("x", par, envir = genoud.wrapper101.env)
                  assign("helper", helper, envir = genoud.wrapper101.env)
                  assign("FiniteBadFitValue", FiniteBadFitValue, envir = genoud.wrapper101.env)
-                 foo <- as.real(attr(numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
+                 foo <- as.double(attr(numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
                  return(foo)
                } #end of gr
              gr1 <- if(is.null(BFGShelp)) function(par, ...) gr(par) else
@@ -722,7 +722,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
   gout <- .Call("rgenoud", as.function(fn1), new.env(),
                 as.integer(nvars), as.integer(pop.size), as.integer(max.generations),
                 as.integer(wait.generations),
-                as.integer(nStartingValues), as.real(starting.values),
+                as.integer(nStartingValues), as.double(starting.values),
                 as.vector(P), as.matrix(Domains),
                 as.integer(max), as.integer(gradient.check), as.integer(boundary.enforcement),
                 as.double(solution.tolerance), as.integer(BFGS), as.integer(data.type.int),
@@ -733,7 +733,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                 as.integer(hard.generation.limit),
                 as.function(genoud.optim.wrapper101), 
                 as.integer(lexical), as.function(fnLexicalSort), as.function(fnMemoryMatrixEvaluate),
-                as.integer(UserGradient), as.function(gr1func), as.real(P9mix),
+                as.integer(UserGradient), as.function(gr1func), as.double(P9mix),
                 as.integer(BFGSburnin), as.integer(transform),
                 PACKAGE="rgenoud");
 
@@ -829,7 +829,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
 
   if(!is.null(BFGShelp) && !is.function(BFGShelp)) stop("'BFGShelp' must be NULL or a function")
 
-  if(!is.null(P9mix) && !is.real(P9mix))  {
+  if(!is.null(P9mix) && !is.double(P9mix))  {
     stop("'P9mix' must be NULL or a number between 0 and 1")
   } else {
     if(is.null(P9mix)) {
@@ -1072,7 +1072,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
                  assign("x", par, envir = genoud.wrapper101.env)
                  assign("helper", helper, envir = genoud.wrapper101.env)
                  assign("FiniteBadFitValue", FiniteBadFitValue, envir = genoud.wrapper101.env)
-                 foo <- as.real(attr(numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
+                 foo <- as.double(attr(numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
                  return(foo)
                } #end of gr
              gr1 <- if(is.null(BFGShelp)) function(par, ...) gr(par) else
@@ -1472,7 +1472,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
   gout <- .Call("rgenoud", as.function(fn1), new.env(),
                 as.integer(nvars), as.integer(pop.size), as.integer(max.generations),
                 as.integer(wait.generations),
-                as.integer(nStartingValues), as.real(starting.values),
+                as.integer(nStartingValues), as.double(starting.values),
                 as.vector(P), as.matrix(Domains),
                 as.integer(max), as.integer(gradient.check), as.integer(boundary.enforcement),
                 as.double(solution.tolerance), as.integer(BFGS), as.integer(data.type.int),
@@ -1483,7 +1483,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
                 as.integer(hard.generation.limit),
                 as.function(genoud.optim.wrapper101),
                 as.integer(lexical), as.function(fnLexicalSort), as.function(fnMemoryMatrixEvaluate),
-                as.integer(UserGradient), as.function(gr1func), as.real(P9mix),
+                as.integer(UserGradient), as.function(gr1func), as.double(P9mix),
                 as.integer(BFGSburnin), as.integer(transform),
                 PACKAGE="rgenoud");
 

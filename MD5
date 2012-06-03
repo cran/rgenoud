@@ -1,10 +1,10 @@
 f5567dfa10857318086a5035524f1fe1 *COPYING
 f34cff6fa67620bb5585411aafb981d7 *COPYRIGHTS
 48db0d29e8aa981edb981a65d78bc0bb *ChangeLog
-0c2dcb29532aad836e37924e098e0cdb *DESCRIPTION
+aece62430b18c7c3c95f5b553fc022a6 *DESCRIPTION
 7041fdf1d47575612a5530f22815c74b *INDEX
 d0e648e7a542fefef8ded0093a377d0c *NAMESPACE
-f329a2365a697a09fb7fd7c1c0b341eb *R/rgenoud.R
+06151cab9e4c1db449fe8ba0ffd1fb39 *R/rgenoud.R
 4b839bc06eb249871d3f23d0d9f9a953 *R/zzz.R
 5b89fbb8f5ded1292c887abd380d9ed3 *THANKS
 c1555556931726b8c05fb5eca07023ed *inst/CITATION
@@ -12,7 +12,7 @@ fc974e2bc8d4159f9ef7c20f2e4d2d40 *inst/doc/Figures/fig1.pdf
 c1c87156136ee41de970e4fce41fe4ed *inst/doc/Figures/lqdxmpl2B.pdf
 688f42dd89519765ad82e2ec6eb8b9ce *inst/doc/rgenoud.Rnw
 6da32365e697f8c1d280b3bf1c346ef2 *inst/doc/rgenoud.bib
-57a6201711c9df6c1a45f2e84f285c6c *inst/doc/rgenoud.pdf
+5ff472c622145eb456da868ca0c1d987 *inst/doc/rgenoud.pdf
 af9efff04801982dec1424e595065cc6 *man/genoud.Rd
 9e5f395a8f7532118c723dab203d314d *src/change_order.cpp
 0e2173333529000bcd8a2b2cdceec2c6 *src/eval.cpp
