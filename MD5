@@ -1,7 +1,7 @@
 f5567dfa10857318086a5035524f1fe1 *COPYING
 f34cff6fa67620bb5585411aafb981d7 *COPYRIGHTS
-48db0d29e8aa981edb981a65d78bc0bb *ChangeLog
-aece62430b18c7c3c95f5b553fc022a6 *DESCRIPTION
+91126b099c6a6abec9f768cf8dcb2ead *ChangeLog
+70fd31e1f3b764377c8bdb3cfc564058 *DESCRIPTION
 7041fdf1d47575612a5530f22815c74b *INDEX
 d0e648e7a542fefef8ded0093a377d0c *NAMESPACE
 06151cab9e4c1db449fe8ba0ffd1fb39 *R/rgenoud.R
@@ -10,6 +10,7 @@ d0e648e7a542fefef8ded0093a377d0c *NAMESPACE
 c1555556931726b8c05fb5eca07023ed *inst/CITATION
 fc974e2bc8d4159f9ef7c20f2e4d2d40 *inst/doc/Figures/fig1.pdf
 c1c87156136ee41de970e4fce41fe4ed *inst/doc/Figures/lqdxmpl2B.pdf
+301934099bc3c999ad3b509374fccd7f *inst/doc/rgenoud.R
 688f42dd89519765ad82e2ec6eb8b9ce *inst/doc/rgenoud.Rnw
 6da32365e697f8c1d280b3bf1c346ef2 *inst/doc/rgenoud.bib
 5ff472c622145eb456da868ca0c1d987 *inst/doc/rgenoud.pdf
@@ -25,11 +26,11 @@ dfa87419e843d8e6fb959e156004c550 *src/genoud.h
 824d9f5d338ecaa274098127fbfe987b *src/math.cpp
 1ac6ed98c2cb0267453dcdfe1c8029ce *src/multiply.cpp
 62b05e4d2b6ccf20af199dc8db6f4436 *src/numerics.cpp
-6923014bada03f7cfb613bc117a04955 *src/operators.cpp
+1dfcf27b62c83849ee8bd8b361d06e11 *src/operators.cpp
 33b6a2cd3d214a86355fb03ae840034d *src/print_format.cpp
 6232a071dae711bba098c886b76bbdee *src/rgenoud.cpp
 5a028c6ece078d870ee528ca300a9776 *src/unif.cpp
 fa19da33dee62a703d43ed766e8d2985 *src/unif.h
 4ef64fab110b8894a0a4871f34f5692f *src/urans.h
 ec7b5314da121bf815686b8969dc0ee9 *tests/tests.R
-83e23ec5ad69b43748224079fe96b2eb *tests/tests.Rout.save
+4293215913ff8bcc4e389b99901c5d8c *tests/tests.Rout.save

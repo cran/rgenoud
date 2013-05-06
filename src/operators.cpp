@@ -12,7 +12,7 @@
   http://sekhon.polisci.berkeley.edu
   <sekhon@berkeley.edu>
 
-  June 3, 2012
+  May 6, 2013
 
 */
 
@@ -283,7 +283,7 @@ void oper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars)
 
   /* unique check variables */
   FLAG SAME;
-  long count, tcount;
+  int count, tcount, ccount;
 
   child = matrix(1,2,1,nvars);
 
@@ -304,10 +304,12 @@ void oper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars)
       do
 	{
 	  /*Cross the two vectors*/
+	  ccount = 0;
 	  for(i=cut + 1; i<=nvars; i++)
 	    {
 	      child[1][i] = p1[i] * (double)n/(double)STEP + p2[i] * (1.0-(double)n/(double)STEP);
 	      child[2][i] = p2[i] * (double)n/(double)STEP + p1[i] * (1.0-(double)n/(double)STEP);
+	      ccount++;
 	    }
 	  
 	  /*Check to see if they satisfy the constraints*/
@@ -326,7 +328,7 @@ void oper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars)
 	}
 
       tcount=0;
-      for (i=1; i<=nvars; i++) {
+      for (i=cut+1; i<=nvars; i++) {
 	if ( child[1][i] != p1[i] )
 	  tcount++;
 	
@@ -334,7 +336,7 @@ void oper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars)
 	  tcount++;
       } /* end of i loop */
 
-      if (tcount==(nvars*2)) SAME=FALSE;
+      if (tcount>=(ccount*2)) SAME=FALSE;
 
     } /* end of while (SAME==TRUE) */
 
@@ -967,7 +969,7 @@ void JaIntegerOper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars)
 
   /* unique check variables */
   FLAG SAME;
-  long count, tcount;
+  int count, tcount, ccount;
 
 
   child = matrix(1,2,1,nvars);
@@ -988,10 +990,12 @@ void JaIntegerOper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars)
       do
 	{
 	  /*Cross the two vectors*/
+	  ccount = 0;
 	  for(i=cut + 1; i<=nvars; i++)
 	    {
 	      child[1][i] = p1[i] * (double)n/(double)STEP + p2[i] * (1.0-(double)n/(double)STEP);
 	      child[2][i] = p2[i] * (double)n/(double)STEP + p1[i] * (1.0-(double)n/(double)STEP);
+	      ccount++;
 	    }
 	  
 	  /*Check to see if they satisfy the constraints*/
@@ -1010,15 +1014,15 @@ void JaIntegerOper5(VECTOR p1, VECTOR p2, int STEP, double **domains, int nvars)
 	}
 
       tcount=0;
-      for (i=1; i<=nvars; i++) {
+      for (i=cut+1; i<=nvars; i++) {
 	if ( (int) child[1][i] != (int) p1[i] )
 	  tcount++;
 	
 	if ( (int) child[2][i] != (int) p2[i] )
 	  tcount++;
       } /* end of i loop */
-      
-      if (tcount==(nvars*2)) SAME=FALSE;
+
+      if (tcount>=(ccount*2)) SAME=FALSE;
       
     } /* end of while (SAME==TRUE); */
 

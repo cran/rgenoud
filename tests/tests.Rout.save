@@ -1,8 +1,7 @@
 
-R version 2.15.0 (2012-03-30)
-Copyright (C) 2012 The R Foundation for Statistical Computing
-ISBN 3-900051-07-0
-Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+R version 3.0.0 (2013-04-03) -- "Masked Marvel"
+Copyright (C) 2013 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin10.8.0 (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
@@ -17,7 +16,7 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 Type 'q()' to quit R.
 
 > library(rgenoud)
-##  rgenoud (Version 5.7-8, Build Date: 2012-06-03)
+##  rgenoud (Version 5.7-9, Build Date: 2013-05-06)
 ##  See http://sekhon.berkeley.edu/rgenoud for additional documentation.
 ##  Please cite software as:
 ##   Walter Mebane, Jr. and Jasjeet S. Sekhon. 2011.
@@ -30,7 +29,7 @@ Type 'q()' to quit R.
 > sin1 <- genoud(sin, nvars=1, max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Sun Jun  3 12:21:44 2012
+Mon May  6 16:18:17 2013
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -68,113 +67,113 @@ variance........ 3.172148e+01
 
 GENERATION: 1
 Fitness value... 1.000000e+00
-mean............ 4.698769e-01
-variance........ 4.686607e-01
-#unique......... 626, #Total UniqueCount: 1626
+mean............ 4.787469e-01
+variance........ 4.709791e-01
+#unique......... 602, #Total UniqueCount: 1602
 var 1:
-best............ 1.570796e+00
-mean............ 2.476980e+00
-variance........ 2.129227e+01
+best............ 7.853982e+00
+mean............ 2.369585e+00
+variance........ 2.109055e+01
 
 GENERATION: 2
 Fitness value... 1.000000e+00
-mean............ 4.688077e-01
-variance........ 5.113062e-01
-#unique......... 694, #Total UniqueCount: 2320
+mean............ 6.906584e-01
+variance........ 3.145412e-01
+#unique......... 675, #Total UniqueCount: 2277
 var 1:
-best............ 1.570796e+00
-mean............ 2.980932e+00
-variance........ 1.656832e+01
+best............ 7.853982e+00
+mean............ 5.441066e+00
+variance........ 1.644610e+01
 
 GENERATION: 3
 Fitness value... 1.000000e+00
-mean............ 6.189650e-01
-variance........ 4.002499e-01
-#unique......... 427, #Total UniqueCount: 2747
+mean............ 6.992597e-01
+variance........ 3.225115e-01
+#unique......... 425, #Total UniqueCount: 2702
 var 1:
-best............ 1.570796e+00
-mean............ 1.679966e+00
-variance........ 1.119450e+01
+best............ 7.853982e+00
+mean............ 6.492986e+00
+variance........ 1.181980e+01
 
 GENERATION: 4
 Fitness value... 1.000000e+00
-mean............ 6.092758e-01
-variance........ 4.169687e-01
-#unique......... 431, #Total UniqueCount: 3178
+mean............ 7.026804e-01
+variance........ 3.202972e-01
+#unique......... 427, #Total UniqueCount: 3129
 var 1:
-best............ 1.570796e+00
-mean............ 1.367527e+00
-variance........ 6.934006e+00
+best............ 7.853982e+00
+mean............ 6.775381e+00
+variance........ 9.064497e+00
 
 GENERATION: 5
 Fitness value... 1.000000e+00
-mean............ 6.156435e-01
-variance........ 4.200404e-01
-#unique......... 423, #Total UniqueCount: 3601
+mean............ 7.172421e-01
+variance........ 2.944383e-01
+#unique......... 429, #Total UniqueCount: 3558
 var 1:
-best............ 1.570796e+00
-mean............ 1.366945e+00
-variance........ 6.752356e+00
+best............ 7.853982e+00
+mean............ 6.803949e+00
+variance........ 9.271285e+00
 
 GENERATION: 6
 Fitness value... 1.000000e+00
-mean............ 6.356096e-01
-variance........ 4.049092e-01
-#unique......... 425, #Total UniqueCount: 4026
+mean............ 7.416843e-01
+variance........ 2.822126e-01
+#unique......... 399, #Total UniqueCount: 3957
 var 1:
-best............ 1.570796e+00
-mean............ 1.393369e+00
-variance........ 6.402281e+00
+best............ 7.853982e+00
+mean............ 6.785987e+00
+variance........ 9.523546e+00
 
 GENERATION: 7
 Fitness value... 1.000000e+00
-mean............ 6.164552e-01
-variance........ 4.133295e-01
-#unique......... 431, #Total UniqueCount: 4457
+mean............ 7.064246e-01
+variance........ 3.249563e-01
+#unique......... 442, #Total UniqueCount: 4399
 var 1:
-best............ 1.570796e+00
-mean............ 1.211458e+00
-variance........ 6.857465e+00
+best............ 7.853982e+00
+mean............ 6.730697e+00
+variance........ 9.290300e+00
 
 GENERATION: 8
 Fitness value... 1.000000e+00
-mean............ 6.562369e-01
-variance........ 3.846095e-01
-#unique......... 401, #Total UniqueCount: 4858
+mean............ 7.328697e-01
+variance........ 3.001654e-01
+#unique......... 419, #Total UniqueCount: 4818
 var 1:
-best............ 1.570796e+00
-mean............ 1.391469e+00
-variance........ 6.147332e+00
+best............ 7.853982e+00
+mean............ 6.774830e+00
+variance........ 9.243335e+00
 
 GENERATION: 9
 Fitness value... 1.000000e+00
-mean............ 6.651051e-01
-variance........ 3.848492e-01
-#unique......... 403, #Total UniqueCount: 5261
+mean............ 7.324268e-01
+variance........ 2.825356e-01
+#unique......... 427, #Total UniqueCount: 5245
 var 1:
-best............ 1.570796e+00
-mean............ 1.330140e+00
-variance........ 5.689063e+00
+best............ 7.853982e+00
+mean............ 6.804995e+00
+variance........ 9.366768e+00
 
 GENERATION: 10
 Fitness value... 1.000000e+00
-mean............ 6.208946e-01
-variance........ 4.056497e-01
-#unique......... 435, #Total UniqueCount: 5696
+mean............ 7.128780e-01
+variance........ 3.125984e-01
+#unique......... 423, #Total UniqueCount: 5668
 var 1:
-best............ 1.570796e+00
-mean............ 1.343203e+00
-variance........ 7.001236e+00
+best............ 7.853982e+00
+mean............ 6.646871e+00
+variance........ 1.087588e+01
 
 GENERATION: 11
 Fitness value... 1.000000e+00
-mean............ 6.724621e-01
-variance........ 3.550086e-01
-#unique......... 419, #Total UniqueCount: 6115
+mean............ 7.410885e-01
+variance........ 2.871270e-01
+#unique......... 415, #Total UniqueCount: 6083
 var 1:
-best............ 1.570796e+00
-mean............ 1.282502e+00
-variance........ 5.515707e+00
+best............ 7.853982e+00
+mean............ 6.821422e+00
+variance........ 9.294157e+00
 
 'wait.generations' limit reached.
 No significant improvement in 10 generations.
@@ -183,22 +182,22 @@ Solution Fitness Value: 1.000000e+00
 
 Parameters at the Solution (parameter, gradient):
 
- X[ 1] :	1.570796e+00	G[ 1] :	3.846606e-11
+ X[ 1] :	7.853982e+00	G[ 1] :	-3.846498e-11
 
 Solution Found Generation 1
 Number of Generations Run 11
 
-Sun Jun  3 12:21:46 2012
-Total run time : 0 hours 0 minutes and 2 seconds
+Mon May  6 16:18:17 2013
+Total run time : 0 hours 0 minutes and 0 seconds
 > print(sin1)
 $value
 [1] 1
 
 $par
-[1] 1.570796
+[1] 7.853982
 
 $gradients
-[1] 3.846606e-11
+[1] -3.846498e-11
 
 $generations
 [1] 11
@@ -217,7 +216,7 @@ $operators
 > sin2 <- genoud(sin, nvars=1, max=FALSE, unif.seed=912821, int.seed=93058)
 
 
-Sun Jun  3 12:21:46 2012
+Mon May  6 16:18:17 2013
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -255,113 +254,113 @@ variance........ 3.172148e+01
 
 GENERATION: 1
 Fitness value... -1.000000e+00
-mean............ -4.392412e-01
-variance........ 4.947034e-01
-#unique......... 627, #Total UniqueCount: 1627
+mean............ -4.421601e-01
+variance........ 4.987089e-01
+#unique......... 601, #Total UniqueCount: 1601
 var 1:
-best............ 4.712389e+00
-mean............ 1.344678e+00
-variance........ 2.358093e+01
+best............ -1.570796e+00
+mean............ 1.200452e+00
+variance........ 2.271389e+01
 
 GENERATION: 2
 Fitness value... -1.000000e+00
-mean............ -6.376971e-01
-variance........ 3.977885e-01
-#unique......... 682, #Total UniqueCount: 2309
+mean............ -4.262208e-01
+variance........ 5.210357e-01
+#unique......... 682, #Total UniqueCount: 2283
 var 1:
-best............ 4.712389e+00
-mean............ 3.205253e+00
-variance........ 1.300124e+01
+best............ -1.570796e+00
+mean............ 5.118553e-01
+variance........ 1.852305e+01
 
 GENERATION: 3
 Fitness value... -1.000000e+00
-mean............ -6.128608e-01
-variance........ 4.144967e-01
-#unique......... 429, #Total UniqueCount: 2738
+mean............ -5.993518e-01
+variance........ 4.272421e-01
+#unique......... 437, #Total UniqueCount: 2720
 var 1:
-best............ 4.712389e+00
-mean............ 4.007063e+00
-variance........ 7.658184e+00
+best............ -1.570796e+00
+mean............ -5.189480e-01
+variance........ 1.110455e+01
 
 GENERATION: 4
 Fitness value... -1.000000e+00
-mean............ -6.212577e-01
-variance........ 4.115324e-01
-#unique......... 437, #Total UniqueCount: 3175
+mean............ -6.307907e-01
+variance........ 4.022376e-01
+#unique......... 417, #Total UniqueCount: 3137
 var 1:
-best............ 4.712389e+00
-mean............ 4.165113e+00
-variance........ 7.042534e+00
+best............ -1.570796e+00
+mean............ -1.415043e+00
+variance........ 7.219784e+00
 
 GENERATION: 5
 Fitness value... -1.000000e+00
-mean............ -6.544408e-01
-variance........ 3.750827e-01
-#unique......... 411, #Total UniqueCount: 3586
+mean............ -6.514710e-01
+variance........ 3.963503e-01
+#unique......... 389, #Total UniqueCount: 3526
 var 1:
-best............ 4.712389e+00
-mean............ 4.169934e+00
-variance........ 6.904521e+00
+best............ -1.570796e+00
+mean............ -1.323440e+00
+variance........ 5.164821e+00
 
 GENERATION: 6
 Fitness value... -1.000000e+00
-mean............ -6.581255e-01
-variance........ 3.650709e-01
-#unique......... 417, #Total UniqueCount: 4003
+mean............ -6.589883e-01
+variance........ 3.692259e-01
+#unique......... 413, #Total UniqueCount: 3939
 var 1:
-best............ 4.712389e+00
-mean............ 4.216442e+00
-variance........ 6.401695e+00
+best............ -1.570796e+00
+mean............ -1.295029e+00
+variance........ 6.135380e+00
 
 GENERATION: 7
 Fitness value... -1.000000e+00
-mean............ -6.506840e-01
-variance........ 3.775357e-01
-#unique......... 419, #Total UniqueCount: 4422
+mean............ -6.511009e-01
+variance........ 3.792198e-01
+#unique......... 415, #Total UniqueCount: 4354
 var 1:
-best............ 4.712389e+00
-mean............ 3.803004e+00
-variance........ 8.929374e+00
+best............ -1.570796e+00
+mean............ -1.395810e+00
+variance........ 5.781379e+00
 
 GENERATION: 8
 Fitness value... -1.000000e+00
-mean............ -6.497109e-01
-variance........ 3.885300e-01
-#unique......... 403, #Total UniqueCount: 4825
+mean............ -6.241771e-01
+variance........ 4.118249e-01
+#unique......... 423, #Total UniqueCount: 4777
 var 1:
-best............ 4.712389e+00
-mean............ 4.103374e+00
-variance........ 7.038492e+00
+best............ -1.570796e+00
+mean............ -1.330983e+00
+variance........ 5.817784e+00
 
 GENERATION: 9
 Fitness value... -1.000000e+00
-mean............ -7.002825e-01
-variance........ 3.359944e-01
-#unique......... 407, #Total UniqueCount: 5232
+mean............ -6.224895e-01
+variance........ 4.179222e-01
+#unique......... 433, #Total UniqueCount: 5210
 var 1:
-best............ 4.712389e+00
-mean............ 4.113148e+00
-variance........ 6.708839e+00
+best............ -1.570796e+00
+mean............ -1.420018e+00
+variance........ 6.023781e+00
 
 GENERATION: 10
 Fitness value... -1.000000e+00
-mean............ -6.969895e-01
-variance........ 3.268609e-01
-#unique......... 398, #Total UniqueCount: 5630
+mean............ -6.275665e-01
+variance........ 4.011626e-01
+#unique......... 439, #Total UniqueCount: 5649
 var 1:
-best............ 4.712389e+00
-mean............ 4.218568e+00
-variance........ 6.475102e+00
+best............ -1.570796e+00
+mean............ -1.313590e+00
+variance........ 7.240868e+00
 
 GENERATION: 11
 Fitness value... -1.000000e+00
-mean............ -6.652317e-01
-variance........ 3.542651e-01
-#unique......... 415, #Total UniqueCount: 6045
+mean............ -6.689601e-01
+variance........ 3.618035e-01
+#unique......... 401, #Total UniqueCount: 6050
 var 1:
-best............ 4.712389e+00
-mean............ 4.084384e+00
-variance........ 7.039829e+00
+best............ -1.570796e+00
+mean............ -1.301328e+00
+variance........ 5.655686e+00
 
 'wait.generations' limit reached.
 No significant improvement in 10 generations.
@@ -370,22 +369,22 @@ Solution Fitness Value: -1.000000e+00
 
 Parameters at the Solution (parameter, gradient):
 
- X[ 1] :	4.712389e+00	G[ 1] :	-6.644891e-11
+ X[ 1] :	-1.570796e+00	G[ 1] :	5.944754e-11
 
 Solution Found Generation 1
 Number of Generations Run 11
 
-Sun Jun  3 12:21:48 2012
+Mon May  6 16:18:19 2013
 Total run time : 0 hours 0 minutes and 2 seconds
 > print(sin2)
 $value
 [1] -1
 
 $par
-[1] 4.712389
+[1] -1.570796
 
 $gradients
-[1] -6.644891e-11
+[1] 5.944754e-11
 
 $generations
 [1] 11
@@ -411,7 +410,7 @@ $operators
 > claw1   <- genoud(claw, nvars=1,pop.size=3000,max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Sun Jun  3 12:21:48 2012
+Mon May  6 16:18:19 2013
 Domains:
  -1.000000e+01   <=  X1   <=    1.000000e+01 
 
@@ -449,113 +448,113 @@ variance........ 3.334373e+01
 
 GENERATION: 1
 Fitness value... 4.113123e-01
-mean............ 2.218809e-01
-variance........ 2.552522e-02
-#unique......... 1836, #Total UniqueCount: 4836
+mean............ 2.195177e-01
+variance........ 2.491574e-02
+#unique......... 1830, #Total UniqueCount: 4830
 var 1:
-best............ 9.995033e-01
-mean............ 4.684588e-01
-variance........ 8.297216e+00
+best............ 9.995032e-01
+mean............ 4.519695e-01
+variance........ 8.361629e+00
 
 GENERATION: 2
 Fitness value... 4.113123e-01
-mean............ 2.816993e-01
-variance........ 2.968509e-02
-#unique......... 2051, #Total UniqueCount: 6887
+mean............ 2.814532e-01
+variance........ 2.964053e-02
+#unique......... 2076, #Total UniqueCount: 6906
 var 1:
-best............ 9.995033e-01
-mean............ 8.423656e-01
-variance........ 6.775246e+00
+best............ 9.995032e-01
+mean............ 8.577541e-01
+variance........ 6.889389e+00
 
 GENERATION: 3
 Fitness value... 4.113123e-01
-mean............ 2.864275e-01
-variance........ 2.897977e-02
-#unique......... 2046, #Total UniqueCount: 8933
+mean............ 2.829078e-01
+variance........ 2.946363e-02
+#unique......... 1959, #Total UniqueCount: 8865
 var 1:
-best............ 9.995033e-01
-mean............ 8.399118e-01
-variance........ 6.825600e+00
+best............ 9.995032e-01
+mean............ 8.432716e-01
+variance........ 6.610512e+00
 
 GENERATION: 4
 Fitness value... 4.113123e-01
-mean............ 2.838900e-01
-variance........ 2.869139e-02
-#unique......... 1878, #Total UniqueCount: 10811
+mean............ 2.887597e-01
+variance........ 2.829153e-02
+#unique......... 1826, #Total UniqueCount: 10691
 var 1:
-best............ 9.995033e-01
-mean............ 8.908219e-01
-variance........ 6.798754e+00
+best............ 9.995032e-01
+mean............ 8.720794e-01
+variance........ 6.379687e+00
 
 GENERATION: 5
 Fitness value... 4.113123e-01
-mean............ 2.901938e-01
-variance........ 2.813199e-02
-#unique......... 1798, #Total UniqueCount: 12609
+mean............ 2.809638e-01
+variance........ 2.899667e-02
+#unique......... 1869, #Total UniqueCount: 12560
 var 1:
-best............ 9.995033e-01
-mean............ 8.704130e-01
-variance........ 6.203916e+00
+best............ 9.995032e-01
+mean............ 7.953450e-01
+variance........ 6.535011e+00
 
 GENERATION: 6
 Fitness value... 4.113123e-01
-mean............ 2.921695e-01
-variance........ 2.741696e-02
-#unique......... 1814, #Total UniqueCount: 14423
+mean............ 2.900779e-01
+variance........ 2.779293e-02
+#unique......... 1809, #Total UniqueCount: 14369
 var 1:
-best............ 9.995033e-01
-mean............ 8.472001e-01
-variance........ 5.701943e+00
+best............ 9.995032e-01
+mean............ 8.669859e-01
+variance........ 6.218933e+00
 
 GENERATION: 7
 Fitness value... 4.113123e-01
-mean............ 2.880376e-01
-variance........ 2.808988e-02
-#unique......... 1842, #Total UniqueCount: 16265
+mean............ 2.867713e-01
+variance........ 2.798707e-02
+#unique......... 1822, #Total UniqueCount: 16191
 var 1:
-best............ 9.995033e-01
-mean............ 8.380206e-01
-variance........ 6.541224e+00
+best............ 9.995032e-01
+mean............ 8.433650e-01
+variance........ 6.468060e+00
 
 GENERATION: 8
 Fitness value... 4.113123e-01
-mean............ 2.860009e-01
-variance........ 2.828495e-02
-#unique......... 1853, #Total UniqueCount: 18118
+mean............ 2.788325e-01
+variance........ 2.920302e-02
+#unique......... 1839, #Total UniqueCount: 18030
 var 1:
-best............ 9.995033e-01
-mean............ 8.542092e-01
-variance........ 6.452253e+00
+best............ 9.995032e-01
+mean............ 9.115030e-01
+variance........ 7.034378e+00
 
 GENERATION: 9
 Fitness value... 4.113123e-01
-mean............ 2.942904e-01
-variance........ 2.682284e-02
-#unique......... 1804, #Total UniqueCount: 19922
+mean............ 2.923154e-01
+variance........ 2.725670e-02
+#unique......... 1734, #Total UniqueCount: 19764
 var 1:
-best............ 9.995033e-01
-mean............ 8.537841e-01
-variance........ 5.747967e+00
+best............ 9.995032e-01
+mean............ 9.075195e-01
+variance........ 5.564484e+00
 
 GENERATION: 10
 Fitness value... 4.113123e-01
-mean............ 2.903657e-01
-variance........ 2.744221e-02
-#unique......... 1848, #Total UniqueCount: 21770
+mean............ 2.976346e-01
+variance........ 2.627850e-02
+#unique......... 1689, #Total UniqueCount: 21453
 var 1:
-best............ 9.995033e-01
-mean............ 8.261983e-01
-variance........ 6.038556e+00
+best............ 9.995032e-01
+mean............ 9.195252e-01
+variance........ 5.290259e+00
 
 GENERATION: 11
 Fitness value... 4.113123e-01
-mean............ 2.983268e-01
-variance........ 2.579515e-02
-#unique......... 1721, #Total UniqueCount: 23491
+mean............ 2.935872e-01
+variance........ 2.626317e-02
+#unique......... 1715, #Total UniqueCount: 23168
 var 1:
-best............ 9.995033e-01
-mean............ 8.328409e-01
-variance........ 5.329774e+00
+best............ 9.995032e-01
+mean............ 9.077440e-01
+variance........ 5.261826e+00
 
 'wait.generations' limit reached.
 No significant improvement in 10 generations.
@@ -564,22 +563,22 @@ Solution Fitness Value: 4.113123e-01
 
 Parameters at the Solution (parameter, gradient):
 
- X[ 1] :	9.995033e-01	G[ 1] :	-1.746217e-09
+ X[ 1] :	9.995032e-01	G[ 1] :	-1.277157e-06
 
 Solution Found Generation 1
 Number of Generations Run 11
 
-Sun Jun  3 12:21:50 2012
+Mon May  6 16:18:21 2013
 Total run time : 0 hours 0 minutes and 2 seconds
 > print(claw1)
 $value
 [1] 0.4113123
 
 $par
-[1] 0.9995033
+[1] 0.9995032
 
 $gradients
-[1] -1.746217e-09
+[1] -1.277157e-06
 
 $generations
 [1] 11
@@ -619,7 +618,7 @@ $operators
 > biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,pop.size=5000,max=TRUE, unif.seed=912821, int.seed=93058)
 
 
-Sun Jun  3 12:21:50 2012
+Mon May  6 16:18:22 2013
 Domains:
  -2.000000e+01   <=  X1   <=    2.000000e+01 
  -2.000000e+01   <=  X2   <=    2.000000e+01 
@@ -662,171 +661,171 @@ variance........ 1.329841e+02
 
 GENERATION: 1
 Fitness value... 1.671127e+00
-mean............ 6.573480e-02
-variance........ 2.764020e-02
-#unique......... 3044, #Total UniqueCount: 8044
+mean............ 6.363940e-02
+variance........ 3.209875e-02
+#unique......... 3423, #Total UniqueCount: 8423
 var 1:
-best............ -1.000003e+00
-mean............ -7.652424e-01
-variance........ 2.449028e+01
+best............ -9.999965e-01
+mean............ -7.799562e-01
+variance........ 2.580699e+01
 var 2:
-best............ -9.999973e-01
-mean............ -6.753439e-01
-variance........ 2.488010e+01
+best............ -1.000005e+00
+mean............ -7.555724e-01
+variance........ 2.435068e+01
 
 GENERATION: 2
 Fitness value... 1.671127e+00
-mean............ 5.047634e-01
-variance........ 4.926982e-01
-#unique......... 3637, #Total UniqueCount: 11681
+mean............ 6.249132e-01
+variance........ 5.746182e-01
+#unique......... 3642, #Total UniqueCount: 12065
 var 1:
-best............ -9.999991e-01
-mean............ -8.947348e-01
-variance........ 1.810849e+01
-var 2:
 best............ -1.000001e+00
-mean............ -8.162942e-01
-variance........ 1.682024e+01
+mean............ -8.974471e-01
+variance........ 1.662059e+01
+var 2:
+best............ -9.999987e-01
+mean............ -8.497694e-01
+variance........ 1.566152e+01
 
 GENERATION: 3
 Fitness value... 1.671127e+00
-mean............ 9.908482e-01
-variance........ 6.618397e-01
-#unique......... 3424, #Total UniqueCount: 15105
+mean............ 9.717519e-01
+variance........ 6.702611e-01
+#unique......... 3528, #Total UniqueCount: 15593
 var 1:
 best............ -1.000000e+00
-mean............ -8.496201e-01
-variance........ 1.499378e+01
+mean............ -8.944140e-01
+variance........ 1.712954e+01
 var 2:
 best............ -1.000000e+00
-mean............ -9.517423e-01
-variance........ 1.704030e+01
+mean............ -9.114140e-01
+variance........ 1.580043e+01
 
 GENERATION: 4
 Fitness value... 1.671127e+00
-mean............ 9.876343e-01
-variance........ 6.651307e-01
-#unique......... 3644, #Total UniqueCount: 18749
+mean............ 9.710726e-01
+variance........ 6.714702e-01
+#unique......... 3666, #Total UniqueCount: 19259
 var 1:
 best............ -1.000000e+00
-mean............ -9.384029e-01
-variance........ 1.481110e+01
+mean............ -8.568081e-01
+variance........ 1.781792e+01
 var 2:
 best............ -1.000000e+00
-mean............ -9.034500e-01
-variance........ 1.643253e+01
+mean............ -8.738692e-01
+variance........ 1.651816e+01
 
 GENERATION: 5
 Fitness value... 1.671127e+00
-mean............ 9.806229e-01
-variance........ 6.682968e-01
-#unique......... 3362, #Total UniqueCount: 22111
+mean............ 9.831994e-01
+variance........ 6.645220e-01
+#unique......... 3335, #Total UniqueCount: 22594
 var 1:
 best............ -1.000000e+00
-mean............ -8.987182e-01
-variance........ 1.459533e+01
+mean............ -8.130327e-01
+variance........ 1.581470e+01
 var 2:
 best............ -1.000000e+00
-mean............ -8.906048e-01
-variance........ 1.576451e+01
+mean............ -8.257962e-01
+variance........ 1.511992e+01
 
 GENERATION: 6
 Fitness value... 1.671127e+00
-mean............ 9.919701e-01
-variance........ 6.650665e-01
-#unique......... 3036, #Total UniqueCount: 25147
+mean............ 1.006698e+00
+variance........ 6.589228e-01
+#unique......... 3028, #Total UniqueCount: 25622
 var 1:
 best............ -1.000000e+00
-mean............ -8.717355e-01
-variance........ 1.478299e+01
+mean............ -9.180558e-01
+variance........ 1.501658e+01
 var 2:
 best............ -1.000000e+00
-mean............ -9.837840e-01
-variance........ 1.514727e+01
+mean............ -9.148021e-01
+variance........ 1.460683e+01
 
 GENERATION: 7
 Fitness value... 1.671127e+00
-mean............ 9.785551e-01
-variance........ 6.679199e-01
-#unique......... 3077, #Total UniqueCount: 28224
+mean............ 9.784026e-01
+variance........ 6.673990e-01
+#unique......... 3074, #Total UniqueCount: 28696
 var 1:
 best............ -1.000000e+00
-mean............ -9.419792e-01
-variance........ 1.386377e+01
+mean............ -8.205462e-01
+variance........ 1.433869e+01
 var 2:
 best............ -1.000000e+00
-mean............ -1.039813e+00
-variance........ 1.409147e+01
+mean............ -8.995069e-01
+variance........ 1.394996e+01
 
 GENERATION: 8
 Fitness value... 1.671127e+00
-mean............ 9.839740e-01
-variance........ 6.656382e-01
-#unique......... 3060, #Total UniqueCount: 31284
+mean............ 9.946592e-01
+variance........ 6.622978e-01
+#unique......... 3043, #Total UniqueCount: 31739
 var 1:
 best............ -1.000000e+00
-mean............ -8.969875e-01
-variance........ 1.451103e+01
+mean............ -1.021578e+00
+variance........ 1.349930e+01
 var 2:
 best............ -1.000000e+00
-mean............ -9.500069e-01
-variance........ 1.386560e+01
+mean............ -8.938267e-01
+variance........ 1.400179e+01
 
 GENERATION: 9
 Fitness value... 1.671127e+00
-mean............ 9.789811e-01
-variance........ 6.679682e-01
-#unique......... 3061, #Total UniqueCount: 34345
+mean............ 9.786945e-01
+variance........ 6.687760e-01
+#unique......... 3047, #Total UniqueCount: 34786
 var 1:
 best............ -1.000000e+00
-mean............ -9.538414e-01
-variance........ 1.433291e+01
+mean............ -8.278672e-01
+variance........ 1.394455e+01
 var 2:
 best............ -1.000000e+00
-mean............ -9.436746e-01
-variance........ 1.351829e+01
+mean............ -8.580631e-01
+variance........ 1.385920e+01
 
 GENERATION: 10
 Fitness value... 1.671127e+00
-mean............ 9.875318e-01
-variance........ 6.633945e-01
-#unique......... 3040, #Total UniqueCount: 37385
+mean............ 9.628559e-01
+variance........ 6.688166e-01
+#unique......... 3089, #Total UniqueCount: 37875
 var 1:
 best............ -1.000000e+00
-mean............ -9.461229e-01
-variance........ 1.291516e+01
+mean............ -8.490109e-01
+variance........ 1.411045e+01
 var 2:
 best............ -1.000000e+00
-mean............ -8.618071e-01
-variance........ 1.353977e+01
+mean............ -8.963694e-01
+variance........ 1.501084e+01
 
 GENERATION: 11
 Fitness value... 1.671127e+00
-mean............ 1.001984e+00
-variance........ 6.571237e-01
-#unique......... 3017, #Total UniqueCount: 40402
+mean............ 9.974602e-01
+variance........ 6.603539e-01
+#unique......... 3020, #Total UniqueCount: 40895
 var 1:
 best............ -1.000000e+00
-mean............ -8.762315e-01
-variance........ 1.233993e+01
+mean............ -9.057994e-01
+variance........ 1.391434e+01
 var 2:
 best............ -1.000000e+00
-mean............ -9.260666e-01
-variance........ 1.186558e+01
+mean............ -9.396784e-01
+variance........ 1.187351e+01
 
 GENERATION: 12
 Fitness value... 1.671127e+00
-mean............ 9.897763e-01
-variance........ 6.618311e-01
-#unique......... 3042, #Total UniqueCount: 43444
+mean............ 9.897510e-01
+variance........ 6.617027e-01
+#unique......... 3029, #Total UniqueCount: 43924
 var 1:
 best............ -1.000000e+00
-mean............ -9.666213e-01
-variance........ 1.173213e+01
+mean............ -9.661139e-01
+variance........ 1.160421e+01
 var 2:
 best............ -1.000000e+00
-mean............ -9.631840e-01
-variance........ 1.168714e+01
+mean............ -8.569730e-01
+variance........ 1.241471e+01
 
 'wait.generations' limit reached.
 No significant improvement in 10 generations.
@@ -835,14 +834,14 @@ Solution Fitness Value: 1.671127e+00
 
 Parameters at the Solution (parameter, gradient):
 
- X[ 1] :	-1.000000e+00	G[ 1] :	8.647865e-08
- X[ 2] :	-1.000000e+00	G[ 2] :	-7.059874e-08
+ X[ 1] :	-1.000000e+00	G[ 1] :	2.491051e-08
+ X[ 2] :	-1.000000e+00	G[ 2] :	-3.427565e-08
 
 Solution Found Generation 1
 Number of Generations Run 12
 
-Sun Jun  3 12:21:57 2012
-Total run time : 0 hours 0 minutes and 7 seconds
+Mon May  6 16:18:30 2013
+Total run time : 0 hours 0 minutes and 8 seconds
 > print(biclaw1)
 $value
 [1] 1.671127
@@ -851,7 +850,7 @@ $par
 [1] -1 -1
 
 $gradients
-[1]  8.647865e-08 -7.059874e-08
+[1]  2.491051e-08 -3.427565e-08
 
 $generations
 [1] 12
@@ -868,4 +867,4 @@ $operators
 > 
 > proc.time()
    user  system elapsed 
- 13.577   0.128  13.704 
+ 11.871   0.184  14.067 
