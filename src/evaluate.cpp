@@ -12,7 +12,7 @@
   http://sekhon.berkeley.edu
   <sekhon@berkeley.edu>
 
-  June 3, 2012
+  June 27, 2013
 
 */
 
@@ -2765,13 +2765,13 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
     else {
       pop_size_old=ReadPopulation(population, pop_size, nvars, popout, PrintLevel);
       fclose(popout);
-
-      for (i=1; i<=pop_size_old; i++) {
-		  for (j=1; j<=nvars; j++) {
-			population[i][j] = (int) population[i][j];
-		  }
-	  }
-
+      
+      for (i=1; i<=pop_size; i++) {
+	for (j=1; j<=nvars; j++) {
+	  population[i][j] = (int) population[i][j];
+	}
+      }
+      
       if (pop_size_old<2) {
 	warning("The old population file appears to be from a different genoud specification.");
 	pop_size_old=0;

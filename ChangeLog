@@ -1,10 +1,30 @@
-2013-05-06 Version: 5.7-9
+2013-06-28 Version: 5.7-12
+	* genoud.Rd: Updated the documentation to reflect the usage of the
+	'parallel' package instead of the deprecated package 'snow'
+	* vignettes: moved vignettes from /inst/doc to /vignettes.
+
+2013-06-28 Version: 5.7-10
+	* genoud.R: now uses the 'parallel' package instead of the
+	deprecated package 'snow'
+
+2013-06-27 Version: 5.7-9.2
+	* evaluate.cpp: JaIntegerOptimization(), Correct memory
+	issue. When reading in an old population file a segmentation fault
+	could result when an old population file was read that had a
+	larger population than the new population. Issue only arose for
+	integer optimization.
+
+2013-05-06 Version: 5.7-9.1
 	* operators.cpp: oper5(), Simple Crossover, always hit the maximum
 	unique individual limit. Corrected the logic to only check for
-	unique children in the crossover portion. 
+	unique children in the crossover portion.  Note that this makes
+	results different from previous versions even if the random number
+	seeds are set.
 
 2012-06-03 Version: 5.7-8
-	* rgenoud.R: Added the following options back in for backward compatibility, but a warning is printed if they are used: output.path and output.append. Please use 'sink' instead.
+	* rgenoud.R: Added the following options back in for backward
+	compatibility, but a warning is printed if they are used:
+	output.path and output.append. Please use 'sink' instead.
 
 2012-06-03 Version: 5.7-7
 	* rgenoud.R: Call to optimHess() now explicitly names the arguments to be matched.
@@ -51,7 +71,7 @@
 
 2010-06-01  Version: 5.6-7
 
-	* rgenoud.R: Improved handling of the parent environment when 	the 'transform' option is used	
+	* rgenoud.R: Improved handling of the parent environment when 	the 'transform' option is used
 	* operators.ccp: Fixed boundary issue for the integer version of the Polytope Crossover operator (P5 and function JaIntegeroper4).
 
 2009-08-14  Version: 5.6-6

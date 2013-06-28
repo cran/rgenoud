@@ -15,13 +15,15 @@
 \usage{genoud(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wait.generations=10,
               hard.generation.limit=TRUE, starting.values=NULL, MemoryMatrix=TRUE, 
               Domains=NULL, default.domains=10, solution.tolerance=0.001,
-              gr=NULL, boundary.enforcement=0, lexical=FALSE, gradient.check=TRUE, BFGS=TRUE,
-              data.type.int=FALSE, hessian=FALSE, unif.seed=812821, int.seed=53058,
+              gr=NULL, boundary.enforcement=0, lexical=FALSE, gradient.check=TRUE,
+	      BFGS=TRUE, data.type.int=FALSE, hessian=FALSE, 
+	      unif.seed=812821, int.seed=53058,
               print.level=2, share.type=0, instance.number=0, 
               output.path="stdout", output.append=FALSE, project.path=NULL,
               P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
               P9mix=NULL, BFGSburnin=0, BFGSfn=NULL, BFGShelp=NULL,
-              control=list(), optim.method=ifelse(boundary.enforcement < 2, "BFGS", "L-BFGS-B"), 
+              control=list(), 
+	      optim.method=ifelse(boundary.enforcement < 2, "BFGS", "L-BFGS-B"), 
 	      transform=FALSE, debug=FALSE, cluster=FALSE, balance=FALSE, ...)
 }
 \arguments{
@@ -459,7 +461,7 @@
     be \code{TRUE} or \code{FALSE}.}  
   \item{cluster}{This can either be an
     object of the 'cluster' class returned by one of the
-    \code{\link[snow]{makeCluster}} commands in the snow package or a
+    \code{\link[parallel]{makeCluster}} commands in the \code{parallel} package or a
     vector of machine names so \code{genoud} can setup the cluster
     automatically.  If it is the latter, the vector should look like:
     \cr \code{c("localhost","musil","musil","deckard")}.\cr This
@@ -467,16 +469,16 @@
     localhost another on "deckard" and two on the machine named
     "musil".  Two nodes on a given machine make sense if the machine
     has two or more chips/cores.  \code{genoud} will setup a SOCK
-    cluster by a call to \code{\link[snow]{makeSOCKcluster}}.  This
+    cluster by a call to \code{\link[parallel]{makePSOCKcluster}}.  This
     will require the user to type in her password for each node as the
     cluster is by default created via \code{ssh}.  One can add on
     usernames to the machine name if it differs from the current
     shell: "username@musil".  Other cluster types, such as PVM and
     MPI, which do not require passwords can be created by directly
-    calling \code{\link[snow]{makeCluster}}, and then passing the
+    calling \code{\link[parallel]{makeCluster}}, and then passing the
     returned cluster object to \code{genoud}. For an example of how to
     manually setup up a cluster with a direct call to
-    \code{\link[snow]{makeCluster}} see
+    \code{\link[parallel]{makeCluster}} see
     \url{http://sekhon.berkeley.edu/rgenoud/R/genoud_cluster_manual.R}.
     For an example of how to get around a firewall by ssh tunneling
     see:
@@ -647,6 +649,7 @@
 #minimize the sin function
  sin2 <- genoud(sin, nvars=1, max=FALSE)
 
+\dontrun{
 #maximize a univariate normal mixture which looks like a claw
  claw <- function(xx) {
    x <- xx[1]
@@ -656,11 +659,13 @@
    return(y)
  }
  claw1   <- genoud(claw, nvars=1,pop.size=3000,max=TRUE)
+}
 
 \dontrun{
 #Plot the previous run
  xx <- seq(-3,3,.05)
- plot(xx,lapply(xx,claw),type="l",xlab="Parameter",ylab="Fit",main="GENOUD: Maximize the Claw Density")
+ plot(xx,lapply(xx,claw),type="l",xlab="Parameter",ylab="Fit",
+      main="GENOUD: Maximize the Claw Density")
  points(claw1$par,claw1$value,col="red")
 
 # Maximize a bivariate normal mixture which looks like a claw.
@@ -696,7 +701,7 @@
 %  LocalWords:  seealso saddlepoints lapply xlab ylab biclaw mNd polytope cdots
 %  LocalWords:  frac url jasjeet RGENOUD PVM MPI parm Overdispersed UC dontrun
 %  LocalWords:  bivariate CPUs startup Genoud's GenMatch tempdir makeCluster
-%  LocalWords:  localhost musil deckard makeSOCKcluster usernames univariate
+%  LocalWords:  localhost musil deckard makePSOCKcluster usernames univariate
 % LocalWords:  SANN dQuote BFGSburnin BFGSfn BFGShelp myCriterion iff Mebane TLP
 % LocalWords:  Singh rgenoud Multinomial Enison dnorm pseudorandom Tausworthe
 % LocalWords:  nondefault args vals envir Nelder myTransformation criter

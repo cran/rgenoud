@@ -11,7 +11,7 @@
 #  http://sekhon.berkeley.edu
 #  <sekhon@berkeley.edu>
 #
-#  June 3, 2012
+#  June 27, 2013
 #
 
 
@@ -438,14 +438,14 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
       if (cluster==FALSE)  {
         clustertrigger=0
       } else {
-        stop("cluster option must be either FALSE, an object of the 'cluster' class (from the 'snow' package) or a list of machines so 'genoud' can create such an object")
+        stop("cluster option must be either FALSE, an object of the 'cluster' class (from the 'parallel' package) or a list of machines so 'genoud' can create such an object")
       }
     }
 
   if(clustertrigger) {
-    snow.exists = require("snow")
-    if (!snow.exists) {
-      stop("The 'cluster' feature cannot be used unless the package 'snow' can be loaded.")
+    parallel.exists = require("parallel")
+    if (!parallel.exists) {
+      stop("The 'cluster' feature cannot be used unless the package 'parallel' can be loaded.")
     }
   }
 
@@ -464,7 +464,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
             NULL
           }
           for (name in list) {
-            snow::clusterCall(cl, gets, name, get(name))
+            parallel::clusterCall(cl, gets, name, get(name))
           }
         }
 
@@ -489,26 +489,14 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
         clustertrigger=2
         cluster <- as.vector(cluster)
         cat("Initializing Cluster\n")
-        cl <- snow::makeSOCKcluster(cluster)
+        cl <- parallel::makePSOCKcluster(cluster)
         GENclusterExport(cl, "fn")        
         GENclusterExport(cl, "fn1")
       }
 
       if (length(cl) < 2 )
         {
-          warning("You only have one node. You probably should not be using the cluster option")
-
-          #override snow parRapply to work with only one node
-          parRapply.1node  <- function (cl, x, fun, ...)
-            {
-              splitRows  <- function (x, ncl)
-                {
-                  lapply(list(1:nrow(x)), function(i) x[i, , drop = F])
-                }
-              
-              snow::docall(c, snow::clusterApply(cl, splitRows(x, length(cl)), apply, 1,
-                                     fun, ...))
-            } #end of parRapply.1node
+          stop("You only have one node. You probably should not be using the cluster option")
         }
     }
 
@@ -623,7 +611,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
               if (balance==TRUE) {
                 in.mat = t(matrix(population.mat[eval.indx,], ncol=nvars))
                 cl.in <- as.list(as.data.frame(in.mat))
-                cl.out <- snow::clusterApplyLB(cl, cl.in, fn1)
+                cl.out <- parallel::clusterApplyLB(cl, cl.in, fn1)
                 try(ret <- matrix(t(data.frame(cl.out)), ncol=lexical), TRUE)
                 if (!is.matrix(ret)) {
                   if (!debug) {
@@ -638,9 +626,9 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                 in.mat = matrix(population.mat[eval.indx,], ncol=nvars)
                 if(length(cl) > 1 )
                   {
-                    cl.out = snow::parRapply(cl, in.mat, fn1)
+                    cl.out = parallel::parRapply(cl, in.mat, fn1)
                   } else {
-                    cl.out = parRapply.1node(cl, in.mat, fn1)
+                    stop("You only have one node. Cluster option should not be used")
                   } 
 
                 try(ret <- matrix(cl.out, byrow=TRUE, ncol=lexical), TRUE)
@@ -797,7 +785,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
     }
   
   if (clustertrigger==2)
-    snow::stopCluster(cl)
+    parallel::stopCluster(cl)
 
   interrupted <- FALSE
   
@@ -1186,14 +1174,14 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
       if (cluster==FALSE)  {
         clustertrigger=0
       } else {
-        stop("cluster option must be either FALSE, an object of the 'cluster' class (from the 'snow' package) or a list of machines so 'genoud' can create such an object")
+        stop("cluster option must be either FALSE, an object of the 'cluster' class (from the 'parallel' package) or a list of machines so 'genoud' can create such an object")
       }
     }
 
   if(clustertrigger) {
-    snow.exists = require("snow")
-    if (!snow.exists) {
-      stop("The 'cluster' feature cannot be used unless the package 'snow' can be loaded.")
+    parallel.exists = require("parallel")
+    if (!parallel.exists) {
+      stop("The 'cluster' feature cannot be used unless the package 'parallel' can be loaded.")
     }
   }
 
@@ -1212,7 +1200,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
             NULL
           }
           for (name in list) {
-            snow::clusterCall(cl, gets, name, get(name))
+            parallel::clusterCall(cl, gets, name, get(name))
           }
         }
 
@@ -1237,26 +1225,14 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
         clustertrigger=2
         cluster <- as.vector(cluster)
         cat("Initializing Cluster\n")
-        cl <- snow::makeSOCKcluster(cluster)
+        cl <- parallel::makePSOCKcluster(cluster)
         GENclusterExport(cl, "fn")
         GENclusterExport(cl, "fn1")
       }
 
       if (length(cl) < 2 )
         {
-          warning("You only have one node. You probably should not be using the cluster option")
-
-          #override snow parRapply to work with only one node
-          parRapply.1node  <- function (cl, x, fun, ...)
-            {
-              splitRows  <- function (x, ncl)
-                {
-                  lapply(list(1:nrow(x)), function(i) x[i, , drop = F])
-                }
-
-              snow::docall(c, snow::clusterApply(cl, splitRows(x, length(cl)), apply, 1,
-                                     fun, ...))
-            } #end of parRapply.1node
+          stop("You only have one node. You probably should not be using the cluster option")
         }
     }
 
@@ -1372,7 +1348,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
               if (balance==TRUE) {
                 in.mat = t(matrix(population.mat[eval.indx,], ncol=nvars))
                 cl.in <- as.list(as.data.frame(in.mat))
-                cl.out <- snow::clusterApplyLB(cl, cl.in, fn1)
+                cl.out <- parallel::clusterApplyLB(cl, cl.in, fn1)
                 try(ret <- matrix(t(data.frame(cl.out)), ncol=lexical), TRUE)
                 if (!is.matrix(ret)) {
                   if (!debug) {
@@ -1387,9 +1363,9 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
                 in.mat = matrix(population.mat[eval.indx,], ncol=nvars)
                 if(length(cl) > 1 )
                   {
-                    cl.out = snow::parRapply(cl, in.mat, fn1)
+                    cl.out = parallel::parRapply(cl, in.mat, fn1)
                   } else {
-                    cl.out = parRapply.1node(cl, in.mat, fn1)
+                    stop("You only have one node. Cluster option should not be used")
                   }
 
                 try(ret <- matrix(cl.out, byrow=TRUE, ncol=lexical), TRUE)
@@ -1547,7 +1523,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
     }
 
   if (clustertrigger==2)
-    snow::stopCluster(cl)
+    parallel::stopCluster(cl)
 
   interrupted <- FALSE
 
