@@ -1,3 +1,15 @@
+2015-07-19 Version: 5.7-12.4
+	* genoud.R: creating visible binding for variable "indx"
+
+2015-07-18 Version: 5.7-12.3
+	* genoud.R: import non-base functions explicitly
+
+2015-07-17 Version: 5.7-12.2
+	* DESCRIPTION: improves description
+
+2013-06-28 Version: 5.7-12.1
+	* test.R: suppress message on load
+
 2013-06-28 Version: 5.7-12
 	* genoud.Rd: Updated the documentation to reflect the usage of the
 	'parallel' package instead of the deprecated package 'snow'

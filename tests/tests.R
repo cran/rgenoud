@@ -1,4 +1,4 @@
-library(rgenoud)
+suppressMessages(library(rgenoud))
 
 #maximize the sin function
 sin1 <- genoud(sin, nvars=1, max=TRUE, unif.seed=912821, int.seed=93058, print.level=0)

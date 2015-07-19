@@ -26,8 +26,8 @@
 .onAttach <- function( ... )
 {
   rgenoudLib <- dirname(system.file(package = "rgenoud"))
-  version <- packageDescription("rgenoud", lib.loc = rgenoudLib)$Version
-  BuildDate <- packageDescription("rgenoud", lib.loc = rgenoudLib)$Date
+  version <- utils::packageDescription("rgenoud", lib.loc = rgenoudLib)$Version
+  BuildDate <- utils::packageDescription("rgenoud", lib.loc = rgenoudLib)$Date
 
   foo <- paste("##  rgenoud (Version ", version, ", Build Date: ", BuildDate, ")\n",
                "##  See http://sekhon.berkeley.edu/rgenoud for additional documentation.\n",

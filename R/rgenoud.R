@@ -11,8 +11,6 @@
 #  http://sekhon.berkeley.edu
 #  <sekhon@berkeley.edu>
 #
-#  June 27, 2013
-#
 
 
 genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wait.generations=10,
@@ -239,6 +237,12 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
     }
   if (lexical>=1) 
     {
+      #creating visible binding for variable "indx"; although it is
+      #actually defined in fnLexicalSort() via an eval and paste
+      if (!exists("indx"))
+        {
+          indx <- NULL; rm(indx)
+        }
       if(share.type > 0) {
         warning("'share.type' being set to 0 because of lexical optimization")
         share.type <- 0
@@ -248,7 +252,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
         {
           foo <- fn1(starting.values[1,])          
         } else {
-          rfoo <- runif(nrow(Domains), Domains[,1], Domains[,2])
+          rfoo <- stats::runif(nrow(Domains), Domains[,1], Domains[,2])
           if(data.type.int)
             rfoo <- as.integer(round(rfoo))
           foo <- fn1(rfoo)          
@@ -323,7 +327,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                  assign("x", par, envir = genoud.wrapper101.env)
                  assign("helper", helper, envir = genoud.wrapper101.env)
                  assign("FiniteBadFitValue", FiniteBadFitValue, envir = genoud.wrapper101.env)
-                 foo <- as.double(attr(numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
+                 foo <- as.double(attr(stats::numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
                  return(foo)
                } #end of gr
              gr1 <- if(is.null(BFGShelp)) function(par, ...) gr(par) else
@@ -344,7 +348,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
        if(optim.method != "L-BFGS-B") {
          genoud.optim.wrapper101 <- function(foo.vals)
            {
-             ret <- optim(foo.vals, fn=fn1, gr=gr1, method=optim.method,
+             ret <- stats::optim(foo.vals, fn=fn1, gr=gr1, method=optim.method,
                           control=control);
              return(c(ret$value,ret$par));
            } # end of genoud.optim.wrapper101
@@ -352,7 +356,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
        else {
          genoud.optim.wrapper101 <- function(foo.vals)
            {
-             ret <- optim(foo.vals, fn=fn1, gr=gr1, method="L-BFGS-B",
+             ret <- stats::optim(foo.vals, fn=fn1, gr=gr1, method="L-BFGS-B",
                           lower = Domains[,1], upper = Domains[,2],
                           control=control);
              return(c(ret$value,ret$par));
@@ -368,11 +372,11 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                print(fit)
              }
              if(is.null(BFGShelp)) {
-               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method=optim.method,
+               ret <- stats::optim(foo.vals, fn=fn1.bfgs, gr=gr1, method=optim.method,
                             control=control);
              }
              else {
-               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method=optim.method,
+               ret <- stats::optim(foo.vals, fn=fn1.bfgs, gr=gr1, method=optim.method,
                             control=control,
                             helper = do.call(BFGShelp, args = list(initial = foo.vals), envir = environment(fn)) );
              }
@@ -398,13 +402,13 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                print(fit)
              }
              if(is.null(BFGShelp)) {
-               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
+               ret <- stats::optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
                             lower = Domains[,1],
                             upper = Domains[,2],
                             control=control);
              }
              else {
-               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
+               ret <- stats::optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
                             lower = Domains[,1],
                             upper = Domains[,2],
                             control=control,
@@ -443,7 +447,7 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
     }
 
   if(clustertrigger) {
-    parallel.exists = require("parallel")
+    parallel.exists = requireNamespace("parallel")
     if (!parallel.exists) {
       stop("The 'cluster' feature cannot be used unless the package 'parallel' can be loaded.")
     }
@@ -759,13 +763,13 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
       
       if(lexical == 1) {
         hess.fn <- function(par) fn1(par, ...)
-        hess <- optimHess(par=gout[5:(nvars+4)], fn=fn1, gr=gr1, control=con)
+        hess <- stats::optimHess(par=gout[5:(nvars+4)], fn=fn1, gr=gr1, control=con)
       }
       else {
         help.stuff <- do.call(BFGShelp, args = list(initial = gout[5:(nvars+4)], done = TRUE), 
                               envir = environment(fn))
         hess.fn <- function(par, helper = help.stuff) fn1.bfgs(par, helper, ...)
-        hess <- optimHess(par=gout[5:(nvars+4)], fn=hess.fn, gr=NULL, control=con)
+        hess <- stats::optimHess(par=gout[5:(nvars+4)], fn=hess.fn, gr=NULL, control=con)
       }
       
       hes <- 0.5 * (hess + t(hess))
@@ -817,6 +821,14 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
 
   if(!is.null(BFGShelp) && !is.function(BFGShelp)) stop("'BFGShelp' must be NULL or a function")
 
+  #creating visible binding for variable "indx"; although it is
+  #actually defined in fnLexicalSort() via an eval and paste
+  if (!exists("indx"))
+    {
+      indx <- NULL; rm(indx)
+    }
+
+  
   if(!is.null(P9mix) && !is.double(P9mix))  {
     stop("'P9mix' must be NULL or a number between 0 and 1")
   } else {
@@ -992,7 +1004,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
         {
           foo <- fn1(starting.values[1,])
         } else {
-          rfoo <- runif(nrow(Domains), Domains[,1], Domains[,2])
+          rfoo <- stats::runif(nrow(Domains), Domains[,1], Domains[,2])
           foo <- fn1(rfoo)
   }
   foo.length <- length(c(foo))
@@ -1060,7 +1072,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
                  assign("x", par, envir = genoud.wrapper101.env)
                  assign("helper", helper, envir = genoud.wrapper101.env)
                  assign("FiniteBadFitValue", FiniteBadFitValue, envir = genoud.wrapper101.env)
-                 foo <- as.double(attr(numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
+                 foo <- as.double(attr(stats::numericDeriv(quote(gr.fn1.bfgs(x, helper, FiniteBadFitValue)), theta=c("x"), genoud.wrapper101.env), "gradient"))
                  return(foo)
                } #end of gr
              gr1 <- if(is.null(BFGShelp)) function(par, ...) gr(par) else
@@ -1079,7 +1091,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
        if(optim.method != "L-BFGS-B") {
          genoud.optim.wrapper101 <- function(foo.vals)
            {
-             ret <- optim(foo.vals, fn=fn1, gr=gr1, method=optim.method,
+             ret <- stats::optim(foo.vals, fn=fn1, gr=gr1, method=optim.method,
                           control=control);
              return(c(ret$value,ret$par));
            } # end of genoud.optim.wrapper101
@@ -1087,7 +1099,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
        else {
          genoud.optim.wrapper101 <- function(foo.vals)
            {
-             ret <- optim(foo.vals, fn=fn1, gr=gr1, method="L-BFGS-B",
+             ret <- stats::optim(foo.vals, fn=fn1, gr=gr1, method="L-BFGS-B",
                           lower = Domains[,1], upper = Domains[,2],
                           control=control);
              return(c(ret$value,ret$par));
@@ -1103,11 +1115,11 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
                print(fit)
              }
              if(is.null(BFGShelp)) {
-               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method=optim.method,
+               ret <- stats::optim(foo.vals, fn=fn1.bfgs, gr=gr1, method=optim.method,
                             control=control);
              }
              else {
-               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method=optim.method,
+               ret <- stats::optim(foo.vals, fn=fn1.bfgs, gr=gr1, method=optim.method,
                             control=control,
                             helper = do.call(BFGShelp, args = list(initial = foo.vals), envir = environment(fn)) );
              }
@@ -1133,13 +1145,13 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
                print(fit)
              }
              if(is.null(BFGShelp)) {
-               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
+               ret <- stats::optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
                             lower = Domains[,1],
                             upper = Domains[,2],
                             control=control);
              }
              else {
-               ret <- optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
+               ret <- stats::optim(foo.vals, fn=fn1.bfgs, gr=gr1, method="L-BFGS-B",
                             lower = Domains[,1],
                             upper = Domains[,2],
                             control=control,
@@ -1179,7 +1191,7 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
     }
 
   if(clustertrigger) {
-    parallel.exists = require("parallel")
+    parallel.exists = requireNamespace("parallel")
     if (!parallel.exists) {
       stop("The 'cluster' feature cannot be used unless the package 'parallel' can be loaded.")
     }
@@ -1497,13 +1509,13 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
 
 #       if(lexical == 1) {
 #         hess.fn <- function(par) fn1(par, ...)
-#         hess <- optimHess(par=gout[5:(nvars+4)], fn=fn1, gr=gr1, control=con)
+#         hess <- stats::optimHess(par=gout[5:(nvars+4)], fn=fn1, gr=gr1, control=con)
 #       }
 #       else {
         help.stuff <- do.call(BFGShelp, args = list(initial = gout[5:(nvars+4)], done = TRUE),
                               envir = environment(fn))
         hess.fn <- function(par, helper = help.stuff) fn1.bfgs(par, helper, ...)
-        hess <- optimHess(par=gout[5:(nvars+4)], fn=hess.fn, gr=NULL, control=con)
+        hess <- stats::optimHess(par=gout[5:(nvars+4)], fn=hess.fn, gr=NULL, control=con)
 #       }
 
       hes <- 0.5 * (hess + t(hess))
