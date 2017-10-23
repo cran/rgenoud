@@ -12,19 +12,19 @@
   multiple computers, CPUs or cores to perform parallel computations.
 }
 
-\usage{genoud(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wait.generations=10,
-              hard.generation.limit=TRUE, starting.values=NULL, MemoryMatrix=TRUE, 
-              Domains=NULL, default.domains=10, solution.tolerance=0.001,
-              gr=NULL, boundary.enforcement=0, lexical=FALSE, gradient.check=TRUE,
-	      BFGS=TRUE, data.type.int=FALSE, hessian=FALSE, 
-	      unif.seed=812821, int.seed=53058,
-              print.level=2, share.type=0, instance.number=0, 
-              output.path="stdout", output.append=FALSE, project.path=NULL,
-              P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
-              P9mix=NULL, BFGSburnin=0, BFGSfn=NULL, BFGShelp=NULL,
-              control=list(), 
-	      optim.method=ifelse(boundary.enforcement < 2, "BFGS", "L-BFGS-B"), 
-	      transform=FALSE, debug=FALSE, cluster=FALSE, balance=FALSE, ...)
+\usage{genoud(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, 
+       wait.generations=10, hard.generation.limit=TRUE, starting.values=NULL, 
+       MemoryMatrix=TRUE, Domains=NULL, default.domains=10, 
+       solution.tolerance=0.001, gr=NULL, boundary.enforcement=0, lexical=FALSE,
+       gradient.check=TRUE, BFGS=TRUE, data.type.int=FALSE, hessian=FALSE, 
+       unif.seed=round(runif(1, 1, 2147483647L)), 
+       int.seed=round(runif(1, 1, 2147483647L)),print.level=2, share.type=0, 
+       instance.number=0, output.path="stdout", output.append=FALSE, 
+       project.path=NULL, P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, 
+       P8=50, P9=0, P9mix=NULL, BFGSburnin=0, BFGSfn=NULL, BFGShelp=NULL, 
+       control=list(), optim.method=ifelse(boundary.enforcement < 2, "BFGS", 
+       "L-BFGS-B"), transform=FALSE, debug=FALSE, cluster=FALSE, balance=FALSE, 
+       ...)
 }
 \arguments{
   \item{fn}{
@@ -246,32 +246,10 @@
     When this flag is set to \code{TRUE}, \code{genoud} will return the
     hessian matrix at the solution as part of its return list.  A user
     can use this matrix to calculate standard errors.}
-  \item{unif.seed}{This sets the seed for the floating-point
-    pseudorandom number generator \code{genoud} uses.  The default value of this
-    seed is 81282.  \code{genoud} uses its own internal pseudorandom number
-    generator (a Tausworthe-Lewis-Payne generator) to allow for recursive
-    and parallel calls to \code{genoud}.  Repeated invocations without specifying
-    this argument cause the program to continue drawing from its internal
-    pseudorandom number stream, which is preserved in a static structure
-    between invocations during the same R session, so the second
-    invocation does not use the same pseudorandom numbers as the first.
-    To produce exactly the same results in a subsequent invocation, one
-    must explicitly provide the same, nondefault value for this argument.
-    \code{genoud} does not use the seed set by R's
-    \code{\link{set.seed}} function. This will change in a subsequent version.}
-  \item{int.seed}{This sets the seed for the integer pseudorandom number
-    generator \code{genoud} uses. The default value of this seed is 53058. \code{genoud}
-    uses its own internal pseudorandom number generator (a
-    Tausworthe-Lewis-Payne generator) to allow for recursive and parallel
-    calls to \code{genoud}.  Repeated invocations without specifying this
-    argument cause the program to continue drawing from its internal
-    pseudorandom number stream, which is preserved in a static structure
-    between invocations during the same R session, so the second
-    invocation does not use the same pseudorandom numbers as the first.
-    To produce exactly the same results in a subsequent invocation, one
-    must explicitly provide the same, nondefault value for this argument.
-    \code{genoud} does not use the seed set by R's
-    \code{\link{set.seed}} function. This will change in a subsequent version.}
+  \item{unif.seed}{This should not be set. To set the seed, one should use 
+  	the \code{set.seed()} function directly. It only exists to ensure compatibility
+  	with functions which are used to call the older version of this function.}
+  \item{int.seed}{See \code{unif.seed}.}
   \item{print.level}{
     This variable controls the level of printing that \code{genoud} does.  There
     are four possible levels: 0 (minimal printing), 1 (normal), 2

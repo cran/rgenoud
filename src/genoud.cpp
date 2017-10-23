@@ -54,8 +54,6 @@ void genoud(struct GND_IOstructure *Structure)
   long   hours, minutes, seconds;
   char   time_str[27];
 
-  static long BaseNewUnifSeed=81282,
-    BaseRandIntSeed=53058;
   static short firsttime=1;
 
   /* FILE *output; */
@@ -87,23 +85,25 @@ void genoud(struct GND_IOstructure *Structure)
   if (ThreadNumber > MAXTHREADS) {
     error("No more than %d threads allowed\n\n", MAXTHREADS);
   }
+  
   if (Structure->ProvideSeeds == 1) {
-    /*
-      Only toggle the instance number if we have threads! */
+     //  Only toggle the instance number if we have threads!
     NewUnifSeed[ThreadNumber] = Structure->UnifSeed;
-    RandIntSeed[ThreadNumber] = Structure->IntSeed;
-  }
+    RandIntSeed[ThreadNumber] = Structure->IntSeed; 
+  } 
   else {
-    /* If a Seed is NOT provided, use the base random number and run from that base!
+     /*If a Seed is NOT provided, use the base random number and run from that base!
        In other words, might as well the ThreadNumber equal to 0 
-    */
+      */
+    
     if (firsttime==1) {
-      NewUnifSeed[0] = BaseNewUnifSeed;
-      RandIntSeed[0] = BaseRandIntSeed;	
+      //NewUnifSeed[0] = BaseNewUnifSeed;
+      //RandIntSeed[0] = BaseRandIntSeed;	
       firsttime=0;
     }
     ThreadNumber = 0;
-  }
+ }
+  
 
   fin.r =   Structure->nvars;            /*total number of inequalities + domains*/
   fin.c =   Structure->nvars+2;          /*x2 variables + lower limits + upper limits*/

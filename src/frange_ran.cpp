@@ -21,7 +21,7 @@
 /* replacements for random number functions in GENOCOP's frange_ran.c */
 
 #include "unif.h"
-#include "urans.h"
+
 
 double newunif(void)
 {

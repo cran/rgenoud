@@ -1,3 +1,9 @@
+2017-10-10 Version 5.8-1.0
+	* fixing the reproducibility bug. Now the seed is set from within
+	R which allows reproducibility
+	* rgenoud.R, genoud.cpp: Setting the seed to be a random draw from a uniform
+ 	instead of it being randomized independenlty from R
+	* Adding new unit tests.
 2015-07-19 Version: 5.7-12.4
 	* genoud.R: creating visible binding for variable "indx"
 

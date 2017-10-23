@@ -17,7 +17,8 @@ genoud <- function(fn, nvars, max=FALSE, pop.size=1000, max.generations=100, wai
                    hard.generation.limit=TRUE, starting.values=NULL, MemoryMatrix=TRUE, 
                    Domains=NULL, default.domains=10, solution.tolerance=0.001,
                    gr=NULL, boundary.enforcement=0, lexical=FALSE, gradient.check=TRUE, BFGS=TRUE, 
-                   data.type.int=FALSE, hessian=FALSE, unif.seed=812821, int.seed=53058,
+                   data.type.int=FALSE, hessian=FALSE, unif.seed=round(runif(1, 1, 2147483647L)), 
+                   int.seed=round(runif(1, 1, 2147483647L)),
                    print.level=2, share.type=0, instance.number=0,
                    output.path="stdout", output.append=FALSE, project.path=NULL, 
                    P1=50, P2=50, P3=50, P4=50, P5=50, P6=50, P7=50, P8=50, P9=0,
@@ -993,11 +994,8 @@ genoud_transform <- function(fn, nvars, max=FALSE, pop.size=1000, max.generation
         warning("'starting.values' which are outside of the bounds have been provided.
            Continuing, but unexpected behavior can occur with 'boundary.enforcement!=0'")
 
-  # has the user provided any seeds?
-  if (unif.seed==812821 && int.seed==53058)
-    provide.seeds <- FALSE
-  else
-    provide.seeds <- TRUE;
+  # seeds always provided
+  provide.seeds <- TRUE;
 
   # we need to know how many items will be returned bf fn()
   if(nStartingValues)
