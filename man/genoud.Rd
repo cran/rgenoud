@@ -246,10 +246,16 @@
     When this flag is set to \code{TRUE}, \code{genoud} will return the
     hessian matrix at the solution as part of its return list.  A user
     can use this matrix to calculate standard errors.}
-  \item{unif.seed}{This should not be set. To set the seed, one should use 
-  	the \code{set.seed()} function directly. It only exists to ensure compatibility
-  	with functions which are used to call the older version of this function.}
-  \item{int.seed}{See \code{unif.seed}.}
+  \item{unif.seed}{An integer used to seed the random number generator for doubles
+  called in C++. If the user wants to have reproducibility for the output of 
+  genoud, they should either set both this and \code{int.seed} or use 
+  \code{set.seed()} before calling \code{genoud} in R. See the note in the Note 
+  section below regarding backwards compatibility after Version 5.9-0.0.}
+  \item{int.seed}{An integer used to seed the random number generator for integers
+  called in C++. If the user wants to have reproducibility for the output of 
+  genoud, they should either set both this and \code{unif.seed} or use 
+  \code{set.seed()} before calling \code{genoud} in R. See the note in the Note 
+  section below regarding backwards compatibility after Version 5.9-0.0.}
   \item{print.level}{
     This variable controls the level of printing that \code{genoud} does.  There
     are four possible levels: 0 (minimal printing), 1 (normal), 2
@@ -489,7 +495,7 @@
   information is useful for such problems.  \code{Genoud} also works
   well for problems that no derivative information exists. For
   additional documentation and examples please see
-  \url{http://sekhon.berkeley.edu/rgenoud}.}
+  \url{http://sekhon.berkeley.edu/rgenoud/}.}
 
 \value{\code{genoud} returns a list
   with 7 objects.  8 objects are returned if the user has requested
@@ -580,7 +586,7 @@
   be placed in the fit function the user is going to have \code{genoud}
   maximize: \code{if ( (parm1 + parm2) >= 725) \{ return(-99999999) \}}.
   In this example, a very bad fit value is returned to \code{genoud} if the
-  linear constrain is violated.  \code{genoud} will then attempt to find
+  linear constraint is violated.  \code{genoud} will then attempt to find
   parameter values that satisfy the constraint. \cr
   
   Alternatively, one can use lexical optimization where the first criterion is a
@@ -590,13 +596,16 @@
   ranked below all candidates where \code{ (parm1 + parm2) < 725} and within 
   these two groups, candidates will be ranked by their fit on the second 
   criterion. The optimal candidate is thus the one with the best fit on the
-  second criterion among candidates that satisfy this restriction.}
+  second criterion among candidates that satisfy this restriction.
+  
+  In Version 5.9-0.0 we have changed the implementation of the random number 
+  generator, so results from this version onward will not be backwards compatible.}
 \references{
 
   Mebane, Walter R., Jr. and Jasjeet S. Sekhon.  2011.  "Genetic
   Optimization Using Derivatives: The rgenoud Package for R."
   \emph{Journal of Statistical Software}, 42(11):  1-26. 
-  \url{http://www.jstatsoft.org/v42/i11/} \cr
+  \url{https://www.jstatsoft.org/v42/i11/} \cr
   
   Sekhon, Jasjeet Singh and Walter R. Mebane, Jr. 1998.  ``Genetic
   Optimization Using Derivatives: Theory and Application to Nonlinear
@@ -615,8 +624,10 @@
 \author{Walter R. Mebane, Jr., University of Michigan,
   \email{wmebane@umich.edu}, \url{http://www-personal.umich.edu/~wmebane/} \cr
   
-  Jasjeet S. Sekhon, UC Berkeley, \email{sekhon@berkeley.edu},
-  \url{http://sekhon.berkeley.edu/}}
+  Jasjeet S. Sekhon, Yale University, \email{jas.sekhon@yale.edu},
+  \url{https://github.com/JasjeetSekhon/rgenoud} \cr
+  
+  Theo Saarinen, UC Berkeley, \email{theo_s@berkeley.edu}}
 \seealso{
   \code{\link[stats]{optim}}.
 }
