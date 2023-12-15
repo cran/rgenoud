@@ -161,7 +161,7 @@
     
     \code{boundary.enforcement} has three possible values: 0 (anything goes), 1
     (partial), and 2 (no trespassing):
-    \itemize{
+    \describe{
       \item{\emph{0: Anything Goes}}{
 	This option allows any of the operators to
 	create out-of-bounds individuals and these individuals will be
@@ -463,10 +463,10 @@
     returned cluster object to \code{genoud}. For an example of how to
     manually setup up a cluster with a direct call to
     \code{\link[parallel]{makeCluster}} see
-    \url{http://sekhon.berkeley.edu/rgenoud/R/genoud_cluster_manual.R}.
+    \url{https://github.com/JasjeetSekhon/rgenoud}.
     For an example of how to get around a firewall by ssh tunneling
     see:
-    \url{http://sekhon.berkeley.edu/rgenoud/R/genoud_cluster_manual_tunnel.R}.}
+    \url{https://github.com/JasjeetSekhon/rgenoud}.}
   \item{balance}{This logical flag controls if load balancing is
     done across the cluster.  Load balancing can result in better
     cluster utilization; however, increased communication can reduce
@@ -495,7 +495,7 @@
   information is useful for such problems.  \code{Genoud} also works
   well for problems that no derivative information exists. For
   additional documentation and examples please see
-  \url{http://sekhon.berkeley.edu/rgenoud/}.}
+  \url{https://github.com/JasjeetSekhon/rgenoud}.}
 
 \value{\code{genoud} returns a list
   with 7 objects.  8 objects are returned if the user has requested
@@ -566,7 +566,7 @@
     \item Heuristic Crossover
     \item Local-Minimum Crossover: BFGS}
   For more information please see Table 1 of the reference article: 
-  \url{http://sekhon.berkeley.edu/papers/rgenoudJSS.pdf}.}
+  \url{https://github.com/JasjeetSekhon/rgenoud}.}
 \note{
   The most important options affecting performance are those determining
   population size (\code{pop.size}) and the
@@ -610,12 +610,12 @@
   Sekhon, Jasjeet Singh and Walter R. Mebane, Jr. 1998.  ``Genetic
   Optimization Using Derivatives: Theory and Application to Nonlinear
   Models.'' \emph{Political Analysis}, 7: 187-210.
-  \url{http://sekhon.berkeley.edu/genoud/genoud.pdf} \cr
+  \url{https://github.com/JasjeetSekhon/rgenoud} \cr
   
   Mebane, Walter R., Jr. and Jasjeet S. Sekhon. 2004. ``Robust
   Estimation and Outlier Detection for Overdispersed Multinomial Models
   of Count Data.''  \emph{American Journal of Political Science}, 48
-  (April): 391-410. \url{http://sekhon.berkeley.edu/multinom.pdf} \cr
+  (April): 391-410. \url{https://github.com/JasjeetSekhon/rgenoud} \cr
   
   Bright, H. and R. Enison. 1979. Quasi-Random Number Sequences from a
   Long-Period TLP Generator with Remarks on Application to
@@ -681,7 +681,7 @@
  }
  biclaw1 <- genoud(biclaw, default.domains=20, nvars=2,pop.size=5000,max=TRUE)
 }
-# For more examples see: http://sekhon.berkeley.edu/rgenoud/R.
+# For more examples see: https://github.com/JasjeetSekhon/rgenoud.
 }
 \keyword{optimize}
 \keyword{nonlinear}

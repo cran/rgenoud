@@ -636,7 +636,7 @@ void oper8(SEXP fn_optim, SEXP rho,
 		if(PrintLevel > 1)
 		  {
 		    Rprintf("NOTE: killing out-of-bounds individual created by bfgs oper(9). fit:%10.8lf\n",bfgsfit);
-		    Rprintf("NOTE: oper(9) Parameter: %d \t Value: %e\n\n", i, work[i]);
+		    Rprintf("NOTE: oper(9) Parameter: %ld \t Value: %e\n\n", i, work[i]);
 		  }
 		warning("killed out-of-bounds individual created by bfgs oper(9)");
 	      }

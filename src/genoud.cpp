@@ -168,8 +168,8 @@ void genoud(struct GND_IOstructure *Structure)
   if(Structure->PrintLevel>0)
     {
       Rprintf( "\n");
-      Rprintf( "Solution Found Generation %d\n", Structure->oPeakGeneration);
-      Rprintf( "Number of Generations Run %d\n", Structure->oGenerations);
+      Rprintf( "Solution Found Generation %ld\n", Structure->oPeakGeneration);
+      Rprintf( "Number of Generations Run %ld\n", Structure->oGenerations);
     }
   time(&stop_time);
 
@@ -184,7 +184,7 @@ void genoud(struct GND_IOstructure *Structure)
   
   if(Structure->PrintLevel>0)
     {
-      Rprintf("Total run time : %d hours %d minutes and %d seconds\n", 
+      Rprintf("Total run time : %ld hours %ld minutes and %ld seconds\n", 
 	      hours, minutes, seconds);
       /* fflush(output); */
     }

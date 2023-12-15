@@ -1,8 +1,8 @@
 citHeader("To cite 'rgenoud' in publications use:")
 
-citEntry(entry = "Article",
+bibentry(bibtype = "Article",
   title        = "Genetic Optimization Using Derivatives:  The {rgenoud} Package for {R}",
-  author       = personList(person(c("Walter", "R."), "Mebane, Jr."),
+  author       = c(person(c("Walter", "R."), "Mebane, Jr."),
                    as.person("Jasjeet S. Sekhon")),
   journal      = "Journal of Statistical Software",
   year         = "2011",
@@ -18,10 +18,10 @@ citEntry(entry = "Article",
         "URL https://www.jstatsoft.org/v42/i11/.")
 )
 
-citEntry(header="To refer to the theory on which this package is based, also cite:",
-  entry="Article",
+bibentry(header="To refer to the theory on which this package is based, also cite:",
+  bibtype="Article",
   title   = "Genetic Optimization Using Derivatives: Theory and Application to Nonlinear Models",
-  author  = personList(as.person("Jasjeet S. Sekhon"),
+  author  = c(as.person("Jasjeet S. Sekhon"),
                        person(c("Walter", "R."), "Mebane, Jr.")),
   journal =  "Political Analysis",
   year    =  "1998",
