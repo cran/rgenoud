@@ -51,7 +51,7 @@ void multi(double *in1, double *in2, double *out,
   int oi, oj, i;
 
 if (col1!=row2) {
-  error("The matrices are not conformable for muliplication\n");
+  Rf_error("The matrices are not conformable for muliplication\n");
 }
 
 outrowcol[0]=row1;

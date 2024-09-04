@@ -327,19 +327,19 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 
     if((popout = fopen(Structure->ProjectPath, "r")) == NULL) {
       Rprintf("         Generating new population\n");
-      warning("Unable to open the old project file: %s", Structure->ProjectPath);
+      Rf_warning("Unable to open the old project file: %s", Structure->ProjectPath);
     }
     else {
       pop_size_old=ReadPopulation(population, pop_size, nvars, popout, PrintLevel);
       fclose(popout);
       if (pop_size_old<2) {
-	warning("The old population file appears to be from a different genoud specification.");
+	Rf_warning("The old population file appears to be from a different genoud specification.");
 	pop_size_old=0;
       }
     }
     if (PrintLevel>1) {
       if((popout = fopen(Structure->ProjectPath, "a")) == NULL) {
-	warning("Unable to open the project file: %s", Structure->ProjectPath);
+	Rf_warning("Unable to open the project file: %s", Structure->ProjectPath);
 	
 	/* free populationstats stuff */
 	free(mean);
@@ -373,7 +373,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    free(oldfitvalueVEC);
 	  }
 
-	error("Fatal Error. See output for diagnostic information.");
+	Rf_error("Fatal Error. See output for diagnostic information.");
       }
       fclose(popout);
     }
@@ -416,7 +416,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	    free(oldfitvalueVEC);
 	  }
 
-	error("Fatal Error. See output for diagnostic information.");
+	Rf_error("Fatal Error. See output for diagnostic information.");
       }
       fclose(popout);
     }
@@ -476,7 +476,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
       if ( (UniqueCount+pop_size) >= MemorySize )
 	{
 	  Structure->MemoryUsage=0;
-	  warning("Turned Off MemoryMatrix because memory usage was too great.");
+	  Rf_warning("Turned Off MemoryMatrix because memory usage was too great.");
 	} /* end of if */
     } // end of Memory based evaluation
   else
@@ -535,7 +535,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 				Rprintf("NOTE: Generation: %ld \t Parameter: %ld \t Value: %e \t Bound: %e\n\n",
 					count_gener, j, X[j], domains[j][1]);
 			      }
-			    warning("Transformed individual below lower bound. Generation: %ld; Parameter: %ld; Value: %e; Bound: %e",
+			    Rf_warning("Transformed individual below lower bound. Generation: %ld; Parameter: %ld; Value: %e; Bound: %e",
 				    count_gener, j, X[j], domains[j][1]);
 			  }
 			if(X[j] > domains[j][3])
@@ -547,7 +547,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 				Rprintf("NOTE: Generation: %ld \t Parameter: %ld \t Value: %e \t Bound: %e\n\n",
 					count_gener, j, X[j], domains[j][3]);
 			      }
-			    warning("Transformed individual above upper bound. Generation: %ld; Parameter: %ld; Value: %e; Bound: %e",
+			    Rf_warning("Transformed individual above upper bound. Generation: %ld; Parameter: %ld; Value: %e; Bound: %e",
 				    count_gener, j, X[j], domains[j][3]);
 			  }
 			population[i][j] = X[j]; // put the transformation in anyway
@@ -731,7 +731,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free(oldfitvalueVEC);
 	}
 			  
-	error("Fatal Error. See output for diagnostic information.");
+	Rf_error("Fatal Error. See output for diagnostic information.");
     }
     print_population((int) pop_size, (int) nvars, 0, (int) Structure->Lexical, population, popout);
     fclose(popout);
@@ -773,7 +773,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free(oldfitvalueVEC);
 	}
       
-      error("Fatal Error. See output for diagnostic information.");
+      Rf_error("Fatal Error. See output for diagnostic information.");
     }
     print_population((int) pop_size, (int) nvars, 0, (int) Structure->Lexical, population, popout);
     fflush(popout);
@@ -783,7 +783,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
   /* Interrupt setup.  Let's print a nice message to recover the best
      solution so far if at least generation 0 has been run */
   if ( (PrintLevel > 0) & (strcmp(Structure->ProjectPath, "/dev/null")!=0) )
-    setVar(install("interrupted"), ScalarLogical(1), Structure->rho);
+    Rf_setVar(Rf_install("interrupted"), Rf_ScalarLogical(1), Structure->rho);
 
   /*Assigning probability of survival for each of the agent, with the*/
   /*probability provided by the user for the best agent*/
@@ -838,7 +838,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			live[first_live]--;
 			/* check that agent to replace is in range */
 			if (die_now < 2) {
-			  error( "No agents to be replaced\n");
+			  Rf_error( "No agents to be replaced\n");
 			}
 
 			new_genera[die_now][nvars+1] = 1.0;
@@ -862,7 +862,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			live[first_live]--;
 			/* check that agent to replace is in range */
 			if (die_now < 2) {
-			  error( "No agents to be replaced\n");
+			  Rf_error( "No agents to be replaced\n");
 			}
 
                         new_genera[die_now][nvars+1] = 2.0;
@@ -885,7 +885,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			live[first_live]--;
 			/* check that agent to replace is in range */
 			if (die_now < 2) {
-			  error( "No agents to be replaced\n");
+			  Rf_error( "No agents to be replaced\n");
 			}
 
                         new_genera[die_now][nvars+1] = 3.0;
@@ -912,7 +912,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			parents[p2use] = find_parent(live,pop_size);
 			/* check that agents to replace are in range */
 			if (die_now < 2) {
-			  error("No agents to be replaced\n");
+			  Rf_error("No agents to be replaced\n");
 			}
 			new_genera[die_now][nvars+1]  = 4.0;
 			for(j=1; j<=p2use; j++)
@@ -953,7 +953,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			} /* end of while same==TRUE loop */
 			/* check that agents to replace are in range */
 			if (die_now < 3) {
-			  error("Not enough agents to be replaced\n");
+			  Rf_error("Not enough agents to be replaced\n");
 			}
 			live[first_live]--;
 			live[second_live]--;
@@ -997,7 +997,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			live[first_live]--;
 			/* check that agent to replace is in range */
 			if (die_now < 2) {
-			  error( "No agents to be replaced\n");
+			  Rf_error( "No agents to be replaced\n");
 			}
 
                         new_genera[die_now][nvars+1] = 6.0;
@@ -1038,7 +1038,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			} /* end of while same==TRUE loop */
 			/* check that agents to replace are in range */
 			if (die_now < 3) {
-			  error("Not enough agents to be replaced\n");
+			  Rf_error("Not enough agents to be replaced\n");
 			}
 			live[first_live]--;
 			live[second_live]--;
@@ -1099,7 +1099,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			live[first_live]--;
 			/* check that agent to replace is in range */
 			if (die_now < 2) {
-			  error( "No agents to be replaced\n");
+			  Rf_error( "No agents to be replaced\n");
 			}
 
                         new_genera[die_now][nvars+1] = 8.0;
@@ -1135,7 +1135,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  if ( (UniqueCount+pop_size) >= MemorySize )
 	    {
 	      Structure->MemoryUsage=0;
-	      warning("Turned Off MemoryMatrix because memory usage was too great.");
+	      Rf_warning("Turned Off MemoryMatrix because memory usage was too great.");
 	    } /* end of if */
 	} // end of MemoryUsage==1
       else
@@ -1230,7 +1230,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 				  count_gener, i+1, bfgsoutX[i]);
 			  Rprintf("NOTE: Fit: %e\n\n", bfgsfit);
 			}
-		      warning("BFGS hit on best individual produced Out of Boundary individual.");
+		      Rf_warning("BFGS hit on best individual produced Out of Boundary individual.");
 		    }
 		    if (bfgsoutX[i] > domains[j][3]) {
 		      BoundaryTrigger=1;
@@ -1242,7 +1242,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 				  count_gener, i+1, bfgsoutX[i]);
 			  Rprintf("NOTE: Fit: %e\n\n", bfgsfit);
 			}
-		      warning("BFGS hit on best individual produced Out of Boundary individual.");
+		      Rf_warning("BFGS hit on best individual produced Out of Boundary individual.");
 		    }
 		  } /* end for loop */
 		  
@@ -1279,7 +1279,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			  Rprintf("NOTE: Generation: %ld \t Parameter: %ld \t Value: %e\n\n", 
 				  count_gener, i+1, bfgsoutX[i]);
 			}
-		      warning("BFGS hit on best individual produced Out of Boundary individual.");
+		      Rf_warning("BFGS hit on best individual produced Out of Boundary individual.");
 		    }
 		    if (bfgsoutX[i] > domains[j][3]) {
 		      BoundaryTrigger=1;
@@ -1290,7 +1290,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			  Rprintf("NOTE: Generation: %ld \t Parameter: %ld \t Value: %e\n\n", 
 				  count_gener, i+1, bfgsoutX[i]);
 			}
-		      warning("BFGS hit on best individual produced Out of Boundary individual.");
+		      Rf_warning("BFGS hit on best individual produced Out of Boundary individual.");
 		    }
 		  } /* end for loop */
 	      
@@ -1329,7 +1329,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			    count_gener, i+1, bfgsoutX[i]);
 		    Rprintf("NOTE: Fit: %e\n\n", bfgsfit);
 		  }
-		warning("BFGS hit on best individual produced Out of Boundary individual.");
+		Rf_warning("BFGS hit on best individual produced Out of Boundary individual.");
 	      }
 	      if (bfgsoutX[i] > domains[j][3]) {
 		BoundaryTrigger=1;
@@ -1341,7 +1341,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 			    count_gener, i+1, bfgsoutX[i]);
 		    Rprintf("NOTE: Fit: %e\n\n", bfgsfit);
 		  }
-		warning("BFGS hit on best individual produced Out of Boundary individual.");
+		Rf_warning("BFGS hit on best individual produced Out of Boundary individual.");
 	      }
 	    } /* end for loop */
 		  
@@ -1414,7 +1414,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
                             count_gener, j, X[j]);
                     Rprintf("NOTE: Fit: %e\n\n", bfgsfit);
                   }
-                warning("BFGS hit on best individual produced Out of Boundary individual.");
+                Rf_warning("BFGS hit on best individual produced Out of Boundary individual.");
               }
               if (X[j] > domains[j][3]) {
                 BoundaryTrigger=1;
@@ -1426,7 +1426,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
                             count_gener, j, X[j]);
                     Rprintf("NOTE: Fit: %e\n\n", bfgsfit);
                   }
-                warning("BFGS hit on best individual produced Out of Boundary individual.");
+                Rf_warning("BFGS hit on best individual produced Out of Boundary individual.");
               }
             } /* end for loop */
 
@@ -1671,7 +1671,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      free(oldfitvalueVEC);
 	    }
 
-	  error("Fatal Error. See output for diagnostic information.");
+	  Rf_error("Fatal Error. See output for diagnostic information.");
 	}
 	print_population((int) pop_size, (int) nvars, (int) count_gener, (int) Structure->Lexical, population, popout);
 	fclose(popout);
@@ -1713,7 +1713,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	      free(oldfitvalueVEC);
 	    }
 
-	  error("Fatal Error. See output for diagnostic information.");
+	  Rf_error("Fatal Error. See output for diagnostic information.");
 	}
 	print_population((int) pop_size, (int) nvars, (int) count_gener, (int) Structure->Lexical, population, popout);
 	fflush(popout);
@@ -1798,7 +1798,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  else
 	    {
 	      HardMaximumNumber = 1;
-	      warning("Stopped because hard maximum generation limit was hit.\nAt least one gradient is too large.");
+	      Rf_warning("Stopped because hard maximum generation limit was hit.\nAt least one gradient is too large.");
 	      if(PrintLevel>0)	  
 		{
 		  Rprintf("\nNOTE: HARD MAXIMUM GENERATION LIMIT HIT\n");
@@ -1839,7 +1839,7 @@ void optimization(struct GND_IOstructure *Structure, VECTOR X,
 	  {
 	    if (HardMaximumNumber==0)
 	      {
-		warning("Stopped because hard maximum generation limit was hit.");
+		Rf_warning("Stopped because hard maximum generation limit was hit.");
 		if(PrintLevel>0)	  
 		  {
 		    Rprintf("\nNOTE: HARD MAXIMUM GENERATION LIMIT HIT\n");
@@ -2078,7 +2078,7 @@ int find_parent(IVECTOR live, int pop_size)
     tot = tot + live[i];
   if(tot==0)
     {
-      error("No agents to select");
+      Rf_error("No agents to select");
     }
 
   /*Choosing one of them randomly*/
@@ -2331,39 +2331,39 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
 
   /* Check to make sure that all operators are positve numbers! */
   if (Structure->P[0] < 0 ) {
-    warning("Operator 1 (Cloning) was Assigned an Illegal Value: %lf.", Structure->P[0]);
+    Rf_warning("Operator 1 (Cloning) was Assigned an Illegal Value: %lf.", Structure->P[0]);
     Structure->P[0]=0.0;
   }
   if (Structure->P[1] < 0 ) {
-    warning("Operator 1 (Uniform Mutation) was Assigned an Illegal Value: %lf.", Structure->P[1]);
+    Rf_warning("Operator 1 (Uniform Mutation) was Assigned an Illegal Value: %lf.", Structure->P[1]);
     Structure->P[1]=0.0;
   }
   if (Structure->P[2] < 0 ) {
-    warning("Operator 3 (Boundary Mutation) was Assigned an Illegal Value: %lf.", Structure->P[2]);
+    Rf_warning("Operator 3 (Boundary Mutation) was Assigned an Illegal Value: %lf.", Structure->P[2]);
     Structure->P[2]=0;
   }
   if (Structure->P[3] < 0 ) {
-    warning("Operator 4 (Non-Uniform Mutation) was Assigned an Illegal Value: %lf.", 
+    Rf_warning("Operator 4 (Non-Uniform Mutation) was Assigned an Illegal Value: %lf.", 
 	    Structure->P[3]);
     Structure->P[3]=0;
   }
   if (Structure->P[4] < 0 ) {
-    warning("Operator 5 (Polytope Crossover) was Assigned an Illegal Value: %lf.", 
+    Rf_warning("Operator 5 (Polytope Crossover) was Assigned an Illegal Value: %lf.", 
 	    Structure->P[4]);
     Structure->P[4]=0;
   }
   if (Structure->P[5] < 0 ) {
-    warning("Operator 6 (Simple Crossover) was Assigned an Illegal Value: %lf.", 
+    Rf_warning("Operator 6 (Simple Crossover) was Assigned an Illegal Value: %lf.", 
 	    Structure->P[5]);
     Structure->P[5]=0;
   }
   if (Structure->P[6] < 0 ) {
-    warning("Operator 7 (Whole Non-Uniform Mutation) was Assigned an Illegal Value: %lf.", 
+    Rf_warning("Operator 7 (Whole Non-Uniform Mutation) was Assigned an Illegal Value: %lf.", 
 	    Structure->P[6]);
     Structure->P[6]=0;
   }
   if (Structure->P[7] < 0 ) {
-    warning("Operator 8 (Heuristic Crossover) was Assigned an Illegal Value: %lf.", 
+    Rf_warning("Operator 8 (Heuristic Crossover) was Assigned an Illegal Value: %lf.", 
 	    Structure->P[7]);
     Structure->P[7]=0;
   }
@@ -2374,14 +2374,14 @@ void SetRunTimeParameters(struct GND_IOstructure *Structure,
     *GradientCheck=0;
 
     if (Structure->P[8] > 0) {
-      warning("Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %lf\nThis is an illegal value because we are working with integer data.", 
+      Rf_warning("Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %lf\nThis is an illegal value because we are working with integer data.", 
 	      Structure->P[8]);
       Structure->P[8]=0;
     } /* end of if */
   }
   else {
     if (Structure->P[8] < 0 ) {
-      warning("Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %lf.", 
+      Rf_warning("Operator 9 (Local-Minimum Crossover) was Assigned an Illegal Value: %lf.", 
 	      Structure->P[8]);
       Structure->P[8]=0;
     }
@@ -2758,7 +2758,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 
     if((popout = fopen(Structure->ProjectPath, "r")) == NULL) {
       Rprintf("         Generating new population\n");
-      warning("Unable to open the old project file: %s", Structure->ProjectPath);
+      Rf_warning("Unable to open the old project file: %s", Structure->ProjectPath);
     }
     else {
       pop_size_old=ReadPopulation(population, pop_size, nvars, popout, PrintLevel);
@@ -2771,13 +2771,13 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       }
       
       if (pop_size_old<2) {
-	warning("The old population file appears to be from a different genoud specification.");
+	Rf_warning("The old population file appears to be from a different genoud specification.");
 	pop_size_old=0;
       }
     }
     if (PrintLevel>1) {
       if((popout = fopen(Structure->ProjectPath, "a")) == NULL) {
-	warning("Unable to open the project file: %s", Structure->ProjectPath);
+	Rf_warning("Unable to open the project file: %s", Structure->ProjectPath);
 
 	/* free populationstats stuff */
 	free(mean);
@@ -2810,7 +2810,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	    free(oldfitvalueVEC);
 	  }
 
-	error("Fatal Error. See output for diagnostic information.");
+	Rf_error("Fatal Error. See output for diagnostic information.");
       }
       fclose(popout);
     }
@@ -2818,7 +2818,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   else {
     if (PrintLevel>1) {
       if((popout = fopen(Structure->ProjectPath, "w")) == NULL) {
-	warning("Unable to open the project file: %s", Structure->ProjectPath);
+	Rf_warning("Unable to open the project file: %s", Structure->ProjectPath);
 	
 	/* free populationstats stuff */
 	free(mean);
@@ -2851,7 +2851,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	    free(oldfitvalueVEC);
 	  }
 	
-	error("Fatal Error. See output for diagnostic information.");
+	Rf_error("Fatal Error. See output for diagnostic information.");
       }
       fclose(popout);
     }
@@ -2912,7 +2912,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
       if ( (UniqueCount+pop_size) >= MemorySize )
 	{
 	  Structure->MemoryUsage=0;
-	  warning("Turned Off MemoryMatrix because memory usage was too great.");
+	  Rf_warning("Turned Off MemoryMatrix because memory usage was too great.");
 	} /* end of if */
     } // end of Memory based evaluation
   else
@@ -3117,7 +3117,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free(oldfitvalueVEC);
 	}
       
-      error("Fatal Error. See output for diagnostic information.");
+      Rf_error("Fatal Error. See output for diagnostic information.");
     }
     print_population((int) pop_size, (int) nvars, 0, (int) Structure->Lexical, population, popout);
     fclose(popout);
@@ -3158,7 +3158,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  free(oldfitvalueVEC);
 	}
       
-      error("Fatal Error. See output for diagnostic information.");
+      Rf_error("Fatal Error. See output for diagnostic information.");
     }
     print_population((int) pop_size, (int) nvars, 0, (int) Structure->Lexical, population, popout);
     fflush(popout);
@@ -3168,7 +3168,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
   /* Interrupt setup.  Let's print a nice message to recover the best
      solution so far if at least generation 0 has been run */
   if ( (PrintLevel > 0) & (strcmp(Structure->ProjectPath, "/dev/null")!=0) )
-    setVar(install("interrupted"), ScalarLogical(1), Structure->rho);
+    Rf_setVar(Rf_install("interrupted"), Rf_ScalarLogical(1), Structure->rho);
   
   /*Assigning probability of survival for each of the agent, with the*/
   /*probability provided by the user for the best agent*/
@@ -3223,7 +3223,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		  live[first_live]--;
 		  /* check that agent to replace is in range */
 		  if (die_now < 2) {
-		    error("No agents to be replaced\n");
+		    Rf_error("No agents to be replaced\n");
 		  }
 		  
 		  new_genera[die_now][nvars+1] = 1.0;
@@ -3247,7 +3247,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		  live[first_live]--;
 		  /* check that agent to replace is in range */
 		  if (die_now < 2) {
-		    error( "No agents to be replaced\n");
+		    Rf_error( "No agents to be replaced\n");
 		  }
 		  
 		  new_genera[die_now][nvars+1] = 2.0;
@@ -3270,7 +3270,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		  live[first_live]--;
 		  /* check that agent to replace is in range */
 		  if (die_now < 2) {
-		    error( "No agents to be replaced\n");
+		    Rf_error( "No agents to be replaced\n");
 		  }
 		  
 		  new_genera[die_now][nvars+1] = 3.0;
@@ -3297,7 +3297,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		  parents[p2use] = find_parent(live,pop_size);
 		  /* check that agents to replace are in range */
 		  if (die_now < 2) {
-		    error("No agents to be replaced\n");
+		    Rf_error("No agents to be replaced\n");
 		  }
 		  new_genera[die_now][nvars+1]  = 4.0;
 		  for(j=1; j<=p2use; j++)
@@ -3338,7 +3338,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		  } /* end of while same==TRUE loop */
 		  /* check that agents to replace are in range */
 		  if (die_now < 3) {
-		    error("Not enough agents to be replaced\n");
+		    Rf_error("Not enough agents to be replaced\n");
 		  }
 		  live[first_live]--;
 		  live[second_live]--;
@@ -3382,7 +3382,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 			live[first_live]--;
 			/* check that agent to replace is in range */
 			if (die_now < 2) {
-			  error( "No agents to be replaced\n");
+			  Rf_error( "No agents to be replaced\n");
 			}
 			
                         new_genera[die_now][nvars+1] = 6.0;
@@ -3422,7 +3422,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 		  } /* end of while same==TRUE loop */
 		  /* check that agents to replace are in range */
 		  if (die_now < 3) {
-		    error("Not enough agents to be replaced\n");
+		    Rf_error("Not enough agents to be replaced\n");
 		  }
 		  live[first_live]--;
 		  live[second_live]--;
@@ -3493,7 +3493,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  if ( (UniqueCount+pop_size) >= MemorySize )
 	    {
 	      Structure->MemoryUsage=0;
-	      warning("Turned Off MemoryMatrix because memory usage was too great.");
+	      Rf_warning("Turned Off MemoryMatrix because memory usage was too great.");
 	    } /* end of if */
 	} // end of MemoryUsage==1
         else
@@ -3747,7 +3747,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	      free(oldfitvalueVEC);
 	    }
 
-	  error("Fatal Error. See output for diagnostic information.");
+	  Rf_error("Fatal Error. See output for diagnostic information.");
 	}
 	print_population((int) pop_size, (int) nvars, (int) count_gener, (int) Structure->Lexical, population, popout);
 	fclose(popout);
@@ -3788,7 +3788,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	      free(oldfitvalueVEC);
 	    }
 	  
-	  error("Fatal Error. See output for diagnostic information.");
+	  Rf_error("Fatal Error. See output for diagnostic information.");
 	}
 	print_population((int) pop_size, (int) nvars, (int) count_gener, (int) Structure->Lexical, population, popout);
 	fflush(popout);
@@ -3872,7 +3872,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  else
 	    {
 	      HardMaximumNumber = 1;
-	      warning("Stopped because hard maximum generation limit was hit.\nAt least one gradient is too large.");
+	      Rf_warning("Stopped because hard maximum generation limit was hit.\nAt least one gradient is too large.");
 	      if(PrintLevel>0)	  
 		{
 		  Rprintf("\nNOTE: HARD MAXIMUM GENERATION LIMIT HIT\n");
@@ -3913,7 +3913,7 @@ void JaIntegerOptimization(struct GND_IOstructure *Structure, VECTOR X,
 	  {
 	    if (HardMaximumNumber==0)
 	      {
-		warning("Stopped because hard maximum generation limit was hit.");
+		Rf_warning("Stopped because hard maximum generation limit was hit.");
 		if(PrintLevel>0)	  
 		  {
 		    Rprintf("\nNOTE: HARD MAXIMUM GENERATION LIMIT HIT\n");

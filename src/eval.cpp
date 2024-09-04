@@ -31,16 +31,16 @@ extern "C"
     long i;
     int isFinite=0;
     
-    PROTECT(Rx = allocVector(REALSXP, nvars));  
+    PROTECT(Rx = Rf_allocVector(REALSXP, nvars));  
     
     for (i=0; i<nvars; i++)
       {
 	REAL(Rx)[i] = X[(i+1)];
       }
     
-    PROTECT(R_fcall = lang2(fn, R_NilValue));
+    PROTECT(R_fcall = Rf_lang2(fn, R_NilValue));
     SETCADR(R_fcall, Rx);
-    fit =  REAL(eval(R_fcall, rho))[0];
+    fit =  REAL(Rf_eval(R_fcall, rho))[0];
     UNPROTECT(2);
     
     isFinite = R_finite(fit);  
@@ -68,16 +68,16 @@ extern "C"
     long i;
     int isFinite=0;
     
-    PROTECT(Rx = allocVector(REALSXP, nvars));
+    PROTECT(Rx = Rf_allocVector(REALSXP, nvars));
 
     for (i=0; i<nvars; i++)
       {
 	REAL(Rx)[i] = X[i+1];
       }
 
-    PROTECT(R_fcall = lang2(fn, R_NilValue));
+    PROTECT(R_fcall = Rf_lang2(fn, R_NilValue));
     SETCADR(R_fcall, Rx);
-    Rret = eval(R_fcall, rho);
+    Rret = Rf_eval(R_fcall, rho);
 
     for (i=0; i<lexical; i++)
       {
@@ -106,16 +106,16 @@ extern "C"
     long i;
     int isFinite=0;
 
-    PROTECT(Rx = allocVector(REALSXP, nvars));
+    PROTECT(Rx = Rf_allocVector(REALSXP, nvars));
 
     for (i=0; i<nvars; i++)
       {
         REAL(Rx)[i] = X[i+1];
       }
 
-    PROTECT(R_fcall = lang2(fn, R_NilValue));
+    PROTECT(R_fcall = Rf_lang2(fn, R_NilValue));
     SETCADR(R_fcall, Rx);
-    Rret = eval(R_fcall, rho);
+    Rret = Rf_eval(R_fcall, rho);
 
     for (i=0; i<lexical; i++)
       {
@@ -145,17 +145,17 @@ extern "C"
     SEXP Rparms, R_fcall, Rgrad;
     long i;
     
-    PROTECT(Rparms = allocVector(REALSXP, nvars));    
-    PROTECT(Rgrad  = allocVector(REALSXP, nvars));    
+    PROTECT(Rparms = Rf_allocVector(REALSXP, nvars));    
+    PROTECT(Rgrad  = Rf_allocVector(REALSXP, nvars));    
     
     for(i=0; i<nvars; i++)
       {
 	REAL(Rparms)[i] = parms[i];
       }
 
-    PROTECT(R_fcall = lang2(fnGR, R_NilValue));
+    PROTECT(R_fcall = Rf_lang2(fnGR, R_NilValue));
     SETCADR(R_fcall, Rparms);    
-    Rgrad = eval(R_fcall, rho);  
+    Rgrad = Rf_eval(R_fcall, rho);  
     
     for(i=0; i<nvars; i++)
       {
@@ -178,8 +178,8 @@ extern "C"
     /* parms = (1) MinMax, (2) nvars, (3) lexical_end, (4) [nvars/or lexical sort] */
     /* using: #define M(ROW,COL,NCOLS) (((ROW)*(NCOLS))+(COL)) */
     
-    PROTECT(MAT = allocMatrix(REALSXP, pop_size, lexical_end));
-    PROTECT(parms = allocVector(REALSXP, 4));
+    PROTECT(MAT = Rf_allocMatrix(REALSXP, pop_size, lexical_end));
+    PROTECT(parms = Rf_allocVector(REALSXP, 4));
     
     REAL(parms)[0] = MinMax;
     REAL(parms)[1] = nvars;
@@ -195,10 +195,10 @@ extern "C"
 	  }
 	}  
     
-    PROTECT(R_fcall = lang3(fnLexicalSort, MAT, parms));
+    PROTECT(R_fcall = Rf_lang3(fnLexicalSort, MAT, parms));
     SETCADR(R_fcall, parms);
     SETCADR(R_fcall, MAT);
-    MATret = eval(R_fcall, rho);  
+    MATret = Rf_eval(R_fcall, rho);  
 
     k = 0;
     for(j=0; j<lexical_end; j++)
@@ -223,9 +223,9 @@ extern "C"
     /* MinMax: 0 min, 1 max */
     /* parms = (1) MinMax, (2) UniqueCount, (3) nvars, (4) lexical */
     
-    PROTECT(Rmemory = allocMatrix(REALSXP, UniqueCount, lexical_end));
-    PROTECT(Rpopulation = allocMatrix(REALSXP, pop_size, lexical_end));
-    PROTECT(parms = allocVector(REALSXP, 3));
+    PROTECT(Rmemory = Rf_allocMatrix(REALSXP, UniqueCount, lexical_end));
+    PROTECT(Rpopulation = Rf_allocMatrix(REALSXP, pop_size, lexical_end));
+    PROTECT(parms = Rf_allocVector(REALSXP, 3));
 
     REAL(parms)[0] = MinMax;
     REAL(parms)[1] = nvars;
@@ -254,11 +254,11 @@ extern "C"
 	  }
 	}  
 
-    PROTECT(R_fcall = lang4(fnMemoryMatrixEvaluate, Rmemory, Rpopulation, parms));    
+    PROTECT(R_fcall = Rf_lang4(fnMemoryMatrixEvaluate, Rmemory, Rpopulation, parms));    
     SETCADR(R_fcall, parms);
     SETCADR(R_fcall, Rpopulation);
     SETCADR(R_fcall, Rmemory);
-    Rret = eval(R_fcall, rho);      
+    Rret = Rf_eval(R_fcall, rho);      
 
     UniqueCount = (long) REAL(Rret)[0];
     k =1;

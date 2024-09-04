@@ -60,7 +60,7 @@ long ReadPopulation(double **Data, long NewPopSize, long NewVars, FILE *fp, shor
     fint = fscanf(fp, "%d", &FitVals); /* reads number of fit values */
 
     if(FitVals > 1)
-      warning("Reading an existing population file is not supported for Fit Values != 1");
+      Rf_warning("Reading an existing population file is not supported for Fit Values != 1");
 
     /* This reads the "Variables:" name */
     fint = fscanf(fp, "%s", ctmp);

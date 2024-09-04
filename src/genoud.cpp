@@ -76,7 +76,7 @@ void genoud(struct GND_IOstructure *Structure)
   else Structure->MinMax=0;
 
   if (Structure->OutputType!=0) {
-    error("output path/type must be the 'R' default");
+    Rf_error("output path/type must be the 'R' default");
   } /* else {
     output=stdout;
     } */
@@ -86,7 +86,7 @@ void genoud(struct GND_IOstructure *Structure)
 
   ThreadNumber=Structure->ThreadNumber;
   if (ThreadNumber > MAXTHREADS) {
-    error("No more than %d threads allowed\n\n", MAXTHREADS);
+    Rf_error("No more than %d threads allowed\n\n", MAXTHREADS);
   }
   
   if (Structure->ProvideSeeds == 1) {

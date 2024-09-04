@@ -32,7 +32,7 @@ extern "C"
     operators=9;
     length= lexical + (nvars*2) + 3 + operators;
 
-    PROTECT(ans=allocVector(REALSXP,length));
+    PROTECT(ans=Rf_allocVector(REALSXP,length));
     REAL(ans)[0] = (double) oGenerations;
     REAL(ans)[1] = (double) oPeakGeneration;
     REAL(ans)[2] = (double) oPopSize;
@@ -69,17 +69,17 @@ extern "C"
     double fit;
     long i;
 
-    PROTECT(x = allocVector(REALSXP, parameters));
+    PROTECT(x = Rf_allocVector(REALSXP, parameters));
 
     for (i=0; i<parameters; i++)
       {
 	REAL(x)[i] = X[i];
       }
 
-    PROTECT(R_fcall = lang2(fn_optim, R_NilValue));
+    PROTECT(R_fcall = Rf_lang2(fn_optim, R_NilValue));
     SETCADR(R_fcall, x);
 
-    ans = eval(R_fcall, rho);
+    ans = Rf_eval(R_fcall, rho);
     fit = REAL(ans)[0];
 
     for(i=0; i<parameters; i++)
@@ -115,10 +115,10 @@ extern "C"
 
     double *FitValues, *Results, *Gradients;
 
-    if(!isEnvironment(rho)) 
-      error ("`rho' should be an environment");
+    if(!Rf_isEnvironment(rho)) 
+      Rf_error ("`rho' should be an environment");
 
-    parameters = asInteger(nvars);
+    parameters = Rf_asInteger(nvars);
 
     // setup GENOUD
     struct GND_IOstructure *MainStructure;
@@ -139,7 +139,7 @@ extern "C"
     // starting values
     double **StartingValues;
     int nStartingValues;
-    nStartingValues = asInteger(n_starting_values);
+    nStartingValues = Rf_asInteger(n_starting_values);
     if (nStartingValues > 0) {
       /* need to free a matrix of StaringValues below */
       StartingValues = (double **) malloc(nStartingValues*sizeof(double));
@@ -156,13 +156,13 @@ extern "C"
     MainStructure->fnMemoryMatrixEvaluate=fnMemoryMatrixEvaluate;
     MainStructure->fnGR=fnGR;
     MainStructure->fn_optim=fn_optim;
-    MainStructure->Lexical=asInteger(lexical);
-    MainStructure->UserGradient=asInteger(RuserGradient);
+    MainStructure->Lexical=Rf_asInteger(lexical);
+    MainStructure->UserGradient=Rf_asInteger(RuserGradient);
     MainStructure->nvars=parameters;
-    MainStructure->PopSize=asInteger(pop_size);
-    MainStructure->MaxGenerations=asInteger(max_generations);
-    MainStructure->WaitGenerations=asInteger(wait_generations);
-    MainStructure->HardGenerationLimit=asInteger(hard_generation_limit);
+    MainStructure->PopSize=Rf_asInteger(pop_size);
+    MainStructure->MaxGenerations=Rf_asInteger(max_generations);
+    MainStructure->WaitGenerations=Rf_asInteger(wait_generations);
+    MainStructure->HardGenerationLimit=Rf_asInteger(hard_generation_limit);
     MainStructure->nStartingValues=nStartingValues;
     MainStructure->StartingValues=StartingValues;
     MainStructure->P[0]=REAL(P)[0];
@@ -175,22 +175,22 @@ extern "C"
     MainStructure->P[7]=REAL(P)[7];
     MainStructure->P[8]=REAL(P)[8];
     MainStructure->Domains=domains;
-    MainStructure->MinMax=asInteger(max);
-    MainStructure->GradientCheck=asInteger(gradient_check);
-    MainStructure->BoundaryEnforcement=asInteger(boundary_enforcement);
-    MainStructure->SolutionTolerance=asReal(solution_tolerance);
-    MainStructure->UseBFGS=asInteger(BFGS);
+    MainStructure->MinMax=Rf_asInteger(max);
+    MainStructure->GradientCheck=Rf_asInteger(gradient_check);
+    MainStructure->BoundaryEnforcement=Rf_asInteger(boundary_enforcement);
+    MainStructure->SolutionTolerance=Rf_asReal(solution_tolerance);
+    MainStructure->UseBFGS=Rf_asInteger(BFGS);
 
-    MainStructure->MemoryUsage=asInteger(MemoryMatrix);
-    MainStructure->Debug=asInteger(Debug);
+    MainStructure->MemoryUsage=Rf_asInteger(MemoryMatrix);
+    MainStructure->Debug=Rf_asInteger(Debug);
 
-    MainStructure->InstanceNumber=asInteger(instance_number);
+    MainStructure->InstanceNumber=Rf_asInteger(instance_number);
 
-    MainStructure->ProvideSeeds=asInteger(provide_seeds);
-    MainStructure->UnifSeed=asInteger(unif_seed);
-    MainStructure->IntSeed=asInteger(int_seed);
-    MainStructure->PrintLevel=asInteger(print_level);
-    MainStructure->DataType=asInteger(data_type_int);
+    MainStructure->ProvideSeeds=Rf_asInteger(provide_seeds);
+    MainStructure->UnifSeed=Rf_asInteger(unif_seed);
+    MainStructure->IntSeed=Rf_asInteger(int_seed);
+    MainStructure->PrintLevel=Rf_asInteger(print_level);
+    MainStructure->DataType=Rf_asInteger(data_type_int);
 
     /* 
        Share Type:
@@ -199,7 +199,7 @@ extern "C"
        (2) NO reading of any existing project file but examination of public population file
        (3) BOTH reading of any existing project file AND examination of public population file
     */
-    MainStructure->ShareType=asInteger(share_type);
+    MainStructure->ShareType=Rf_asInteger(share_type);
 
     //Paths
     char OutputPath[1000], ProjectPath[1000];
@@ -207,7 +207,7 @@ extern "C"
     strcpy(ProjectPath,STRING_VALUE(project_path));
     MainStructure->OutputPath=OutputPath;
     MainStructure->ProjectPath=ProjectPath;
-    MainStructure->OutputType=asInteger(output_type);
+    MainStructure->OutputType=Rf_asInteger(output_type);
 
     /* output data structures */
     FitValues = (double *) malloc(MainStructure->Lexical*sizeof(double));  
@@ -226,14 +226,14 @@ extern "C"
     MainStructure->ThreadNumber=0;
 
     /* Operator Options */
-    MainStructure->P9mix=asReal(RP9mix);
-    MainStructure->BFGSburnin=asInteger(BFGSburnin);
+    MainStructure->P9mix=Rf_asReal(RP9mix);
+    MainStructure->BFGSburnin=Rf_asInteger(BFGSburnin);
 
     /* Transform Related Variables */
     /* whichFUN == 3 implies EvaluateTransform should be called */
     /* whichFUN == 2 implies EvaluateLexical should be called */
     /* whichFUN == 1 implies evaluate should be called */
-    MainStructure->Transform=asInteger(transform);
+    MainStructure->Transform=Rf_asInteger(transform);
     if(MainStructure->Transform == 1)
         MainStructure->whichFUN = 3;
     else if(MainStructure->Lexical > 1)

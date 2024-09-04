@@ -15,6 +15,7 @@
   June 3, 2012
 
 */
+#define R_NO_REMAP
 
 #include<R.h>
 #include<stdio.h>
